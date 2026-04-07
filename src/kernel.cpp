@@ -3,11 +3,13 @@
 //
 // Bare Metal Sega Genesis
 //
-// M2: initialises all Circle subsystems required by the emulator and
-// confirms each one starts without error.  No emulation yet.
-//
 
 #include "kernel.h"
+
+// ROM file to load from the SD card root.
+// Circle's FatFS supports root directory only with 8.3 filenames.
+// Copy your Genesis ROM to the SD card and rename it to this name.
+#define ROM_TITLE "GAME.MD"
 
 static const char FromKernel[] = "kernel";
 
@@ -17,13 +19,18 @@ CKernel::CKernel (void)
 	m_Logger (m_Options.GetLogLevel (), &m_Timer),
 	m_USBHCI (&m_Interrupt, &m_Timer),
 	m_EMMC (&m_Interrupt, &m_Timer, &m_ActLED),
-	m_Sound (&m_Interrupt)
+	m_Sound (&m_Interrupt),
+	m_SDCard (m_FileSystem, m_DeviceNameService),
+	m_pROMBuffer (0),
+	m_nROMSize (0)
 {
 	m_ActLED.Blink (5);
 }
 
 CKernel::~CKernel (void)
 {
+	delete[] m_pROMBuffer;
+	m_pROMBuffer = 0;
 }
 
 boolean CKernel::Initialize (void)
@@ -81,9 +88,29 @@ TShutdownMode CKernel::Run (void)
 	m_Logger.Write (FromKernel, LogNotice,
 		"Bare Metal Sega Genesis — build " __DATE__ " " __TIME__);
 
-	m_Logger.Write (FromKernel, LogNotice, "All subsystems initialised — standing by.");
+	// Mount the SD card filesystem.
+	if (!m_SDCard.Mount ())
+	{
+		m_Logger.Write (FromKernel, LogPanic, "SD card mount failed");
+		return ShutdownHalt;
+	}
 
-	// Heartbeat: blink LED once per second until emulation loop is wired in (M3+).
+	// Load ROM from the SD card root.
+	// Rename your ROM to ROM_TITLE on the SD card before booting.
+	m_Logger.Write (FromKernel, LogNotice, "Loading ROM: %s", ROM_TITLE);
+	if (!m_SDCard.ReadFile (ROM_TITLE, &m_pROMBuffer, &m_nROMSize))
+	{
+		m_Logger.Write (FromKernel, LogPanic,
+			"ROM not found — copy your Genesis ROM to the SD card root as %s",
+			ROM_TITLE);
+		return ShutdownHalt;
+	}
+
+	m_Logger.Write (FromKernel, LogNotice,
+		"ROM loaded: %u bytes", (unsigned) m_nROMSize);
+
+	// Spin until emulation core is wired in (M4).
+	m_Logger.Write (FromKernel, LogNotice, "M3 complete — standing by.");
 	for (unsigned i = 0; ; i++)
 	{
 		m_Timer.SimpleMsDelay (1000);

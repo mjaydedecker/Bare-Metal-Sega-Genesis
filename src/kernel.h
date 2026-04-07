@@ -4,9 +4,6 @@
 // Bare Metal Sega Genesis
 // CKernel — top-level orchestrator for the bare-metal emulator.
 //
-// M2: all Circle subsystems required by the emulator are declared here.
-// Emulation components are wired in during subsequent milestones.
-//
 
 #ifndef _kernel_h
 #define _kernel_h
@@ -25,6 +22,7 @@
 #include <SDCard/emmc.h>
 #include <circle/fs/fat/fatfs.h>
 #include <circle/types.h>
+#include "storage/sdcard.h"
 
 enum TShutdownMode
 {
@@ -53,10 +51,17 @@ private:
 	CInterruptSystem   m_Interrupt;
 	CTimer             m_Timer;
 	CLogger            m_Logger;
-	CUSBHCIDevice      m_USBHCI;    // gamepad input (M7)
-	CEMMCDevice        m_EMMC;      // SD card block device (M3)
-	CFATFileSystem     m_FileSystem; // FAT filesystem over EMMC (M3)
-	CPWMSoundDevice    m_Sound;     // PWM audio output (M6)
+	CUSBHCIDevice      m_USBHCI;     // gamepad input (M7)
+	CEMMCDevice        m_EMMC;       // SD card block device
+	CFATFileSystem     m_FileSystem; // FAT filesystem over EMMC
+	CPWMSoundDevice    m_Sound;      // PWM audio output (M6)
+
+	// Storage wrapper — declared after m_FileSystem and m_DeviceNameService.
+	SDCard             m_SDCard;
+
+	// ROM buffer — allocated by SDCard::ReadFile, passed to core in M4.
+	u8    *m_pROMBuffer;
+	size_t m_nROMSize;
 };
 
 #endif

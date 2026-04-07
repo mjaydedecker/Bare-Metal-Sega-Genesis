@@ -15,10 +15,10 @@ RASPPI  = 2
 # arm-linux-gnueabihf toolchain available via apt on Ubuntu/Debian.
 PREFIX  = arm-linux-gnueabihf-
 
-# M1/M2: stub kernel only.
 # Genesis-Plus-GX-Wide objects are added in M4.
 OBJS = src/main.o \
-       src/kernel.o
+       src/kernel.o \
+       src/storage/sdcard.o
 
 # Libraries — most specific first, Circle core last.
 # Each is built on demand by the targets below.
@@ -30,7 +30,7 @@ LIBS = $(CIRCLEHOME)/addon/SDCard/libsdcard.a \
        $(CIRCLEHOME)/lib/fs/libfs.a \
        $(CIRCLEHOME)/lib/libcircle.a
 
-EXTRACLEAN = src/*.o src/*.d
+EXTRACLEAN = src/*.o src/*.d src/storage/*.o src/storage/*.d
 
 include $(CIRCLEHOME)/Rules.mk
 
