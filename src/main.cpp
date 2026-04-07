@@ -1,0 +1,33 @@
+//
+// main.cpp
+//
+// Bare Metal Sega Genesis
+// Entry point — instantiates CKernel and drives the boot sequence.
+//
+
+#include "kernel.h"
+#include <circle/startup.h>
+
+int main (void)
+{
+	CKernel Kernel;
+	if (!Kernel.Initialize ())
+	{
+		halt ();
+		return EXIT_HALT;
+	}
+
+	TShutdownMode ShutdownMode = Kernel.Run ();
+
+	switch (ShutdownMode)
+	{
+	case ShutdownReboot:
+		reboot ();
+		return EXIT_REBOOT;
+
+	case ShutdownHalt:
+	default:
+		halt ();
+		return EXIT_HALT;
+	}
+}

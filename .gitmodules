@@ -1,0 +1,6 @@
+[submodule "libs/circle"]
+	path = libs/circle
+	url = https://github.com/rsta2/circle
+[submodule "libs/genesis-plus-gx-wide"]
+	path = libs/genesis-plus-gx-wide
+	url = https://github.com/libretro/Genesis-Plus-GX-Wide
