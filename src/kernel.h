@@ -23,6 +23,9 @@
 #include <circle/fs/fat/fatfs.h>
 #include <circle/types.h>
 #include "storage/sdcard.h"
+#include "libretro/environment.h"
+#include "libretro/callbacks.h"
+#include <libretro.h>
 
 enum TShutdownMode
 {

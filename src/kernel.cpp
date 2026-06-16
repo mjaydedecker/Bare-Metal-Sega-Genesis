@@ -109,8 +109,53 @@ TShutdownMode CKernel::Run (void)
 	m_Logger.Write (FromKernel, LogNotice,
 		"ROM loaded: %u bytes", (unsigned) m_nROMSize);
 
-	// Spin until emulation core is wired in (M4).
-	m_Logger.Write (FromKernel, LogNotice, "M3 complete — standing by.");
+	// Wire up libretro callbacks before retro_init().
+	m_Logger.Write (FromKernel, LogNotice, "Setting callbacks");
+	retro_set_environment (environment_cb);
+	retro_set_video_refresh (video_refresh_cb);
+	retro_set_audio_sample (audio_sample_cb);
+	retro_set_audio_sample_batch (audio_batch_cb);
+	retro_set_input_poll (input_poll_cb);
+	retro_set_input_state (input_state_cb);
+
+	// Initialise the emulation core.
+	m_Logger.Write (FromKernel, LogNotice, "Calling retro_init");
+	retro_init ();
+	m_Logger.Write (FromKernel, LogNotice, "retro_init done");
+
+	// Expose ROM to the environment callback so GET_GAME_INFO_EXT works
+	// and the core loads from memory rather than the (unsupported) filesystem.
+	g_rom_data = m_pROMBuffer;
+	g_rom_size = m_nROMSize;
+
+	// Load the ROM.
+	struct retro_game_info gameInfo;
+	gameInfo.path = ROM_TITLE;
+	gameInfo.data = m_pROMBuffer;
+	gameInfo.size = m_nROMSize;
+	gameInfo.meta = "";
+
+	m_Logger.Write (FromKernel, LogNotice, "Calling retro_load_game");
+	if (!retro_load_game (&gameInfo))
+	{
+		m_Logger.Write (FromKernel, LogPanic, "retro_load_game failed");
+		retro_deinit ();
+		return ShutdownHalt;
+	}
+	m_Logger.Write (FromKernel, LogNotice, "retro_load_game done");
+
+	// Log A/V geometry so we can verify the core is alive.
+	struct retro_system_av_info avInfo;
+	retro_get_system_av_info (&avInfo);
+	m_Logger.Write (FromKernel, LogNotice,
+		"AV info: %u x %u @ %.2f fps",
+		avInfo.geometry.base_width,
+		avInfo.geometry.base_height,
+		(double) avInfo.timing.fps);
+
+	m_Logger.Write (FromKernel, LogNotice, "M4 complete — core loaded.");
+
+	// Heartbeat until M5 (video) is implemented.
 	for (unsigned i = 0; ; i++)
 	{
 		m_Timer.SimpleMsDelay (1000);
