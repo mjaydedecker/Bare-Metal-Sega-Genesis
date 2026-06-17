@@ -2,8 +2,28 @@
 
 **Date:** 2026-06-16
 **Milestone:** M5 (Video Output)
-**Status:** design approved; implementation plan to follow.
+**Status:** design approved; **superseded in part on first hardware test** — see Correction below.
 **Target hardware:** Raspberry Pi 2 (`RASPPI=2`, AArch32, `kernel7.img`).
+
+> ## Correction (2026-06-16, after first boot)
+>
+> The original premise below — "a fixed 320×240 framebuffer is GPU-scaled by the
+> firmware to the HDMI output" — is **wrong for Circle's `CBcmFrameBuffer`**. On
+> the Pi mailbox framebuffer the **physical framebuffer size IS the HDMI output
+> mode**; the firmware scales virtual→physical (panning), not physical→panel.
+> Requesting 320×240 made the Pi emit a 320×240 signal, which the TV rejected
+> ("unsupported signal").
+>
+> **Corrected approach (implemented):** `Display` creates the framebuffer at the
+> firmware's **current/native display mode** (`CBcmFrameBuffer(0, 0, 16)` — the
+> same TV-supported mode M4's console used) and the frame is **CPU integer
+> nearest-neighbor scaled** (largest whole factor that fits) and centered, with
+> black bars. `blit_rgb565` gained a `scale` parameter. No `config.txt` HDMI mode
+> is required. Exact 4:3 / pixel-aspect correction remains deferred
+> (backlog #3); the image shows at the Genesis native pixel aspect, unstretched.
+>
+> Sections below describing the 320×240 surface and `config.txt` 4:3 setup are
+> retained for history but no longer reflect the implementation.
 
 ## Goal
 

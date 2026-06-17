@@ -2,8 +2,13 @@
 // src/video/display.h
 //
 // Bare Metal Sega Genesis
-// Owns a fixed 320x240 16bpp framebuffer and blits RGB565 frames into it,
-// centered. The Pi firmware GPU-scales the surface to the HDMI output.
+// Owns a framebuffer at the firmware's current (TV-supported) display mode and
+// blits RGB565 frames into it, nearest-neighbor integer-scaled and centered.
+//
+// NOTE: on the Pi mailbox framebuffer the physical size IS the HDMI output
+// resolution (the firmware does not scale a small framebuffer up to the panel).
+// Requesting a tiny mode like 320x240 produces an "unsupported signal" on most
+// TVs, so we take the current display mode and scale the frame on the CPU.
 //
 
 #ifndef _video_display_h
@@ -15,16 +20,15 @@
 class Display
 {
 public:
-    static const unsigned FB_WIDTH  = 320;
-    static const unsigned FB_HEIGHT = 240;   // 320x240 is exactly 4:3
-    static const unsigned FB_DEPTH  = 16;    // RGB565
+    static const unsigned FB_DEPTH = 16;     // RGB565
 
     Display(void);
     ~Display(void);
 
     boolean Initialize(void);
 
-    // Copy one RGB565 frame, centered. pitch is the source row stride in bytes.
+    // Copy one RGB565 frame, integer-scaled and centered. pitch is the source
+    // row stride in bytes.
     void Blit(const void *src, unsigned width, unsigned height, size_t pitch);
 
 private:
@@ -33,6 +37,8 @@ private:
     CBcmFrameBuffer *m_pFB;
     u16             *m_pBuffer;   // framebuffer base
     unsigned         m_Pitch;     // framebuffer pitch in bytes
+    unsigned         m_FbW;       // framebuffer width in pixels (native mode)
+    unsigned         m_FbH;       // framebuffer height in pixels (native mode)
     unsigned         m_LastW;
     unsigned         m_LastH;
 };

@@ -2,6 +2,14 @@
 
 **Status:** backlog — revisit after the M5 base concept is proven on hardware.
 
+> **Update (2026-06-16):** First hardware test showed the GPU-scaled small-
+> framebuffer premise is invalid — on the Pi the physical framebuffer size *is*
+> the HDMI output mode, so a 320×240 surface produced an "unsupported signal".
+> M5 now uses the **CPU integer-scaling path (item #1 below), which is therefore
+> no longer deferred** — it is the implemented base: framebuffer at the current/
+> native mode, frame integer-scaled and centered. Items #3–#8 remain deferred.
+> The "Context" section below describes the original (superseded) base concept.
+
 ## Context
 
 The M5 base design deliberately picks the simplest path that gets the Genesis

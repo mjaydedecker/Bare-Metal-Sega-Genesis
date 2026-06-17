@@ -11,14 +11,18 @@
 #include <stdint.h>
 #include <stddef.h>
 
-// Copy a w*h RGB565 image, centered, into a dst_w*dst_h RGB565 surface.
-// Strides are in BYTES. src may have a stride wider than w (the core's
-// buffer pitch is fixed at 720*2 while the active width varies).
-// src == NULL is a no-op (libretro "repeat last frame"). w/h are clamped
-// to the destination. Caller is responsible for clearing letterbox bars.
+// Copy a w*h RGB565 image, nearest-neighbor integer-scaled by `scale` and
+// centered, into a dst_w*dst_h RGB565 surface. Each source pixel becomes a
+// scale*scale block. Strides are in BYTES; src may have a stride wider than w
+// (the core's buffer pitch is fixed at 720*2 while the active width varies).
+//
+// src == NULL or scale == 0 is a no-op (libretro "repeat last frame").
+// If the scaled image would not fit, `scale` is reduced until it does (min 1),
+// then w/h are clamped to the destination. The caller is responsible for
+// clearing letterbox/pillarbox bars.
 void blit_rgb565(uint16_t *dst, unsigned dst_pitch_bytes,
                  unsigned dst_w, unsigned dst_h,
                  const uint16_t *src, unsigned src_pitch_bytes,
-                 unsigned w, unsigned h);
+                 unsigned w, unsigned h, unsigned scale);
 
 #endif

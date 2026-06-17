@@ -11,7 +11,7 @@
 #include <stdint.h>
 
 Display::Display(void)
-:   m_pFB(0), m_pBuffer(0), m_Pitch(0), m_LastW(0), m_LastH(0)
+:   m_pFB(0), m_pBuffer(0), m_Pitch(0), m_FbW(0), m_FbH(0), m_LastW(0), m_LastH(0)
 {
 }
 
@@ -23,7 +23,9 @@ Display::~Display(void)
 
 boolean Display::Initialize(void)
 {
-    m_pFB = new CBcmFrameBuffer(FB_WIDTH, FB_HEIGHT, FB_DEPTH);
+    // Width/height 0 => CBcmFrameBuffer uses the firmware's current display
+    // mode, which the TV already accepts (the same mode the M4 console used).
+    m_pFB = new CBcmFrameBuffer(0, 0, FB_DEPTH);
     if (m_pFB == 0)
     {
         return FALSE;
@@ -37,6 +39,8 @@ boolean Display::Initialize(void)
 
     m_pBuffer = (u16 *) (uintptr_t) m_pFB->GetBuffer();
     m_Pitch   = m_pFB->GetPitch();
+    m_FbW     = m_pFB->GetWidth();
+    m_FbH     = m_pFB->GetHeight();
     m_LastW   = 0;
     m_LastH   = 0;
     ClearBlack();
@@ -47,7 +51,7 @@ void Display::ClearBlack(void)
 {
     if (m_pBuffer != 0)
     {
-        memset(m_pBuffer, 0, (size_t) m_Pitch * FB_HEIGHT);
+        memset(m_pBuffer, 0, (size_t) m_Pitch * m_FbH);
     }
 }
 
@@ -65,6 +69,19 @@ void Display::Blit(const void *src, unsigned width, unsigned height, size_t pitc
         m_LastH = height;
     }
 
-    blit_rgb565(m_pBuffer, m_Pitch, FB_WIDTH, FB_HEIGHT,
-                (const uint16_t *) src, (unsigned) pitch, width, height);
+    // Largest integer scale that fits the framebuffer.
+    unsigned scale = 1;
+    if (width != 0 && height != 0)
+    {
+        unsigned sx = m_FbW / width;
+        unsigned sy = m_FbH / height;
+        scale = (sx < sy) ? sx : sy;
+        if (scale < 1)
+        {
+            scale = 1;
+        }
+    }
+
+    blit_rgb565(m_pBuffer, m_Pitch, m_FbW, m_FbH,
+                (const uint16_t *) src, (unsigned) pitch, width, height, scale);
 }

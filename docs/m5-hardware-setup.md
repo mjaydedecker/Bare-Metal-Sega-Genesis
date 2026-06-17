@@ -4,17 +4,22 @@
 - `kernel7.img` (the M5 build)
 - Firmware: `bootcode.bin`, `start.elf`, `fixup.dat`
 - `GAME.MD` — a test Genesis ROM
-- `config.txt` — see below
+- `config.txt` — optional (see below)
 
-## config.txt — force a 4:3 HDMI mode
-The kernel renders a fixed 320x240 (4:3) surface; the firmware scales it to the
-HDMI signal. Force a 4:3 signal so the TV pillarboxes it (tune to your panel):
+## HDMI mode — no config.txt needed
+The kernel takes the firmware's **current display mode** (the same TV-supported
+mode the M4 console used) and CPU integer-scales the Genesis frame into it,
+centered, with black bars. So no `config.txt` HDMI settings are required — if
+the card already has a working `config.txt`, leave it as-is.
 
-    hdmi_group=2
-    hdmi_mode=16     # 1024x768 (4:3). Alt: hdmi_mode=35 (1280x960).
+> Note: an earlier draft asked for a forced 4:3 mode (`hdmi_group`/`hdmi_mode`).
+> That was based on a wrong assumption (that a tiny 320x240 framebuffer would be
+> GPU-scaled to the panel). On the Pi the framebuffer's physical size *is* the
+> HDMI output mode, so a 320x240 request produced an "unsupported signal". Do
+> **not** force a 320x240 mode.
 
-Set one mode, verify on the TV, adjust if the panel rejects it. No code depends
-on the exact mode.
+The displayed image uses the Genesis native pixel aspect (unstretched), centered
+with black bars. Exact 4:3 / pixel-aspect correction is a later enhancement.
 
 ## Serial logging
 Logging now goes to the serial UART at 115200 (GPIO14/15). Attach a USB-TTL

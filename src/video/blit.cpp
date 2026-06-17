@@ -11,21 +11,41 @@
 void blit_rgb565(uint16_t *dst, unsigned dst_pitch_bytes,
                  unsigned dst_w, unsigned dst_h,
                  const uint16_t *src, unsigned src_pitch_bytes,
-                 unsigned w, unsigned h)
+                 unsigned w, unsigned h, unsigned scale)
 {
-    if (dst == 0 || src == 0) return;          // dupe frame / no surface
-    if (w > dst_w) w = dst_w;                   // clamp defensively
-    if (h > dst_h) h = dst_h;
+    if (dst == 0 || src == 0 || scale == 0) return;  // dupe frame / no surface
 
-    unsigned off_x      = (dst_w - w) / 2;
-    unsigned off_y      = (dst_h - h) / 2;
-    unsigned dst_stride = dst_pitch_bytes / 2;  // in pixels
+    // Reduce the scale factor until the scaled image fits the surface.
+    while (scale > 1 && (w * scale > dst_w || h * scale > dst_h))
+    {
+        scale--;
+    }
+
+    // Clamp source extent so the scaled image fits at the (reduced) scale.
+    if (w * scale > dst_w) w = dst_w / scale;
+    if (h * scale > dst_h) h = dst_h / scale;
+
+    unsigned out_w      = w * scale;
+    unsigned out_h      = h * scale;
+    unsigned off_x      = (dst_w - out_w) / 2;
+    unsigned off_y      = (dst_h - out_h) / 2;
+    unsigned dst_stride = dst_pitch_bytes / 2;       // in pixels
     unsigned src_stride = src_pitch_bytes / 2;
 
-    for (unsigned y = 0; y < h; y++)
+    for (unsigned sy = 0; sy < h; sy++)
     {
-        memcpy(dst + (off_y + y) * dst_stride + off_x,
-               src + y * src_stride,
-               (size_t) w * 2);
+        const uint16_t *srow = src + sy * src_stride;
+        for (unsigned dy = 0; dy < scale; dy++)
+        {
+            uint16_t *drow = dst + (off_y + sy * scale + dy) * dst_stride + off_x;
+            for (unsigned sx = 0; sx < w; sx++)
+            {
+                uint16_t px = srow[sx];
+                for (unsigned dx = 0; dx < scale; dx++)
+                {
+                    *drow++ = px;
+                }
+            }
+        }
     }
 }
