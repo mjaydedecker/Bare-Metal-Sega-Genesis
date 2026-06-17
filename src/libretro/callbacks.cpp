@@ -10,8 +10,10 @@
 
 #include "callbacks.h"
 #include "../video/display.h"
+#include "../audio/audio_driver.h"
 
 Display *g_display = 0;
+AudioDriver *g_audio = 0;
 
 void video_refresh_cb(const void *data, unsigned width, unsigned height,
                       size_t pitch)
@@ -24,12 +26,19 @@ void video_refresh_cb(const void *data, unsigned width, unsigned height,
 
 void audio_sample_cb(int16_t left, int16_t right)
 {
-    (void)left; (void)right;
+    if (g_audio != 0)
+    {
+        int16_t frame[2] = { left, right };
+        g_audio->Write(frame, 1);
+    }
 }
 
 size_t audio_batch_cb(const int16_t *data, size_t frames)
 {
-    (void)data;
+    if (g_audio != 0)
+    {
+        g_audio->Write(data, (unsigned) frames);
+    }
     return frames;
 }
 
