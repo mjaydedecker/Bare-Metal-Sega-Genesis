@@ -52,7 +52,7 @@ boolean CKernel::Initialize (void)
 		CDevice *pTarget = m_DeviceNameService.GetDevice (m_Options.GetLogDevice (), FALSE);
 		if (pTarget == 0)
 		{
-			pTarget = &m_Screen;
+			pTarget = &m_Serial;   // M5: framebuffer is dedicated to video
 		}
 
 		bOK = m_Logger.Initialize (pTarget);
@@ -78,6 +78,16 @@ boolean CKernel::Initialize (void)
 	{
 		m_Logger.Write (FromKernel, LogNotice, "Initialising SD card");
 		bOK = m_EMMC.Initialize ();
+	}
+
+	if (bOK)
+	{
+		m_Logger.Write (FromKernel, LogNotice, "Initialising video");
+		bOK = m_Display.Initialize ();
+		if (!bOK)
+		{
+			m_Logger.Write (FromKernel, LogPanic, "Display init failed");
+		}
 	}
 
 	return bOK;
@@ -153,14 +163,41 @@ TShutdownMode CKernel::Run (void)
 		avInfo.geometry.base_height,
 		(double) avInfo.timing.fps);
 
-	m_Logger.Write (FromKernel, LogNotice, "M4 complete — core loaded.");
+	m_Logger.Write (FromKernel, LogNotice, "M5: entering frame loop");
 
-	// Heartbeat until M5 (video) is implemented.
-	for (unsigned i = 0; ; i++)
+	// Point the video callback at our Display.
+	g_display = &m_Display;
+
+	// Pace to the core's reported frame rate. Approximate for M5; M6 audio
+	// will become the real sync source.
+	double fps = (double) avInfo.timing.fps;
+	if (fps < 1.0) fps = 60.0;
+	u64 period_us = (u64) (1000000.0 / fps);
+
+	u64 next = CTimer::GetClockTicks64 ();
+	unsigned frame = 0;
+	boolean ledOn = FALSE;
+	for (;;)
 	{
-		m_Timer.SimpleMsDelay (1000);
-		if (i % 2 == 0) m_ActLED.On ();
-		else             m_ActLED.Off ();
+		retro_run ();                       // -> video_refresh_cb -> Blit
+
+		next += period_us;
+		u64 now = CTimer::GetClockTicks64 ();
+		if (next < now)                     // running behind: drop the slack
+		{
+			next = now;
+		}
+		while (CTimer::GetClockTicks64 () < next)
+		{
+			// spin to the frame deadline
+		}
+
+		if (++frame >= 30)                  // ~0.5s liveness blink
+		{
+			frame = 0;
+			ledOn = !ledOn;
+			if (ledOn) m_ActLED.On (); else m_ActLED.Off ();
+		}
 	}
 
 	return ShutdownHalt;

@@ -25,6 +25,7 @@
 #include "storage/sdcard.h"
 #include "libretro/environment.h"
 #include "libretro/callbacks.h"
+#include "video/display.h"
 #include <libretro.h>
 
 enum TShutdownMode
@@ -58,6 +59,7 @@ private:
 	CEMMCDevice        m_EMMC;       // SD card block device
 	CFATFileSystem     m_FileSystem; // FAT filesystem over EMMC
 	CPWMSoundDevice    m_Sound;      // PWM audio output (M6)
+	Display            m_Display;    // HDMI video output (M5)
 
 	// Storage wrapper — declared after m_FileSystem and m_DeviceNameService.
 	SDCard             m_SDCard;
