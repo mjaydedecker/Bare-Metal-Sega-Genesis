@@ -11,6 +11,11 @@
 
 #include <libretro.h>
 
+// Set by the kernel before the frame loop; video_refresh_cb forwards
+// frames here. Forward-declared to avoid pulling Circle into this header.
+class Display;
+extern Display *g_display;
+
 // These four callbacks are passed to retro_set_video_refresh(),
 // retro_set_audio_sample(), retro_set_audio_sample_batch(),
 // retro_set_input_poll(), and retro_set_input_state() respectively.

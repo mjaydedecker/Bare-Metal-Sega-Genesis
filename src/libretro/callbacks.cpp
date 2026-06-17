@@ -9,11 +9,17 @@
 //
 
 #include "callbacks.h"
+#include "../video/display.h"
+
+Display *g_display = 0;
 
 void video_refresh_cb(const void *data, unsigned width, unsigned height,
                       size_t pitch)
 {
-    (void)data; (void)width; (void)height; (void)pitch;
+    if (g_display != 0)
+    {
+        g_display->Blit(data, width, height, pitch);
+    }
 }
 
 void audio_sample_cb(int16_t left, int16_t right)
