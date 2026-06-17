@@ -9,6 +9,7 @@
 #define _kernel_h
 
 #include <circle/actled.h>
+#include <circle/cputhrottle.h>
 #include <circle/koptions.h>
 #include <circle/devicenameservice.h>
 #include <circle/screen.h>
@@ -48,6 +49,9 @@ private:
 	// Initialisation order matters — do not reorder these members.
 	CActLED            m_ActLED;
 	CKernelOptions     m_Options;
+	// CPU clock: raise to maximum early, but AFTER m_Options — CCPUThrottle's
+	// constructor calls CKernelOptions::Get(), which must already exist.
+	CCPUThrottle       m_CPUThrottle;
 	CDeviceNameService m_DeviceNameService;
 	CScreenDevice      m_Screen;
 	CSerialDevice      m_Serial;
