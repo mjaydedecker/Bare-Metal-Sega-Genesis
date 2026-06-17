@@ -19,7 +19,7 @@ CKernel::CKernel (void)
 	m_Logger (m_Options.GetLogLevel (), &m_Timer),
 	m_USBHCI (&m_Interrupt, &m_Timer),
 	m_EMMC (&m_Interrupt, &m_Timer, &m_ActLED),
-	m_Sound (&m_Interrupt),
+	m_Audio (&m_Interrupt),
 	m_SDCard (m_FileSystem, m_DeviceNameService),
 	m_pROMBuffer (0),
 	m_nROMSize (0)
@@ -163,33 +163,61 @@ TShutdownMode CKernel::Run (void)
 		avInfo.geometry.base_height,
 		(double) avInfo.timing.fps);
 
-	m_Logger.Write (FromKernel, LogNotice, "M5: entering frame loop");
+	m_Logger.Write (FromKernel, LogNotice, "M6: entering frame loop");
+
+	// Pacing parameters from the core's A/V info.
+	unsigned sampleRate     = (unsigned) avInfo.timing.sample_rate;
+	double   fps            = (double) avInfo.timing.fps;
+	if (fps < 1.0) fps = 60.0;
+	unsigned framesPerVideo = sampleRate ? (unsigned) (sampleRate / fps) : 0;
+	unsigned target         = framesPerVideo * 2;   // ~2 video frames of latency
+
+	// Initialise HDMI audio. On failure, fall back to video-only timer pacing.
+	boolean audioOK = (sampleRate > 0) && m_Audio.Initialize (sampleRate);
+	if (audioOK)
+	{
+		g_audio = &m_Audio;
+		m_Logger.Write (FromKernel, LogNotice,
+			"Audio: HDMI %u Hz, target %u frames", sampleRate, target);
+	}
+	else
+	{
+		g_audio = 0;
+		m_Logger.Write (FromKernel, LogWarning,
+			"Audio disabled; using timer pacing");
+	}
 
 	// Point the video callback at our Display.
 	g_display = &m_Display;
 
-	// Pace to the core's reported frame rate. Approximate for M5; M6 audio
-	// will become the real sync source.
-	double fps = (double) avInfo.timing.fps;
-	if (fps < 1.0) fps = 60.0;
-	u64 period_us = (u64) (1000000.0 / fps);
-
-	u64 next = CTimer::GetClockTicks64 ();
-	unsigned frame = 0;
-	boolean ledOn = FALSE;
+	u64      period_us = (u64) (1000000.0 / fps);   // timer-fallback period
+	u64      next      = CTimer::GetClockTicks64 ();
+	unsigned frame     = 0;
+	boolean  ledOn     = FALSE;
 	for (;;)
 	{
-		retro_run ();                       // -> video_refresh_cb -> Blit
+		retro_run ();                       // -> video_refresh_cb / audio_*_cb
 
-		next += period_us;
-		u64 now = CTimer::GetClockTicks64 ();
-		if (next < now)                     // running behind: drop the slack
+		if (audioOK)
 		{
-			next = now;
+			// Pace to the audio clock: wait until the queue drains.
+			while (m_Audio.QueuedFrames () > target)
+			{
+				// spin until the hardware has played a frame's worth
+			}
 		}
-		while (CTimer::GetClockTicks64 () < next)
+		else
 		{
-			// spin to the frame deadline
+			next += period_us;
+			u64 now = CTimer::GetClockTicks64 ();
+			if (next < now)                 // running behind: drop the slack
+			{
+				next = now;
+			}
+			while (CTimer::GetClockTicks64 () < next)
+			{
+				// spin to the frame deadline
+			}
 		}
 
 		if (++frame >= 30)                  // ~0.5s liveness blink

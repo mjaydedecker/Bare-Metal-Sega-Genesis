@@ -18,7 +18,7 @@
 #include <circle/timer.h>
 #include <circle/logger.h>
 #include <circle/usb/usbhcidevice.h>
-#include <circle/sound/pwmsounddevice.h>
+#include "audio/audio_driver.h"
 #include <SDCard/emmc.h>
 #include <circle/fs/fat/fatfs.h>
 #include <circle/types.h>
@@ -58,7 +58,7 @@ private:
 	CUSBHCIDevice      m_USBHCI;     // gamepad input (M7)
 	CEMMCDevice        m_EMMC;       // SD card block device
 	CFATFileSystem     m_FileSystem; // FAT filesystem over EMMC
-	CPWMSoundDevice    m_Sound;      // PWM audio output (M6)
+	AudioDriver        m_Audio;      // HDMI audio output (M6)
 	Display            m_Display;    // HDMI video output (M5)
 
 	// Storage wrapper — declared after m_FileSystem and m_DeviceNameService.
