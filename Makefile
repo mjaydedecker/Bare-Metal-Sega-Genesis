@@ -58,32 +58,43 @@ include $(CIRCLEHOME)/Rules.mk
 # Circle library build targets
 # Each sub-library is built on demand when first needed by the linker.
 # Pass the same AARCH / RASPPI / PREFIX so all objects match the target ABI.
+#
+# The KERNEL_MAX_SIZE override (see line ~22) MUST reach Circle's own
+# startup/mem code, not just our app objects — otherwise Circle places the
+# kernel stack at the 2 MB default (0x228000), inside our ~18 MB image, and
+# the kernel self-corrupts before main().  A command-line DEFINE= would
+# clobber Circle's own `DEFINE +=` in Rules.mk, so we inject it through
+# Circle's Config.mk instead, which Rules.mk includes before those appends.
+# Every Circle sub-library depends on that generated Config.mk.
 # ---------------------------------------------------------------------------
 
-CIRCLE_MAKE = $(MAKE) -C $(@D) AARCH=$(AARCH) RASPPI=$(RASPPI) PREFIX=$(PREFIX) DEFINE="-DKERNEL_MAX_SIZE=0x1400000"
+$(CIRCLEHOME)/Config.mk:
+	echo 'DEFINE += -DKERNEL_MAX_SIZE=0x1400000' > $@
+
+CIRCLE_MAKE = $(MAKE) -C $(@D) AARCH=$(AARCH) RASPPI=$(RASPPI) PREFIX=$(PREFIX)
 
 libs/libgenesis.a:
 	$(MAKE) -f libs/genesis.mk PREFIX=$(PREFIX)
 
-$(CIRCLEHOME)/lib/libcircle.a:
-	$(MAKE) -C $(CIRCLEHOME)/lib AARCH=$(AARCH) RASPPI=$(RASPPI) PREFIX=$(PREFIX)
+$(CIRCLEHOME)/lib/libcircle.a: $(CIRCLEHOME)/Config.mk
+	$(CIRCLE_MAKE)
 
-$(CIRCLEHOME)/lib/usb/libusb.a:
-	$(MAKE) -C $(CIRCLEHOME)/lib/usb AARCH=$(AARCH) RASPPI=$(RASPPI) PREFIX=$(PREFIX)
+$(CIRCLEHOME)/lib/usb/libusb.a: $(CIRCLEHOME)/Config.mk
+	$(CIRCLE_MAKE)
 
-$(CIRCLEHOME)/lib/input/libinput.a:
-	$(MAKE) -C $(CIRCLEHOME)/lib/input AARCH=$(AARCH) RASPPI=$(RASPPI) PREFIX=$(PREFIX)
+$(CIRCLEHOME)/lib/input/libinput.a: $(CIRCLEHOME)/Config.mk
+	$(CIRCLE_MAKE)
 
-$(CIRCLEHOME)/lib/sound/libsound.a:
-	$(MAKE) -C $(CIRCLEHOME)/lib/sound AARCH=$(AARCH) RASPPI=$(RASPPI) PREFIX=$(PREFIX)
+$(CIRCLEHOME)/lib/sound/libsound.a: $(CIRCLEHOME)/Config.mk
+	$(CIRCLE_MAKE)
 
-$(CIRCLEHOME)/lib/fs/fat/libfatfs.a:
-	$(MAKE) -C $(CIRCLEHOME)/lib/fs/fat AARCH=$(AARCH) RASPPI=$(RASPPI) PREFIX=$(PREFIX)
+$(CIRCLEHOME)/lib/fs/fat/libfatfs.a: $(CIRCLEHOME)/Config.mk
+	$(CIRCLE_MAKE)
 
-$(CIRCLEHOME)/lib/fs/libfs.a:
-	$(MAKE) -C $(CIRCLEHOME)/lib/fs AARCH=$(AARCH) RASPPI=$(RASPPI) PREFIX=$(PREFIX)
+$(CIRCLEHOME)/lib/fs/libfs.a: $(CIRCLEHOME)/Config.mk
+	$(CIRCLE_MAKE)
 
-$(CIRCLEHOME)/addon/SDCard/libsdcard.a:
-	$(MAKE) -C $(CIRCLEHOME)/addon/SDCard AARCH=$(AARCH) RASPPI=$(RASPPI) PREFIX=$(PREFIX)
+$(CIRCLEHOME)/addon/SDCard/libsdcard.a: $(CIRCLEHOME)/Config.mk
+	$(CIRCLE_MAKE)
 
 -include $(DEPS)
