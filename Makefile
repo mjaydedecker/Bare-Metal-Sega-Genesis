@@ -29,7 +29,9 @@ OBJS = src/main.o \
        src/libretro/callbacks.o \
        src/runtime_stubs.o \
        src/cstdlib_stubs.o \
-       src/stdlib_stubs.o
+       src/stdlib_stubs.o \
+       src/video/blit.o \
+       src/video/display.o
 
 # Extra include path so src/kernel.cpp and src/libretro/*.cpp can find
 # libretro.h without polluting the genesis-core compile flags.
@@ -50,6 +52,7 @@ LIBS = libs/libgenesis.a \
 
 EXTRACLEAN = src/*.o src/*.d src/storage/*.o src/storage/*.d \
              src/libretro/*.o src/libretro/*.d \
+             src/video/*.o src/video/*.d \
              build/genesis libs/libgenesis.a
 
 include $(CIRCLEHOME)/Rules.mk
