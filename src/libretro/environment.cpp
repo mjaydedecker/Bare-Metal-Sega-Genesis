@@ -110,6 +110,21 @@ bool environment_cb(unsigned cmd, void *data)
             return true;
         }
 
+        case RETRO_ENVIRONMENT_GET_VARIABLE:
+        {
+            // Disable the "Wide" core's widescreen extra columns (default 10),
+            // which render 400px-wide with side-fill artifacts and cost ~25%
+            // extra per-frame work. "0" -> native 320-wide rendering.
+            retro_variable *var = reinterpret_cast<retro_variable *>(data);
+            if (var != 0 && var->key != 0 &&
+                strcmp(var->key, "genesis_plus_gx_wide_h40_extra_columns") == 0)
+            {
+                var->value = "0";
+                return true;
+            }
+            return false;   // other options: core keeps its defaults
+        }
+
         default:
             return false;
     }
