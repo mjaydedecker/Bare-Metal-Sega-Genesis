@@ -169,7 +169,7 @@ TShutdownMode CKernel::Run (void)
 	// Pacing parameters from the core's A/V info.
 	unsigned sampleRate     = (unsigned) avInfo.timing.sample_rate;
 	double   fps            = (double) avInfo.timing.fps;
-	if (fps < 1.0) fps = 60.0;
+	if (fps < 1.0 || fps > 61.0) fps = 60.0;   // clamp to a sane range
 	unsigned framesPerVideo = sampleRate ? (unsigned) (sampleRate / fps) : 0;
 	unsigned target         = framesPerVideo * 2;   // ~2 video frames of latency
 
@@ -191,7 +191,7 @@ TShutdownMode CKernel::Run (void)
 	// Point the video callback at our Display.
 	g_display = &m_Display;
 
-	u64      period_us = (u64) (1000000.0 / fps);   // timer-fallback period
+	u64      period_us = (u64) (1000000.0 / fps);   // per-frame period
 	u64      next      = CTimer::GetClockTicks64 ();
 	unsigned frame     = 0;
 	boolean  ledOn     = FALSE;
@@ -199,25 +199,30 @@ TShutdownMode CKernel::Run (void)
 	{
 		retro_run ();                       // -> video_refresh_cb / audio_*_cb
 
+		// Pace to the core's frame rate via the timer. The core runs far
+		// faster than realtime (~7-8 ms/frame), so this gives smooth full
+		// speed. (Pacing on the audio queue instead throttled the core.)
+		next += period_us;
+		u64 now = CTimer::GetClockTicks64 ();
+		if (next < now)                     // running behind: drop the slack
+		{
+			next = now;
+		}
+		while (CTimer::GetClockTicks64 () < next)
+		{
+			// spin to the frame deadline
+		}
+
+		// Anti-drift / overflow guard: the timer and the audio clock differ
+		// slightly, so the queue slowly creeps. If it climbs past a high
+		// watermark, hold until it drains -- this locks the long-term rate to
+		// the audio clock without throttling the normal cadence. No-op if
+		// audio init failed (video-only).
 		if (audioOK)
 		{
-			// Pace to the audio clock: wait until the queue drains.
-			while (m_Audio.QueuedFrames () > target)
+			while (m_Audio.QueuedFrames () > target + framesPerVideo)
 			{
-				// spin until the hardware has played a frame's worth
-			}
-		}
-		else
-		{
-			next += period_us;
-			u64 now = CTimer::GetClockTicks64 ();
-			if (next < now)                 // running behind: drop the slack
-			{
-				next = now;
-			}
-			while (CTimer::GetClockTicks64 () < next)
-			{
-				// spin to the frame deadline
+				// drain toward the setpoint, then resume
 			}
 		}
 
