@@ -27,6 +27,7 @@
 #include "libretro/environment.h"
 #include "libretro/callbacks.h"
 #include "video/display.h"
+#include "input/gamepad.h"
 #include <libretro.h>
 
 enum TShutdownMode
@@ -64,6 +65,7 @@ private:
 	CFATFileSystem     m_FileSystem; // FAT filesystem over EMMC
 	AudioDriver        m_Audio;      // HDMI audio output (M6)
 	Display            m_Display;    // HDMI video output (M5)
+	Gamepad            m_Gamepad;    // USB controller input (M7)
 
 	// Storage wrapper — declared after m_FileSystem and m_DeviceNameService.
 	SDCard             m_SDCard;

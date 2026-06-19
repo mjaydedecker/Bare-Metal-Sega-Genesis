@@ -21,6 +21,7 @@ CKernel::CKernel (void)
 	m_USBHCI (&m_Interrupt, &m_Timer),
 	m_EMMC (&m_Interrupt, &m_Timer, &m_ActLED),
 	m_Audio (&m_Interrupt),
+	m_Gamepad (&m_DeviceNameService),
 	m_SDCard (m_FileSystem, m_DeviceNameService),
 	m_pROMBuffer (0),
 	m_nROMSize (0)
@@ -88,6 +89,16 @@ boolean CKernel::Initialize (void)
 		if (!bOK)
 		{
 			m_Logger.Write (FromKernel, LogPanic, "Display init failed");
+		}
+	}
+
+	if (bOK)
+	{
+		m_Logger.Write (FromKernel, LogNotice, "Initialising input");
+		if (!m_Gamepad.Initialize ())
+		{
+			// Not fatal: the game still runs without a controller.
+			m_Logger.Write (FromKernel, LogNotice, "No USB gamepad found");
 		}
 	}
 
@@ -187,6 +198,13 @@ TShutdownMode CKernel::Run (void)
 		m_Logger.Write (FromKernel, LogWarning,
 			"Audio disabled; using timer pacing");
 	}
+
+	// Configure port 0 as a 6-button Genesis pad (port 1 unused), and point
+	// the input callbacks at our gamepad.
+	#define RETRO_DEVICE_MDPAD_6B RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_JOYPAD, 1)
+	retro_set_controller_port_device (0, RETRO_DEVICE_MDPAD_6B);
+	retro_set_controller_port_device (1, RETRO_DEVICE_NONE);
+	g_gamepad = &m_Gamepad;
 
 	// Point the video callback at our Display.
 	g_display = &m_Display;
