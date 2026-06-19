@@ -32,7 +32,9 @@ OBJS = src/main.o \
        src/stdlib_stubs.o \
        src/video/blit.o \
        src/video/display.o \
-       src/audio/audio_driver.o
+       src/audio/audio_driver.o \
+       src/input/joypad_map.o \
+       src/input/gamepad.o
 
 # Extra include path so src/kernel.cpp and src/libretro/*.cpp can find
 # libretro.h without polluting the genesis-core compile flags.
@@ -55,6 +57,7 @@ EXTRACLEAN = src/*.o src/*.d src/storage/*.o src/storage/*.d \
              src/libretro/*.o src/libretro/*.d \
              src/video/*.o src/video/*.d \
              src/audio/*.o src/audio/*.d \
+             src/input/*.o src/input/*.d \
              build/genesis libs/libgenesis.a
 
 include $(CIRCLEHOME)/Rules.mk
