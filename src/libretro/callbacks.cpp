@@ -11,9 +11,12 @@
 #include "callbacks.h"
 #include "../video/display.h"
 #include "../audio/audio_driver.h"
+#include "../input/gamepad.h"
+#include "../input/joypad_map.h"
 
 Display *g_display = 0;
 AudioDriver *g_audio = 0;
+Gamepad *g_gamepad = 0;
 
 void video_refresh_cb(const void *data, unsigned width, unsigned height,
                       size_t pitch)
@@ -44,11 +47,19 @@ size_t audio_batch_cb(const int16_t *data, size_t frames)
 
 void input_poll_cb(void)
 {
+    if (g_gamepad != 0)
+    {
+        g_gamepad->Poll();
+    }
 }
 
 int16_t input_state_cb(unsigned port, unsigned device, unsigned index,
                        unsigned id)
 {
-    (void)port; (void)device; (void)index; (void)id;
-    return 0;
+    (void)index;
+    if (port != 0 || device != RETRO_DEVICE_JOYPAD || g_gamepad == 0)
+    {
+        return 0;
+    }
+    return joypad_state(g_gamepad->Buttons(), id);
 }
