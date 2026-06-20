@@ -33,6 +33,15 @@ public:
     // Read an entire file into a new[] buffer. Caller owns *ppBuffer.
     bool ReadFile(const char *path, u8 **ppBuffer, size_t *pSize);
 
+    // Write an entire buffer to a file, creating/overwriting it.
+    bool WriteFile(const char *path, const u8 *data, size_t size);
+
+    // True if a file or directory exists at path.
+    bool Exists(const char *path);
+
+    // Create a directory (success if it already exists).
+    bool MakeDir(const char *path);
+
 private:
     FATFS m_FS;
     bool  m_bMounted;

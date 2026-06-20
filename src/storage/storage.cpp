@@ -134,3 +134,36 @@ bool Storage::ReadFile(const char *path, u8 **ppBuffer, size_t *pSize)
     *pSize    = size;
     return true;
 }
+
+bool Storage::WriteFile(const char *path, const u8 *data, size_t size)
+{
+    FIL file;
+    if (f_open(&file, path, FA_WRITE | FA_CREATE_ALWAYS) != FR_OK)
+    {
+        CLogger::Get()->Write(FromStorage, LogError, "Cannot create: %s", path);
+        return false;
+    }
+
+    UINT written = 0;
+    FRESULT r = f_write(&file, data, (UINT) size, &written);
+    f_close(&file);
+
+    if (r != FR_OK || written != size)
+    {
+        CLogger::Get()->Write(FromStorage, LogError, "Write error: %s", path);
+        return false;
+    }
+    return true;
+}
+
+bool Storage::Exists(const char *path)
+{
+    FILINFO fno;
+    return f_stat(path, &fno) == FR_OK;
+}
+
+bool Storage::MakeDir(const char *path)
+{
+    FRESULT r = f_mkdir(path);
+    return r == FR_OK || r == FR_EXIST;
+}
