@@ -20,6 +20,7 @@ CKernel::CKernel (void)
 	m_Gamepad (&m_DeviceNameService),
 	m_Storage (),
 	m_SaveState (&m_Storage),
+	m_Sram (&m_Storage),
 	m_Canvas (&m_Display),
 	m_RomMenu (&m_Canvas, &m_Gamepad, &m_Storage, &m_USBHCI),
 	m_PauseMenu (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_SaveState),
@@ -193,6 +194,8 @@ TShutdownMode CKernel::Run (void)
 		retro_set_controller_port_device (1, RETRO_DEVICE_NONE);
 
 		m_SaveState.SetGame (romPath);   // save/load target for this game
+		m_Sram.SetGame (romPath);
+		m_Sram.Load ();                  // restore battery SRAM if present
 
 		// --- Play ---
 		u64      next      = CTimer::GetClockTicks64 ();
@@ -229,6 +232,7 @@ TShutdownMode CKernel::Run (void)
 			}
 
 			retro_run ();
+			m_Sram.Tick ();              // periodic dirty-checked SRAM auto-save
 
 			next += period_us;
 			u64 t = CTimer::GetClockTicks64 ();
@@ -249,6 +253,7 @@ TShutdownMode CKernel::Run (void)
 		}
 
 		// --- Unload and return to the browser ---
+		m_Sram.Save ();                  // flush battery SRAM before unloading
 		retro_unload_game ();
 		delete[] m_pROMBuffer;
 		m_pROMBuffer = 0;

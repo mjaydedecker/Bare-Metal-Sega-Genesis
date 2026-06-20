@@ -29,6 +29,7 @@
 #include "video/display.h"
 #include "ui/text_canvas.h"
 #include "menu/save_state.h"
+#include "menu/sram.h"
 #include "menu/pause_menu.h"
 #include "input/gamepad.h"
 #include <libretro.h>
@@ -70,6 +71,7 @@ private:
 	Gamepad            m_Gamepad;    // USB controller input (M7)
 	Storage            m_Storage;    // SD card filesystem (ChaN FatFS)
 	SaveState          m_SaveState;  // save/load core state to SD slots
+	Sram               m_Sram;       // battery SRAM persistence
 	TextCanvas         m_Canvas;     // on-screen UI on the game framebuffer
 	RomMenu            m_RomMenu;    // on-screen ROM browser
 	PauseMenu          m_PauseMenu;  // in-emulation overlay menu
