@@ -8,6 +8,14 @@
 *.map
 *.hex
 
+# Compiled host test binaries (test/test_*.cpp are the sources; the built
+# executables share the name without an extension)
+/test/test_blit
+/test/test_joypad
+/test/test_rom_filter
+/test/test_menu_state
+/test/test_menu_path
+
 # Editor
 *.swp
 *~
