@@ -18,7 +18,7 @@ CKernel::CKernel (void)
 	m_Screen (m_Options.GetWidth (), m_Options.GetHeight ()),
 	m_Timer (&m_Interrupt),
 	m_Logger (m_Options.GetLogLevel (), &m_Timer),
-	m_USBHCI (&m_Interrupt, &m_Timer),
+	m_USBHCI (&m_Interrupt, &m_Timer, TRUE),   // TRUE: USB plug-and-play (gamepad)
 	m_EMMC (&m_Interrupt, &m_Timer, &m_ActLED),
 	m_Audio (&m_Interrupt),
 	m_Gamepad (&m_DeviceNameService),
@@ -94,12 +94,9 @@ boolean CKernel::Initialize (void)
 
 	if (bOK)
 	{
-		m_Logger.Write (FromKernel, LogNotice, "Initialising input");
-		if (!m_Gamepad.Initialize ())
-		{
-			// Not fatal: the game still runs without a controller.
-			m_Logger.Write (FromKernel, LogNotice, "No USB gamepad found");
-		}
+		// USB gamepads enumerate asynchronously via plug-and-play; the pad is
+		// acquired later in the frame loop (UpdatePlugAndPlay + Gamepad::Poll).
+		m_Logger.Write (FromKernel, LogNotice, "Input: USB gamepad (plug-and-play)");
 	}
 
 	return bOK;
@@ -215,6 +212,10 @@ TShutdownMode CKernel::Run (void)
 	boolean  ledOn     = FALSE;
 	for (;;)
 	{
+		// Pump USB plug-and-play so a connected gamepad enumerates and
+		// Gamepad::Poll() can acquire it (it appears shortly after boot).
+		m_USBHCI.UpdatePlugAndPlay ();
+
 		retro_run ();                       // -> video_refresh_cb / audio_*_cb
 
 		// Pace to the core's frame rate via the timer. The core runs far

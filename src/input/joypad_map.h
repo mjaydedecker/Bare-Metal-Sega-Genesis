@@ -13,14 +13,22 @@
 #include <stdint.h>
 #include <libretro.h>   // RETRO_DEVICE_ID_JOYPAD_*
 
-#define GP_Y      (1u << 7)
-#define GP_B      (1u << 8)
-#define GP_A      (1u << 9)
-#define GP_X      (1u << 10)
-#define GP_LB     (1u << 5)
-#define GP_RB     (1u << 6)
-#define GP_SELECT (1u << 11)
-#define GP_START  (1u << 14)
+// Face/shoulder buttons: RAW HID button bits as reported by Circle's generic
+// gamepad driver (these are this controller's layout; observed on an 8BitDo).
+// A generic auto-mapping is a deferred enhancement.
+#define GP_A      (1u << 0)    // 0x001
+#define GP_B      (1u << 1)    // 0x002
+#define GP_X      (1u << 2)    // 0x004
+#define GP_Y      (1u << 3)    // 0x008
+#define GP_LB     (1u << 4)    // 0x010
+#define GP_RB     (1u << 5)    // 0x020
+#define GP_SELECT (1u << 8)    // 0x100
+#define GP_START  (1u << 9)    // 0x200
+
+// D-pad direction bits, synthesized from the HID hat in gamepad.cpp. Chosen at
+// bits 15..18 (== Circle's normalized GamePadButtonUp.. ) so they (a) don't
+// collide with the raw button bits above and (b) also match controllers handled
+// by Circle's specific drivers.
 #define GP_UP     (1u << 15)
 #define GP_RIGHT  (1u << 16)
 #define GP_DOWN   (1u << 17)

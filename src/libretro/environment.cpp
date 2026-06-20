@@ -125,6 +125,10 @@ bool environment_cb(unsigned cmd, void *data)
             return false;   // other options: core keeps its defaults
         }
 
+        case RETRO_ENVIRONMENT_GET_INPUT_BITMASKS:
+            // We answer the RETRO_DEVICE_ID_JOYPAD_MASK query in input_state_cb.
+            return true;
+
         default:
             return false;
     }

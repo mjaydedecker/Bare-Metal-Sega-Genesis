@@ -33,6 +33,16 @@ int main(void)
     assert(joypad_state(0,          RETRO_DEVICE_ID_JOYPAD_A) == 0);
     assert(joypad_state(0xFFFFFFFF, 999u)                     == 0);
 
+    // JOYPAD_MASK returns a bitmask of pressed button ids (this is how the
+    // core actually reads the pad).
+    int16_t m = joypad_state(GP_A | GP_START | GP_DOWN, RETRO_DEVICE_ID_JOYPAD_MASK);
+    assert(m & (1 << RETRO_DEVICE_ID_JOYPAD_A));
+    assert(m & (1 << RETRO_DEVICE_ID_JOYPAD_START));
+    assert(m & (1 << RETRO_DEVICE_ID_JOYPAD_DOWN));
+    assert(!(m & (1 << RETRO_DEVICE_ID_JOYPAD_B)));
+    assert(!(m & (1 << RETRO_DEVICE_ID_JOYPAD_UP)));
+    assert(joypad_state(0, RETRO_DEVICE_ID_JOYPAD_MASK) == 0);
+
     printf("All joypad tests passed\n");
     return 0;
 }
