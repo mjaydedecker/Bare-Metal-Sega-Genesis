@@ -6,6 +6,7 @@
 
 #include "kernel.h"
 #include "input/joypad_map.h"   // GP_START, GP_SELECT bits for the menu hotkey
+#include "audio/audio_util.h"   // classify_queue, AQ_* for metrics
 
 static const char FromKernel[] = "kernel";
 
@@ -25,7 +26,7 @@ CKernel::CKernel (void)
 	m_RomMenu (&m_Canvas, &m_Gamepad, &m_Storage, &m_USBHCI),
 	m_Settings (),
 	m_SettingsStore (&m_Storage),
-	m_SettingsScreen (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore, &m_Display),
+	m_SettingsScreen (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore, &m_Display, &m_Audio),
 	m_PauseMenu (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_SaveState, &m_SettingsScreen),
 	m_pROMBuffer (0),
 	m_nROMSize (0)
@@ -121,6 +122,8 @@ TShutdownMode CKernel::Run (void)
 	m_SettingsStore.Load (&m_Settings);
 	m_Display.SetScaleMode (m_Settings.scale_mode);
 	g_widescreen = m_Settings.widescreen;
+	m_Audio.SetVolume (m_Settings.volume);
+	m_Audio.SetMute (m_Settings.mute);
 
 	// libretro callbacks + core init: once for the whole session.
 	retro_set_environment (environment_cb);
@@ -208,6 +211,7 @@ TShutdownMode CKernel::Run (void)
 		// --- Play ---
 		u64      next      = CTimer::GetClockTicks64 ();
 		unsigned frame     = 0;
+		unsigned logCtr    = 0;
 		boolean  ledOn     = FALSE;
 		unsigned prevBtns  = 0;
 		boolean  toBrowser = FALSE;
@@ -249,6 +253,15 @@ TShutdownMode CKernel::Run (void)
 
 			if (audioOK)
 			{
+				// Sample the queue depth before gating, classify for metrics,
+				// then apply the high-watermark gate.
+				unsigned q = m_Audio.QueuedFrames ();
+				switch (classify_queue (q, 0, target + framesPerVideo))
+				{
+				case AQ_Underrun: m_Audio.RecordUnderrun (); break;
+				case AQ_Overrun:  m_Audio.RecordOverrun ();  break;
+				default: break;
+				}
 				while (m_Audio.QueuedFrames () > target + framesPerVideo) { }
 			}
 
@@ -257,6 +270,17 @@ TShutdownMode CKernel::Run (void)
 				frame = 0;
 				ledOn = !ledOn;
 				if (ledOn) m_ActLED.On (); else m_ActLED.Off ();
+			}
+
+			if (++logCtr >= 300)   // ~5 s at 60 fps
+			{
+				logCtr = 0;
+				if (audioOK)
+				{
+					m_Logger.Write (FromKernel, LogNotice,
+						"audio underruns=%u overruns=%u",
+						m_Audio.Underruns (), m_Audio.Overruns ());
+				}
 			}
 		}
 
