@@ -6,11 +6,23 @@
 //
 
 #include "audio_driver.h"
+#include "audio_util.h"
 #include <circle/sound/soundbasedevice.h>
 
 AudioDriver::AudioDriver(CInterruptSystem *pInterrupt)
-:   m_pInterrupt(pInterrupt), m_pDevice(0)
+:   m_pInterrupt(pInterrupt), m_pDevice(0),
+    m_Volume(100), m_Mute(false), m_Underruns(0), m_Overruns(0)
 {
+}
+
+void AudioDriver::SetVolume(unsigned volume)
+{
+    m_Volume = volume > 100 ? 100 : volume;
+}
+
+void AudioDriver::SetMute(bool mute)
+{
+    m_Mute = mute;
 }
 
 AudioDriver::~AudioDriver(void)
@@ -53,10 +65,35 @@ boolean AudioDriver::Initialize(unsigned nSampleRate)
 
 void AudioDriver::Write(const s16 *pSamples, unsigned nFrames)
 {
-    if (m_pDevice != 0 && nFrames > 0)
+    if (m_pDevice == 0 || nFrames == 0)
     {
-        // 4 bytes per signed-16 stereo frame; Write() takes a byte count.
+        return;
+    }
+
+    // Fast path: full volume, not muted -> write the core's buffer directly.
+    if (!m_Mute && m_Volume >= 100)
+    {
         m_pDevice->Write(pSamples, (size_t) nFrames * 4);
+        return;
+    }
+
+    // Scaled / muted path: stage gained samples in chunks (2 s16 per frame).
+    // Always writes nFrames (silence when muted) so queue pacing is unaffected.
+    static s16 staging[STAGE_FRAMES * 2];
+    unsigned done = 0;
+    while (done < nFrames)
+    {
+        unsigned chunk = nFrames - done;
+        if (chunk > STAGE_FRAMES) chunk = STAGE_FRAMES;
+
+        const s16 *in = pSamples + (size_t) done * 2;
+        for (unsigned i = 0; i < chunk * 2; i++)
+        {
+            staging[i] = scale_sample(in[i], m_Volume, m_Mute);
+        }
+
+        m_pDevice->Write(staging, (size_t) chunk * 4);
+        done += chunk;
     }
 }
 

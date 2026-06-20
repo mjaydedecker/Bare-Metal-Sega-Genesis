@@ -32,9 +32,26 @@ public:
 
     boolean IsReady(void) const;
 
+    // Master volume 0-100 and mute. Safe to call before Initialize() — the
+    // values are applied when Write() runs.
+    void SetVolume(unsigned volume);   // clamped to 0-100
+    void SetMute(bool mute);
+
+    // Underrun/overrun metrics (bumped by the kernel from the pacing loop).
+    void     RecordUnderrun(void) { m_Underruns++; }
+    void     RecordOverrun (void) { m_Overruns++;  }
+    unsigned Underruns(void) const { return m_Underruns; }
+    unsigned Overruns (void) const { return m_Overruns;  }
+
 private:
+    static const unsigned STAGE_FRAMES = 1024;   // gain staging chunk size
+
     CInterruptSystem     *m_pInterrupt;
     CHDMISoundBaseDevice *m_pDevice;
+    unsigned              m_Volume;     // 0-100
+    bool                  m_Mute;
+    unsigned              m_Underruns;
+    unsigned              m_Overruns;
 };
 
 #endif
