@@ -6,11 +6,12 @@ LIBRETRO_INC = ../libs/genesis-plus-gx-wide/libretro/libretro-common/include
 
 .PHONY: run clean
 
-run: test_blit test_joypad test_rom_filter test_menu_state
+run: test_blit test_joypad test_rom_filter test_menu_state test_menu_path
 	./test_blit
 	./test_joypad
 	./test_rom_filter
 	./test_menu_state
+	./test_menu_path
 
 test_blit: test_blit.cpp ../src/video/blit.cpp ../src/video/blit.h
 	$(CXX) $(CXXFLAGS) -o $@ test_blit.cpp ../src/video/blit.cpp
@@ -23,6 +24,9 @@ test_rom_filter: test_rom_filter.cpp ../src/menu/rom_filter.cpp ../src/menu/rom_
 
 test_menu_state: test_menu_state.cpp ../src/menu/menu_state.cpp ../src/menu/menu_state.h
 	$(CXX) $(CXXFLAGS) -o $@ test_menu_state.cpp ../src/menu/menu_state.cpp
+
+test_menu_path: test_menu_path.cpp ../src/menu/menu_path.cpp ../src/menu/menu_path.h
+	$(CXX) $(CXXFLAGS) -o $@ test_menu_path.cpp ../src/menu/menu_path.cpp
 
 clean:
 	rm -f test_blit test_joypad test_rom_filter test_menu_state test_menu_path
