@@ -16,6 +16,7 @@
 
 #include <circle/bcmframebuffer.h>
 #include <circle/types.h>
+#include "../settings/settings.h"   // ScaleMode
 
 class Display
 {
@@ -26,6 +27,10 @@ public:
     ~Display(void);
 
     boolean Initialize(void);
+
+    // Select integer (sharp, letterboxed) vs stretch (aspect-fill) scaling.
+    // Takes effect on the next Blit.
+    void SetScaleMode(ScaleMode mode) { m_ScaleMode = mode; }
 
     // Copy one RGB565 frame, integer-scaled and centered. pitch is the source
     // row stride in bytes.
@@ -52,6 +57,7 @@ private:
     unsigned         m_FbH;       // framebuffer height in pixels (native mode)
     unsigned         m_LastW;
     unsigned         m_LastH;
+    ScaleMode        m_ScaleMode;
 };
 
 #endif

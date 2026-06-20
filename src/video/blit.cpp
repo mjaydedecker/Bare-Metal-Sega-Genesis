@@ -66,3 +66,29 @@ void blit_rgb565(uint16_t *dst, unsigned dst_pitch_bytes,
         }
     }
 }
+
+void blit_rgb565_scaled(uint16_t *dst, unsigned dst_pitch_bytes,
+                        unsigned dst_w, unsigned dst_h,
+                        const uint16_t *src, unsigned src_pitch_bytes,
+                        unsigned w, unsigned h,
+                        unsigned out_x, unsigned out_y,
+                        unsigned out_w, unsigned out_h)
+{
+    if (dst == 0 || src == 0) return;
+    if (w == 0 || h == 0 || out_w == 0 || out_h == 0) return;
+    if (out_x + out_w > dst_w || out_y + out_h > dst_h) return;  // doesn't fit
+
+    unsigned dst_stride = dst_pitch_bytes / 2;   // pixels
+    unsigned src_stride = src_pitch_bytes / 2;
+
+    for (unsigned dy = 0; dy < out_h; dy++)
+    {
+        unsigned        sy   = dy * h / out_h;   // nearest-neighbor source row
+        const uint16_t *srow = src + sy * src_stride;
+        uint16_t       *drow = dst + (out_y + dy) * dst_stride + out_x;
+        for (unsigned dx = 0; dx < out_w; dx++)
+        {
+            drow[dx] = srow[dx * w / out_w];
+        }
+    }
+}

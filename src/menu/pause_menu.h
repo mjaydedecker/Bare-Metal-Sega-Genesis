@@ -13,13 +13,15 @@
 #include "../input/gamepad.h"
 #include "save_state.h"
 
+class SettingsScreen;
+
 enum class MenuAction { Resume, Reset, ReturnToBrowser };
 
 class PauseMenu
 {
 public:
     PauseMenu(TextCanvas *pCanvas, Gamepad *pGamepad, CUSBHCIDevice *pUSBHCI,
-              SaveState *pSaveState);
+              SaveState *pSaveState, SettingsScreen *pSettingsScreen);
     MenuAction Run(void);     // draws over the last frame; returns on confirm
 
 private:
@@ -31,6 +33,7 @@ private:
     Gamepad       *m_pGamepad;
     CUSBHCIDevice *m_pUSBHCI;
     SaveState     *m_pSaveState;
+    SettingsScreen *m_pSettingsScreen;
 };
 
 #endif

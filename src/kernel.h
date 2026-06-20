@@ -30,6 +30,9 @@
 #include "ui/text_canvas.h"
 #include "menu/save_state.h"
 #include "menu/sram.h"
+#include "settings/settings.h"
+#include "settings/settings_store.h"
+#include "menu/settings_screen.h"
 #include "menu/pause_menu.h"
 #include "input/gamepad.h"
 #include <libretro.h>
@@ -74,6 +77,9 @@ private:
 	Sram               m_Sram;       // battery SRAM persistence
 	TextCanvas         m_Canvas;     // on-screen UI on the game framebuffer
 	RomMenu            m_RomMenu;    // on-screen ROM browser
+	Settings           m_Settings;       // user settings (video, etc.)
+	SettingsStore      m_SettingsStore;  // load/save settings to SD card
+	SettingsScreen     m_SettingsScreen; // in-emulation Settings screen
 	PauseMenu          m_PauseMenu;  // in-emulation overlay menu
 
 	// ROM buffer — allocated by SDCard::ReadFile, passed to core in M4.

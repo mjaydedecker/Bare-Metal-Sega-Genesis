@@ -137,6 +137,41 @@ static void test_scale_reduced_to_fit(void) {
     printf("test_scale_reduced_to_fit OK\n");
 }
 
+// blit_rgb565_scaled: 2x1 source stretched to a 4x2 rect, centered in 320x240.
+static void test_scaled_stretch_rect(void) {
+    reset_buffers();
+    src[0] = 0xAAAA;                 // source (0,0)
+    src[1] = 0xBBBB;                 // source (1,0)
+
+    // Stretch a 2x1 image into a 4x2 rect at offset (10, 20).
+    blit_rgb565_scaled(dst, DST_W * 2, DST_W, DST_H,
+                       src, SRC_STRIDE_PX * 2, 2, 1,
+                       10, 20, 4, 2);
+
+    // Columns 0..1 map to source col 0; columns 2..3 map to source col 1.
+    assert(dst[20 * DST_W + 10] == 0xAAAA);
+    assert(dst[20 * DST_W + 11] == 0xAAAA);
+    assert(dst[20 * DST_W + 12] == 0xBBBB);
+    assert(dst[20 * DST_W + 13] == 0xBBBB);
+    // Row 1 replicates row 0 (single source row).
+    assert(dst[21 * DST_W + 10] == 0xAAAA);
+    assert(dst[21 * DST_W + 13] == 0xBBBB);
+    // Outside the rect stays clear.
+    assert(dst[20 * DST_W + 9] == 0);
+    printf("test_scaled_stretch_rect OK\n");
+}
+
+// blit_rgb565_scaled: rect that leaves the surface is a no-op.
+static void test_scaled_out_of_bounds_noop(void) {
+    reset_buffers();
+    src[0] = 0x1234;
+    blit_rgb565_scaled(dst, DST_W * 2, DST_W, DST_H,
+                       src, SRC_STRIDE_PX * 2, 2, 2,
+                       DST_W - 1, 0, 4, 4);   // exceeds width
+    assert(dst[0] == 0);
+    printf("test_scaled_out_of_bounds_noop OK\n");
+}
+
 int main(void) {
     test_centering_256x224();
     test_source_stride_honored();
@@ -146,6 +181,8 @@ int main(void) {
     test_scale_zero_noop();
     test_scale_2x_block();
     test_scale_reduced_to_fit();
+    test_scaled_stretch_rect();
+    test_scaled_out_of_bounds_noop();
     printf("All blit tests passed\n");
     return 0;
 }

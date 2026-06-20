@@ -25,4 +25,16 @@ void blit_rgb565(uint16_t *dst, unsigned dst_pitch_bytes,
                  const uint16_t *src, unsigned src_pitch_bytes,
                  unsigned w, unsigned h, unsigned scale);
 
+// Nearest-neighbor scale a w*h RGB565 image into the destination rectangle
+// (out_x, out_y, out_w, out_h) inside a dst_w*dst_h RGB565 surface. Used by the
+// "stretch" video mode for non-integer aspect-fill scaling. Strides are in
+// BYTES. No-op if src is NULL, any extent is 0, or the rect leaves the surface.
+// The caller clears letterbox/pillarbox bars.
+void blit_rgb565_scaled(uint16_t *dst, unsigned dst_pitch_bytes,
+                        unsigned dst_w, unsigned dst_h,
+                        const uint16_t *src, unsigned src_pitch_bytes,
+                        unsigned w, unsigned h,
+                        unsigned out_x, unsigned out_y,
+                        unsigned out_w, unsigned out_h);
+
 #endif

@@ -6,6 +6,7 @@
 //
 
 #include "pause_menu.h"
+#include "settings_screen.h"
 #include "menu_state.h"             // menu_next_enabled
 #include "../input/joypad_map.h"    // GP_UP, GP_DOWN, GP_START, GP_B
 #include <circle/timer.h>
@@ -18,7 +19,7 @@ static const char *const LABELS[NUM_ENTRIES] =
     "Resume", "Save State", "Load State", "Reset Game", "Settings",
     "Return to ROM Browser"
 };
-static const bool ENABLED[NUM_ENTRIES] = { true, true, true, true, false, true };
+static const bool ENABLED[NUM_ENTRIES] = { true, true, true, true, true, true };
 
 // RGB565 colours.
 static const u16 BOX   = 0x0008;
@@ -28,9 +29,9 @@ static const u16 SELFG = 0x0000;
 static const u16 SELBG = 0x07FF;
 
 PauseMenu::PauseMenu(TextCanvas *pCanvas, Gamepad *pGamepad, CUSBHCIDevice *pUSBHCI,
-                     SaveState *pSaveState)
+                     SaveState *pSaveState, SettingsScreen *pSettingsScreen)
 :   m_pCanvas(pCanvas), m_pGamepad(pGamepad), m_pUSBHCI(pUSBHCI),
-    m_pSaveState(pSaveState)
+    m_pSaveState(pSaveState), m_pSettingsScreen(pSettingsScreen)
 {
 }
 
@@ -204,6 +205,12 @@ MenuAction PauseMenu::Run(void)
 
             case 3:                       // Reset Game
                 return MenuAction::Reset;
+
+            case 4:                       // Settings
+                m_pSettingsScreen->Run();
+                Render(selected);
+                prev = m_pGamepad->Buttons();
+                break;
 
             case 5:                       // Return to ROM Browser
                 return MenuAction::ReturnToBrowser;

@@ -23,4 +23,13 @@ extern retro_pixel_format g_pixel_format;
 extern const void *g_rom_data;
 extern size_t      g_rom_size;
 
+// Genesis-Plus-GX-Wide widescreen toggle. Read by the GET_VARIABLE handler for
+// "genesis_plus_gx_wide_h40_extra_columns": false => "0" (native 320-wide),
+// true => "10" (extra columns). Set by the kernel/Settings screen.
+extern bool g_widescreen;
+
+// Set true after g_widescreen changes; the GET_VARIABLE_UPDATE handler reports
+// and clears it so the core re-reads variables (applies on its next poll/reset).
+extern bool g_variables_dirty;
+
 #endif

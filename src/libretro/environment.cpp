@@ -20,6 +20,10 @@ retro_pixel_format g_pixel_format = RETRO_PIXEL_FORMAT_0RGB1555;
 const void *g_rom_data = 0;
 size_t      g_rom_size = 0;
 
+// Video widescreen toggle + change flag (see environment.h).
+bool g_widescreen      = false;
+bool g_variables_dirty = false;
+
 // Logging shim: bridge retro_log_printf_t to Circle's CLogger.
 static void retro_log_cb(enum retro_log_level level, const char *fmt, ...)
 {
@@ -119,10 +123,18 @@ bool environment_cb(unsigned cmd, void *data)
             if (var != 0 && var->key != 0 &&
                 strcmp(var->key, "genesis_plus_gx_wide_h40_extra_columns") == 0)
             {
-                var->value = "0";
+                var->value = g_widescreen ? "10" : "0";
                 return true;
             }
             return false;   // other options: core keeps its defaults
+        }
+
+        case RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE:
+        {
+            bool updated = g_variables_dirty;
+            g_variables_dirty = false;
+            if (data != 0) *reinterpret_cast<bool *>(data) = updated;
+            return updated;
         }
 
         case RETRO_ENVIRONMENT_GET_INPUT_BITMASKS:
