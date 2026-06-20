@@ -32,4 +32,8 @@ extern bool g_widescreen;
 // and clears it so the core re-reads variables (applies on its next poll/reset).
 extern bool g_variables_dirty;
 
+// Genesis region for the core's "genesis_plus_gx_wide_region_detect" variable:
+// "auto" | "ntsc-u" | "pal". Set by the kernel/Settings screen.
+extern const char *g_region_value;
+
 #endif

@@ -23,6 +23,7 @@ size_t      g_rom_size = 0;
 // Video widescreen toggle + change flag (see environment.h).
 bool g_widescreen      = false;
 bool g_variables_dirty = false;
+const char *g_region_value = "auto";
 
 // Logging shim: bridge retro_log_printf_t to Circle's CLogger.
 static void retro_log_cb(enum retro_log_level level, const char *fmt, ...)
@@ -120,11 +121,20 @@ bool environment_cb(unsigned cmd, void *data)
             // which render 400px-wide with side-fill artifacts and cost ~25%
             // extra per-frame work. "0" -> native 320-wide rendering.
             retro_variable *var = reinterpret_cast<retro_variable *>(data);
-            if (var != 0 && var->key != 0 &&
-                strcmp(var->key, "genesis_plus_gx_wide_h40_extra_columns") == 0)
+            if (var != 0 && var->key != 0)
             {
-                var->value = g_widescreen ? "10" : "0";
-                return true;
+                if (strcmp(var->key,
+                           "genesis_plus_gx_wide_h40_extra_columns") == 0)
+                {
+                    var->value = g_widescreen ? "10" : "0";
+                    return true;
+                }
+                if (strcmp(var->key,
+                           "genesis_plus_gx_wide_region_detect") == 0)
+                {
+                    var->value = g_region_value;
+                    return true;
+                }
             }
             return false;   // other options: core keeps its defaults
         }
