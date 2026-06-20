@@ -34,13 +34,18 @@ OBJS = src/main.o \
        src/video/display.o \
        src/audio/audio_driver.o \
        src/input/joypad_map.o \
-       src/input/gamepad.o
+       src/input/gamepad.o \
+       src/storage/storage.o \
+       src/menu/rom_filter.o \
+       src/menu/menu_state.o \
+       src/menu/menu_path.o
 
 # Extra include path so src/kernel.cpp and src/libretro/*.cpp can find
 # libretro.h without polluting the genesis-core compile flags.
 EXTRAINCLUDE = \
     -I libs/genesis-plus-gx-wide/libretro/libretro-common/include \
-    -I libs/genesis-plus-gx-wide/libretro
+    -I libs/genesis-plus-gx-wide/libretro \
+    -I libs/circle/addon/fatfs
 
 # Libraries — most specific first, Circle core last.
 # Each is built on demand by the targets below.
@@ -49,11 +54,13 @@ LIBS = libs/libgenesis.a \
        $(CIRCLEHOME)/lib/usb/libusb.a \
        $(CIRCLEHOME)/lib/input/libinput.a \
        $(CIRCLEHOME)/lib/sound/libsound.a \
+       $(CIRCLEHOME)/addon/fatfs/libfatfs.a \
        $(CIRCLEHOME)/lib/fs/fat/libfatfs.a \
        $(CIRCLEHOME)/lib/fs/libfs.a \
        $(CIRCLEHOME)/lib/libcircle.a
 
 EXTRACLEAN = src/*.o src/*.d src/storage/*.o src/storage/*.d \
+             src/menu/*.o src/menu/*.d \
              src/libretro/*.o src/libretro/*.d \
              src/video/*.o src/video/*.d \
              src/audio/*.o src/audio/*.d \
@@ -103,6 +110,9 @@ $(CIRCLEHOME)/lib/fs/libfs.a: $(CIRCLEHOME)/Config.mk
 	$(CIRCLE_MAKE)
 
 $(CIRCLEHOME)/addon/SDCard/libsdcard.a: $(CIRCLEHOME)/Config.mk
+	$(CIRCLE_MAKE)
+
+$(CIRCLEHOME)/addon/fatfs/libfatfs.a: $(CIRCLEHOME)/Config.mk
 	$(CIRCLE_MAKE)
 
 -include $(DEPS)
