@@ -12,6 +12,7 @@
 #include <stddef.h>
 
 enum class ScaleMode { Integer, Stretch };
+enum class Region    { Auto, NTSC, PAL };
 
 struct Settings
 {
@@ -19,10 +20,15 @@ struct Settings
     bool      widescreen;   // widescreen:  on | off
     unsigned  volume;       // 0-100 master volume
     bool      mute;         // audio mute
+    Region    region;       // region: auto | ntsc | pal
+    char      auto_launch_rom[256];   // ROM path to boot into ("" = unset)
 
     Settings(void)
     :   scale_mode(ScaleMode::Integer), widescreen(false),
-        volume(100), mute(false) {}
+        volume(100), mute(false), region(Region::Auto)
+    {
+        auto_launch_rom[0] = '\0';
+    }
 };
 
 // Parse key=value text into a Settings. Missing/invalid/unknown keys fall back
@@ -32,5 +38,11 @@ Settings parse_settings(const char *text);
 
 // Render a Settings to key=value text (NUL-terminated, truncated to out_size).
 void serialize_settings(const Settings &s, char *out, size_t out_size);
+
+// Region as written to the settings file ("auto" | "ntsc" | "pal").
+const char *region_file_value(Region r);
+
+// Region as the core's option value ("auto" | "ntsc-u" | "pal").
+const char *region_core_value(Region r);
 
 #endif

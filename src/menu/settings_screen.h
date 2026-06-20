@@ -26,6 +26,9 @@ public:
                    AudioDriver *pAudio);
     void Run(void);   // returns when the user backs out (B)
 
+    // Tell the screen which ROM is currently running (for the auto-launch row).
+    void SetCurrentRom(const char *path) { m_pRomPath = path; }
+
 private:
     void Render(int selected);
     void Apply(void);   // push current settings to Display + env globals
@@ -37,6 +40,7 @@ private:
     SettingsStore *m_pStore;
     Display       *m_pDisplay;
     AudioDriver   *m_pAudio;
+    const char    *m_pRomPath;
 };
 
 #endif

@@ -90,6 +90,19 @@ Settings parse_settings(const char *text)
         }
         else if (ieq(key, "mute"))
             s.mute = truthy(val);
+        else if (ieq(key, "region"))
+        {
+            if      (ieq(val, "ntsc")) s.region = Region::NTSC;
+            else if (ieq(val, "pal"))  s.region = Region::PAL;
+            else                       s.region = Region::Auto;
+        }
+        else if (ieq(key, "auto_launch_rom"))
+        {
+            unsigned i = 0;
+            for (; val[i] && i < sizeof(s.auto_launch_rom) - 1; i++)
+                s.auto_launch_rom[i] = val[i];
+            s.auto_launch_rom[i] = '\0';
+        }
         // unknown keys: ignored
     }
     return s;
@@ -118,6 +131,26 @@ static void append_uint(char *out, size_t out_size, unsigned v)
     appendz(out, out_size, fwd);
 }
 
+const char *region_file_value(Region r)
+{
+    switch (r)
+    {
+    case Region::NTSC: return "ntsc";
+    case Region::PAL:  return "pal";
+    default:           return "auto";
+    }
+}
+
+const char *region_core_value(Region r)
+{
+    switch (r)
+    {
+    case Region::NTSC: return "ntsc-u";
+    case Region::PAL:  return "pal";
+    default:           return "auto";
+    }
+}
+
 void serialize_settings(const Settings &s, char *out, size_t out_size)
 {
     if (out == 0 || out_size == 0) return;
@@ -132,5 +165,9 @@ void serialize_settings(const Settings &s, char *out, size_t out_size)
     append_uint(out, out_size, s.volume);
     appendz(out, out_size, "\nmute=");
     appendz(out, out_size, s.mute ? "on" : "off");
+    appendz(out, out_size, "\nregion=");
+    appendz(out, out_size, region_file_value(s.region));
+    appendz(out, out_size, "\nauto_launch_rom=");
+    appendz(out, out_size, s.auto_launch_rom);
     appendz(out, out_size, "\n");
 }

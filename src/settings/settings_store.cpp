@@ -42,7 +42,7 @@ bool SettingsStore::Load(Settings *pOut)
 
 bool SettingsStore::Save(const Settings &s)
 {
-    char text[256];
+    char text[512];   // a ROM path pushes the file past 256 bytes
     serialize_settings(s, text, sizeof text);
     return m_pStorage->WriteFile(SETTINGS_PATH,
                                  (const u8 *) text, strlen(text));

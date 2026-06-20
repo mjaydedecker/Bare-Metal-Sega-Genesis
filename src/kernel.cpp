@@ -124,6 +124,7 @@ TShutdownMode CKernel::Run (void)
 	g_widescreen = m_Settings.widescreen;
 	m_Audio.SetVolume (m_Settings.volume);
 	m_Audio.SetMute (m_Settings.mute);
+	g_region_value = region_core_value (m_Settings.region);
 
 	// libretro callbacks + core init: once for the whole session.
 	retro_set_environment (environment_cb);
@@ -141,12 +142,25 @@ TShutdownMode CKernel::Run (void)
 	const unsigned HOTKEY = GP_START | GP_SELECT;
 
 	boolean audioInited = FALSE;
+	boolean firstBoot   = TRUE;
 
 	for (;;)   // browse <-> play
 	{
-		// --- Browse ---
+		// --- Browse (or auto-launch on the very first pass) ---
 		char romPath[300];
-		if (!m_RomMenu.Run (romPath, sizeof romPath))
+		boolean autoLaunched = FALSE;
+		if (firstBoot && m_Settings.auto_launch_rom[0] != '\0' &&
+		    m_Storage.Exists (m_Settings.auto_launch_rom))
+		{
+			unsigned i = 0;
+			for (; m_Settings.auto_launch_rom[i] && i < sizeof romPath - 1; i++)
+				romPath[i] = m_Settings.auto_launch_rom[i];
+			romPath[i] = '\0';
+			autoLaunched = TRUE;
+		}
+		firstBoot = FALSE;
+
+		if (!autoLaunched && !m_RomMenu.Run (romPath, sizeof romPath))
 		{
 			m_Logger.Write (FromKernel, LogPanic, "No ROMs found in /roms");
 			return ShutdownHalt;   // RomMenu already drew the message
@@ -207,6 +221,7 @@ TShutdownMode CKernel::Run (void)
 		m_SaveState.SetGame (romPath);   // save/load target for this game
 		m_Sram.SetGame (romPath);
 		m_Sram.Load ();                  // restore battery SRAM if present
+		m_SettingsScreen.SetCurrentRom (romPath);   // auto-launch toggle target
 
 		// --- Play ---
 		u64      next      = CTimer::GetClockTicks64 ();
