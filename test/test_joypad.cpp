@@ -49,6 +49,12 @@ int main(void)
     assert(joypad_state(combined, RETRO_DEVICE_ID_JOYPAD_UP));
     assert(joypad_state(combined, RETRO_DEVICE_ID_JOYPAD_START));
 
+    // Menu-hotkey preset -> button bitmask.
+    assert(hotkey_mask(MenuHotkey::StartSelect) == (GP_START | GP_SELECT));
+    assert(hotkey_mask(MenuHotkey::StartA)      == (GP_START | GP_A));
+    assert(hotkey_mask(MenuHotkey::StartB)      == (GP_START | GP_B));
+    assert(hotkey_mask(MenuHotkey::LR)          == (GP_LB | GP_RB));
+
     printf("All joypad tests passed\n");
     return 0;
 }

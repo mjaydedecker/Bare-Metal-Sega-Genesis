@@ -12,6 +12,7 @@
 
 #include <stdint.h>
 #include <libretro.h>   // RETRO_DEVICE_ID_JOYPAD_*
+#include "../settings/settings.h"   // MenuHotkey
 
 // Face/shoulder buttons: RAW HID button bits as reported by Circle's generic
 // gamepad driver (these are this controller's layout; observed on an 8BitDo).
@@ -37,5 +38,9 @@
 // buttons: TGamePadButton bitmask. retro_id: RETRO_DEVICE_ID_JOYPAD_*.
 // Returns 1 if the mapped button is pressed, else 0.
 int16_t joypad_state(unsigned buttons, unsigned retro_id);
+
+// The GP_* button bitmask for a menu-hotkey preset (both buttons held opens
+// the pause menu).
+unsigned hotkey_mask(MenuHotkey h);
 
 #endif
