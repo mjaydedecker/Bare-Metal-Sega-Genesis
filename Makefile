@@ -38,7 +38,8 @@ OBJS = src/main.o \
        src/storage/storage.o \
        src/menu/rom_filter.o \
        src/menu/menu_state.o \
-       src/menu/menu_path.o
+       src/menu/menu_path.o \
+       src/menu/rom_menu.o
 
 # Extra include path so src/kernel.cpp and src/libretro/*.cpp can find
 # libretro.h without polluting the genesis-core compile flags.
