@@ -20,4 +20,9 @@ struct MenuState
 // selection stays within [top, top+visible_rows-1]. Safe for count <= 0.
 void menu_move(MenuState *s, int delta);
 
+// Starting from `from`, return the next index in direction `dir` (+1 or -1)
+// whose enabled[] is true. No wrap: if there is no enabled entry that way (or
+// none at all), returns `from`.
+int menu_next_enabled(const bool *enabled, int count, int from, int dir);
+
 #endif

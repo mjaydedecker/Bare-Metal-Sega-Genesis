@@ -28,3 +28,14 @@ void menu_move(MenuState *s, int delta)
     if (maxTop < 0) maxTop = 0;
     if (s->top > maxTop) s->top = maxTop;
 }
+
+int menu_next_enabled(const bool *enabled, int count, int from, int dir)
+{
+    if (count <= 0) return from;
+    int step = (dir >= 0) ? 1 : -1;
+    for (int i = from + step; i >= 0 && i < count; i += step)
+    {
+        if (enabled[i]) return i;
+    }
+    return from;
+}
