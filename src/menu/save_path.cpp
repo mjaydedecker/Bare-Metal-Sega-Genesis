@@ -36,3 +36,20 @@ void state_path(const char *romPath, int slot, char *out, unsigned out_size)
     append(out, out_size, &pos, digit);
     out[pos] = '\0';
 }
+
+void sram_path(const char *romPath, char *out, unsigned out_size)
+{
+    if (out_size == 0) return;
+
+    const char *base = romPath;            // basename: after the last '/'
+    for (unsigned i = 0; romPath[i] != '\0'; i++)
+    {
+        if (romPath[i] == '/') base = &romPath[i + 1];
+    }
+
+    unsigned pos = 0;
+    append(out, out_size, &pos, "SD:/saves/");
+    append(out, out_size, &pos, base);
+    append(out, out_size, &pos, ".srm");
+    out[pos] = '\0';
+}
