@@ -16,12 +16,14 @@
 #include "../settings/settings.h"
 #include "../settings/settings_store.h"
 #include "../video/display.h"
+#include "../audio/audio_driver.h"
 
 class SettingsScreen
 {
 public:
     SettingsScreen(TextCanvas *pCanvas, Gamepad *pGamepad, CUSBHCIDevice *pUSBHCI,
-                   Settings *pSettings, SettingsStore *pStore, Display *pDisplay);
+                   Settings *pSettings, SettingsStore *pStore, Display *pDisplay,
+                   AudioDriver *pAudio);
     void Run(void);   // returns when the user backs out (B)
 
 private:
@@ -34,6 +36,7 @@ private:
     Settings      *m_pSettings;
     SettingsStore *m_pStore;
     Display       *m_pDisplay;
+    AudioDriver   *m_pAudio;
 };
 
 #endif

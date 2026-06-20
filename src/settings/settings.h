@@ -17,8 +17,12 @@ struct Settings
 {
     ScaleMode scale_mode;   // video_scale: integer | stretch
     bool      widescreen;   // widescreen:  on | off
+    unsigned  volume;       // 0-100 master volume
+    bool      mute;         // audio mute
 
-    Settings(void) : scale_mode(ScaleMode::Integer), widescreen(false) {}
+    Settings(void)
+    :   scale_mode(ScaleMode::Integer), widescreen(false),
+        volume(100), mute(false) {}
 };
 
 // Parse key=value text into a Settings. Missing/invalid/unknown keys fall back
