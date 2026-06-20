@@ -31,6 +31,12 @@ public:
     // row stride in bytes.
     void Blit(const void *src, unsigned width, unsigned height, size_t pitch);
 
+    // Framebuffer accessors for on-screen UI (TextCanvas draws into this).
+    u16     *Buffer(void) const { return m_pBuffer; }
+    unsigned Pitch (void) const { return m_Pitch; }   // bytes per row
+    unsigned Width (void) const { return m_FbW; }     // pixels
+    unsigned Height(void) const { return m_FbH; }     // pixels
+
 private:
     void ClearBlack(void);
 
