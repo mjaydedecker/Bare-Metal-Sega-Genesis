@@ -5,6 +5,7 @@
 //
 
 #include "kernel.h"
+#include "input/joypad_map.h"   // GP_START, GP_SELECT bits for the menu hotkey
 
 static const char FromKernel[] = "kernel";
 
@@ -20,6 +21,7 @@ CKernel::CKernel (void)
 	m_Storage (),
 	m_Canvas (&m_Display),
 	m_RomMenu (&m_Canvas, &m_Gamepad, &m_Storage, &m_USBHCI),
+	m_PauseMenu (&m_Canvas, &m_Gamepad, &m_USBHCI),
 	m_pROMBuffer (0),
 	m_nROMSize (0)
 {
@@ -104,155 +106,148 @@ TShutdownMode CKernel::Run (void)
 	m_Logger.Write (FromKernel, LogNotice,
 		"Bare Metal Sega Genesis — build " __DATE__ " " __TIME__);
 
-	// Mount the SD card filesystem.
 	if (!m_Storage.Mount ())
 	{
 		m_Logger.Write (FromKernel, LogPanic, "SD card mount failed");
 		return ShutdownHalt;
 	}
 
-	// Browse SD:/roms and let the user pick a ROM (renders on the console).
-	char romPath[300];
-	if (!m_RomMenu.Run (romPath, sizeof romPath))
-	{
-		m_Logger.Write (FromKernel, LogPanic, "No ROMs found in /roms");
-		return ShutdownHalt;
-	}
-
-	// Read the selected ROM.
-	m_Logger.Write (FromKernel, LogNotice, "Loading ROM: %s", romPath);
-	if (!m_Storage.ReadFile (romPath, &m_pROMBuffer, &m_nROMSize))
-	{
-		m_Logger.Write (FromKernel, LogPanic, "Failed to read ROM: %s", romPath);
-		return ShutdownHalt;
-	}
-
-	m_Logger.Write (FromKernel, LogNotice,
-		"ROM loaded: %u bytes", (unsigned) m_nROMSize);
-
-	// Wire up libretro callbacks before retro_init().
-	m_Logger.Write (FromKernel, LogNotice, "Setting callbacks");
+	// libretro callbacks + core init: once for the whole session.
 	retro_set_environment (environment_cb);
 	retro_set_video_refresh (video_refresh_cb);
 	retro_set_audio_sample (audio_sample_cb);
 	retro_set_audio_sample_batch (audio_batch_cb);
 	retro_set_input_poll (input_poll_cb);
 	retro_set_input_state (input_state_cb);
-
-	// Initialise the emulation core.
-	m_Logger.Write (FromKernel, LogNotice, "Calling retro_init");
 	retro_init ();
-	m_Logger.Write (FromKernel, LogNotice, "retro_init done");
 
-	// Expose ROM to the environment callback so GET_GAME_INFO_EXT works
-	// and the core loads from memory rather than the (unsupported) filesystem.
-	g_rom_data = m_pROMBuffer;
-	g_rom_size = m_nROMSize;
-
-	// Load the ROM.
-	struct retro_game_info gameInfo;
-	gameInfo.path = romPath;
-	gameInfo.data = m_pROMBuffer;
-	gameInfo.size = m_nROMSize;
-	gameInfo.meta = "";
-
-	m_Logger.Write (FromKernel, LogNotice, "Calling retro_load_game");
-	if (!retro_load_game (&gameInfo))
-	{
-		m_Logger.Write (FromKernel, LogPanic, "retro_load_game failed");
-		retro_deinit ();
-		return ShutdownHalt;
-	}
-	m_Logger.Write (FromKernel, LogNotice, "retro_load_game done");
-
-	// Log A/V geometry so we can verify the core is alive.
-	struct retro_system_av_info avInfo;
-	retro_get_system_av_info (&avInfo);
-	m_Logger.Write (FromKernel, LogNotice,
-		"AV info: %u x %u @ %.2f fps",
-		avInfo.geometry.base_width,
-		avInfo.geometry.base_height,
-		(double) avInfo.timing.fps);
-
-	m_Logger.Write (FromKernel, LogNotice, "M6: entering frame loop");
-
-	// Pacing parameters from the core's A/V info.
-	unsigned sampleRate     = (unsigned) avInfo.timing.sample_rate;
-	double   fps            = (double) avInfo.timing.fps;
-	if (fps < 1.0 || fps > 61.0) fps = 60.0;   // clamp to a sane range
-	unsigned framesPerVideo = sampleRate ? (unsigned) (sampleRate / fps) : 0;
-	unsigned target         = framesPerVideo * 2;   // ~2 video frames of latency
-
-	// Initialise HDMI audio. On failure, fall back to video-only timer pacing.
-	boolean audioOK = (sampleRate > 0) && m_Audio.Initialize (sampleRate);
-	if (audioOK)
-	{
-		g_audio = &m_Audio;
-		m_Logger.Write (FromKernel, LogNotice,
-			"Audio: HDMI %u Hz, target %u frames", sampleRate, target);
-	}
-	else
-	{
-		g_audio = 0;
-		m_Logger.Write (FromKernel, LogWarning,
-			"Audio disabled; using timer pacing");
-	}
-
-	// Configure port 0 as a 6-button Genesis pad (port 1 unused), and point
-	// the input callbacks at our gamepad.
-	#define RETRO_DEVICE_MDPAD_6B RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_JOYPAD, 1)
-	retro_set_controller_port_device (0, RETRO_DEVICE_MDPAD_6B);
-	retro_set_controller_port_device (1, RETRO_DEVICE_NONE);
+	g_display = &m_Display;
 	g_gamepad = &m_Gamepad;
 
-	// Point the video callback at our Display.
-	g_display = &m_Display;
+	#define RETRO_DEVICE_MDPAD_6B RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_JOYPAD, 1)
+	const unsigned HOTKEY = GP_START | GP_SELECT;
 
-	u64      period_us = (u64) (1000000.0 / fps);   // per-frame period
-	u64      next      = CTimer::GetClockTicks64 ();
-	unsigned frame     = 0;
-	boolean  ledOn     = FALSE;
-	for (;;)
+	boolean audioInited = FALSE;
+
+	for (;;)   // browse <-> play
 	{
-		// Pump USB plug-and-play so a connected gamepad enumerates and
-		// Gamepad::Poll() can acquire it (it appears shortly after boot).
-		m_USBHCI.UpdatePlugAndPlay ();
-
-		retro_run ();                       // -> video_refresh_cb / audio_*_cb
-
-		// Pace to the core's frame rate via the timer. The core runs far
-		// faster than realtime (~7-8 ms/frame), so this gives smooth full
-		// speed. (Pacing on the audio queue instead throttled the core.)
-		next += period_us;
-		u64 now = CTimer::GetClockTicks64 ();
-		if (next < now)                     // running behind: drop the slack
+		// --- Browse ---
+		char romPath[300];
+		if (!m_RomMenu.Run (romPath, sizeof romPath))
 		{
-			next = now;
-		}
-		while (CTimer::GetClockTicks64 () < next)
-		{
-			// spin to the frame deadline
+			m_Logger.Write (FromKernel, LogPanic, "No ROMs found in /roms");
+			return ShutdownHalt;   // RomMenu already drew the message
 		}
 
-		// Anti-drift / overflow guard: the timer and the audio clock differ
-		// slightly, so the queue slowly creeps. If it climbs past a high
-		// watermark, hold until it drains -- this locks the long-term rate to
-		// the audio clock without throttling the normal cadence. No-op if
-		// audio init failed (video-only).
-		if (audioOK)
+		if (!m_Storage.ReadFile (romPath, &m_pROMBuffer, &m_nROMSize))
 		{
-			while (m_Audio.QueuedFrames () > target + framesPerVideo)
+			m_Canvas.Clear (0x0000);
+			m_Canvas.DrawText (40, 40, "Failed to read ROM.", 0xF800, 0x0000);
+			m_Canvas.DrawText (40, 40 + (int) m_Canvas.CharH (),
+				"Returning to browser...", 0xFFFF, 0x0000);
+			CTimer::SimpleMsDelay (2000);
+			continue;
+		}
+
+		g_rom_data = m_pROMBuffer;
+		g_rom_size = m_nROMSize;
+
+		struct retro_game_info gameInfo;
+		gameInfo.path = romPath;
+		gameInfo.data = m_pROMBuffer;
+		gameInfo.size = m_nROMSize;
+		gameInfo.meta = "";
+
+		if (!retro_load_game (&gameInfo))
+		{
+			delete[] m_pROMBuffer;
+			m_pROMBuffer = 0;
+			m_Canvas.Clear (0x0000);
+			m_Canvas.DrawText (40, 40, "Failed to load ROM.", 0xF800, 0x0000);
+			m_Canvas.DrawText (40, 40 + (int) m_Canvas.CharH (),
+				"Returning to browser...", 0xFFFF, 0x0000);
+			CTimer::SimpleMsDelay (2000);
+			continue;
+		}
+
+		// Pacing parameters from the core's A/V info.
+		struct retro_system_av_info avInfo;
+		retro_get_system_av_info (&avInfo);
+		unsigned sampleRate     = (unsigned) avInfo.timing.sample_rate;
+		double   fps            = (double) avInfo.timing.fps;
+		if (fps < 1.0 || fps > 61.0) fps = 60.0;
+		unsigned framesPerVideo = sampleRate ? (unsigned) (sampleRate / fps) : 0;
+		unsigned target         = framesPerVideo * 2;
+		u64      period_us      = (u64) (1000000.0 / fps);
+
+		// Audio: initialise once (Genesis sample rate is constant).
+		if (!audioInited && sampleRate > 0 && m_Audio.Initialize (sampleRate))
+		{
+			audioInited = TRUE;
+			g_audio = &m_Audio;
+		}
+		boolean audioOK = audioInited;
+
+		retro_set_controller_port_device (0, RETRO_DEVICE_MDPAD_6B);
+		retro_set_controller_port_device (1, RETRO_DEVICE_NONE);
+
+		// --- Play ---
+		u64      next      = CTimer::GetClockTicks64 ();
+		unsigned frame     = 0;
+		boolean  ledOn     = FALSE;
+		unsigned prevBtns  = 0;
+		boolean  toBrowser = FALSE;
+
+		for (;;)
+		{
+			m_USBHCI.UpdatePlugAndPlay ();
+			m_Gamepad.Poll ();
+			unsigned now     = m_Gamepad.Buttons ();
+			unsigned pressed = now & ~prevBtns;
+			prevBtns = now;
+
+			// Hotkey: Start+Select both held, completed this frame.
+			if ((pressed & HOTKEY) && (now & HOTKEY) == HOTKEY)
 			{
-				// drain toward the setpoint, then resume
+				MenuAction action = m_PauseMenu.Run ();
+				if (action == MenuAction::Reset)
+				{
+					retro_reset ();
+				}
+				else if (action == MenuAction::ReturnToBrowser)
+				{
+					toBrowser = TRUE;
+				}
+				prevBtns = m_Gamepad.Buttons ();          // resync after the menu
+				next     = CTimer::GetClockTicks64 ();    // re-baseline pacing
+				if (toBrowser) break;
+				continue;
+			}
+
+			retro_run ();
+
+			next += period_us;
+			u64 t = CTimer::GetClockTicks64 ();
+			if (next < t) next = t;
+			while (CTimer::GetClockTicks64 () < next) { }
+
+			if (audioOK)
+			{
+				while (m_Audio.QueuedFrames () > target + framesPerVideo) { }
+			}
+
+			if (++frame >= 30)
+			{
+				frame = 0;
+				ledOn = !ledOn;
+				if (ledOn) m_ActLED.On (); else m_ActLED.Off ();
 			}
 		}
 
-		if (++frame >= 30)                  // ~0.5s liveness blink
-		{
-			frame = 0;
-			ledOn = !ledOn;
-			if (ledOn) m_ActLED.On (); else m_ActLED.Off ();
-		}
+		// --- Unload and return to the browser ---
+		retro_unload_game ();
+		delete[] m_pROMBuffer;
+		m_pROMBuffer = 0;
 	}
 
 	return ShutdownHalt;

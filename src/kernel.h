@@ -28,6 +28,7 @@
 #include "libretro/callbacks.h"
 #include "video/display.h"
 #include "ui/text_canvas.h"
+#include "menu/pause_menu.h"
 #include "input/gamepad.h"
 #include <libretro.h>
 
@@ -69,6 +70,7 @@ private:
 	Storage            m_Storage;    // SD card filesystem (ChaN FatFS)
 	TextCanvas         m_Canvas;     // on-screen UI on the game framebuffer
 	RomMenu            m_RomMenu;    // on-screen ROM browser
+	PauseMenu          m_PauseMenu;  // in-emulation overlay menu
 
 	// ROM buffer — allocated by SDCard::ReadFile, passed to core in M4.
 	u8    *m_pROMBuffer;
