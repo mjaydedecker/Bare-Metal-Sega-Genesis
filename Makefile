@@ -32,6 +32,7 @@ OBJS = src/main.o \
        src/video/blit.o \
        src/video/display.o \
        src/audio/audio_driver.o \
+       src/audio/audio_util.o \
        src/input/joypad_map.o \
        src/input/gamepad.o \
        src/storage/storage.o \
