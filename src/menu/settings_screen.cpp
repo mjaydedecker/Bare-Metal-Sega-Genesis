@@ -9,8 +9,9 @@
 #include "../input/joypad_map.h"          // GP_UP, GP_DOWN, GP_LEFT, GP_RIGHT, GP_B
 #include "../libretro/environment.h"      // g_widescreen, g_variables_dirty
 #include <circle/timer.h>
+#include <string.h>   // strcmp, strncpy for the auto-launch row
 
-#define NUM_ROWS 4
+#define NUM_ROWS 6
 
 // RGB565 colours (match the pause menu palette).
 static const u16 BOX   = 0x0008;
@@ -24,7 +25,7 @@ SettingsScreen::SettingsScreen(TextCanvas *pCanvas, Gamepad *pGamepad,
                                AudioDriver *pAudio)
 :   m_pCanvas(pCanvas), m_pGamepad(pGamepad), m_pUSBHCI(pUSBHCI),
     m_pSettings(pSettings), m_pStore(pStore), m_pDisplay(pDisplay),
-    m_pAudio(pAudio)
+    m_pAudio(pAudio), m_pRomPath(0)
 {
 }
 
@@ -32,6 +33,7 @@ void SettingsScreen::Apply(void)
 {
     m_pDisplay->SetScaleMode(m_pSettings->scale_mode);   // live
     g_widescreen      = m_pSettings->widescreen;         // core re-reads...
+    g_region_value    = region_core_value(m_pSettings->region);
     g_variables_dirty = true;                            // ...on next poll/reset
     m_pAudio->SetVolume(m_pSettings->volume);            // live
     m_pAudio->SetMute(m_pSettings->mute);                // live
@@ -66,9 +68,17 @@ void SettingsScreen::Render(int selected)
                                ? "< Stretch >" : "< Integer >";
     const char *wideVal  = m_pSettings->widescreen ? "< On >" : "< Off >";
     const char *muteVal  = m_pSettings->mute ? "< On >" : "< Off >";
+    const char *regionVal =
+        m_pSettings->region == Region::NTSC ? "< NTSC >" :
+        m_pSettings->region == Region::PAL  ? "< PAL >"  : "< Auto >";
+    bool autoOn = m_pRomPath != 0 &&
+                  strcmp(m_pSettings->auto_launch_rom, m_pRomPath) == 0;
+    const char *autoVal = autoOn ? "< On >" : "< Off >";
     const char *labels[NUM_ROWS] = { "Video Scale:", "Widescreen:",
-                                     "Volume:", "Mute:" };
-    const char *values[NUM_ROWS] = { scaleVal, wideVal, volVal, muteVal };
+                                     "Volume:", "Mute:",
+                                     "Region:", "Auto-launch:" };
+    const char *values[NUM_ROWS] = { scaleVal, wideVal, volVal, muteVal,
+                                     regionVal, autoVal };
 
     for (int i = 0; i < NUM_ROWS; i++)
     {
@@ -82,8 +92,11 @@ void SettingsScreen::Render(int selected)
         m_pCanvas->DrawText(boxX + cw * 17, ty, values[i],       fg, bg);
     }
 
+    m_pCanvas->DrawText(boxX + cw, boxY + ch * (NUM_ROWS + 3),
+                        "Widescreen: on reset.  Region: on reload.",
+                        WHITE, BOX);
     m_pCanvas->DrawText(boxX + cw, boxY + ch * (NUM_ROWS + 4),
-                        "Widescreen applies on reset.  B: back", WHITE, BOX);
+                        "Auto-launch boots this game.  B: back", WHITE, BOX);
 }
 
 void SettingsScreen::Run(void)
@@ -136,6 +149,31 @@ void SettingsScreen::Run(void)
             case 3:   // Mute (toggle)
                 m_pSettings->mute = !m_pSettings->mute;
                 break;
+            case 4:   // Region (cycle Auto -> NTSC -> PAL)
+            {
+                int r = (int) m_pSettings->region + dir;
+                if (r < 0) r = 2;
+                if (r > 2) r = 0;
+                m_pSettings->region = (Region) r;
+                break;
+            }
+            case 5:   // Auto-launch this game (toggle)
+            {
+                bool on = m_pRomPath != 0 &&
+                          strcmp(m_pSettings->auto_launch_rom, m_pRomPath) == 0;
+                if (on)
+                {
+                    m_pSettings->auto_launch_rom[0] = '\0';
+                }
+                else if (m_pRomPath != 0)
+                {
+                    strncpy(m_pSettings->auto_launch_rom, m_pRomPath,
+                            sizeof(m_pSettings->auto_launch_rom) - 1);
+                    m_pSettings->auto_launch_rom[
+                        sizeof(m_pSettings->auto_launch_rom) - 1] = '\0';
+                }
+                break;
+            }
             }
 
             Apply();
