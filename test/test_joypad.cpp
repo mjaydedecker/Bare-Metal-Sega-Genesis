@@ -43,6 +43,12 @@ int main(void)
     assert(!(m & (1 << RETRO_DEVICE_ID_JOYPAD_UP)));
     assert(joypad_state(0, RETRO_DEVICE_ID_JOYPAD_MASK) == 0);
 
+    // Two pads combine for menu navigation as a bitwise OR; the mapper then
+    // reports every pressed button from either pad.
+    unsigned combined = (GP_UP) | (GP_START);   // pad0 Up, pad1 Start
+    assert(joypad_state(combined, RETRO_DEVICE_ID_JOYPAD_UP));
+    assert(joypad_state(combined, RETRO_DEVICE_ID_JOYPAD_START));
+
     printf("All joypad tests passed\n");
     return 0;
 }
