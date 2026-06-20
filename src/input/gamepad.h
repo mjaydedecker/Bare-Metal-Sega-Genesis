@@ -17,15 +17,26 @@
 class Gamepad
 {
 public:
+    static const unsigned MAX_PADS = 2;   // Player 1 + Player 2
+
     Gamepad(CDeviceNameService *pNameService);
 
-    boolean  IsPresent(void) const;
-    void     Poll(void);           // acquire "upad1" + register handler when it appears
-    unsigned Buttons(void) const;  // latest button bitmask (handler-updated)
+    // Acquire upad1/upad2 and register each pad's report handler (lazy
+    // plug-and-play; pads enumerate a moment after boot).
+    void Poll(void);
+
+    // Latest button bitmask for a port (0 if the port has no pad / is invalid).
+    unsigned Buttons(unsigned port = 0) const;
+
+    // Combined bitmask of both pads — used for menu navigation / pause hotkey
+    // so either controller can drive the UI.
+    unsigned MenuButtons(void) const;
+
+    boolean IsPresent(unsigned port = 0) const;
 
 private:
     CDeviceNameService *m_pNameService;
-    CUSBGamePadDevice  *m_pDevice;
+    CUSBGamePadDevice  *m_pDevice[MAX_PADS];
 };
 
 #endif

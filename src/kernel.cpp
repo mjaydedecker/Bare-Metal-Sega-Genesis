@@ -202,7 +202,7 @@ TShutdownMode CKernel::Run (void)
 		boolean audioOK = audioInited;
 
 		retro_set_controller_port_device (0, RETRO_DEVICE_MDPAD_6B);
-		retro_set_controller_port_device (1, RETRO_DEVICE_NONE);
+		retro_set_controller_port_device (1, RETRO_DEVICE_MDPAD_6B);
 
 		m_SaveState.SetGame (romPath);   // save/load target for this game
 		m_Sram.SetGame (romPath);
@@ -220,7 +220,7 @@ TShutdownMode CKernel::Run (void)
 		{
 			m_USBHCI.UpdatePlugAndPlay ();
 			m_Gamepad.Poll ();
-			unsigned now     = m_Gamepad.Buttons ();
+			unsigned now     = m_Gamepad.MenuButtons ();
 			unsigned pressed = now & ~prevBtns;
 			prevBtns = now;
 
@@ -236,7 +236,7 @@ TShutdownMode CKernel::Run (void)
 				{
 					toBrowser = TRUE;
 				}
-				prevBtns = m_Gamepad.Buttons ();          // resync after the menu
+				prevBtns = m_Gamepad.MenuButtons ();       // resync after the menu
 				next     = CTimer::GetClockTicks64 ();    // re-baseline pacing
 				if (toBrowser) break;
 				m_Display.ForceRepaint ();   // wipe the overlay from the letterbox bars

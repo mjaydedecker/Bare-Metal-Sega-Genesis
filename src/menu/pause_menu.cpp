@@ -92,7 +92,7 @@ int PauseMenu::PickSlot(bool forLoad)
     int ch = (int) m_pCanvas->CharH();
 
     bool     redraw = true;
-    unsigned prev   = m_pGamepad->Buttons();
+    unsigned prev   = m_pGamepad->MenuButtons();
     for (;;)
     {
         if (redraw)
@@ -119,7 +119,7 @@ int PauseMenu::PickSlot(bool forLoad)
 
         m_pUSBHCI->UpdatePlugAndPlay();
         m_pGamepad->Poll();
-        unsigned now     = m_pGamepad->Buttons();
+        unsigned now     = m_pGamepad->MenuButtons();
         unsigned pressed = now & ~prev;
         prev = now;
 
@@ -151,12 +151,12 @@ MenuAction PauseMenu::Run(void)
     int selected = 0;
     Render(selected);
 
-    unsigned prev = m_pGamepad->Buttons();
+    unsigned prev = m_pGamepad->MenuButtons();
     for (;;)
     {
         m_pUSBHCI->UpdatePlugAndPlay();
         m_pGamepad->Poll();
-        unsigned now     = m_pGamepad->Buttons();
+        unsigned now     = m_pGamepad->MenuButtons();
         unsigned pressed = now & ~prev;
         prev = now;
 
@@ -187,7 +187,7 @@ MenuAction PauseMenu::Run(void)
                     Message(ok ? msg : "Save failed.");
                 }
                 Render(selected);
-                prev = m_pGamepad->Buttons();
+                prev = m_pGamepad->MenuButtons();
                 break;
             }
 
@@ -199,7 +199,7 @@ MenuAction PauseMenu::Run(void)
                     Message("Load failed.");
                 }
                 Render(selected);
-                prev = m_pGamepad->Buttons();
+                prev = m_pGamepad->MenuButtons();
                 break;
             }
 
@@ -209,7 +209,7 @@ MenuAction PauseMenu::Run(void)
             case 4:                       // Settings
                 m_pSettingsScreen->Run();
                 Render(selected);
-                prev = m_pGamepad->Buttons();
+                prev = m_pGamepad->MenuButtons();
                 break;
 
             case 5:                       // Return to ROM Browser

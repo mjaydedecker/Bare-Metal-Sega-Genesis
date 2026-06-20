@@ -91,12 +91,12 @@ void SettingsScreen::Run(void)
     int selected = 0;
     Render(selected);
 
-    unsigned prev = m_pGamepad->Buttons();
+    unsigned prev = m_pGamepad->MenuButtons();
     for (;;)
     {
         m_pUSBHCI->UpdatePlugAndPlay();
         m_pGamepad->Poll();
-        unsigned now     = m_pGamepad->Buttons();
+        unsigned now     = m_pGamepad->MenuButtons();
         unsigned pressed = now & ~prev;
         prev = now;
 
