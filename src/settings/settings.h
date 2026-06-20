@@ -13,6 +13,7 @@
 
 enum class ScaleMode { Integer, Stretch };
 enum class Region    { Auto, NTSC, PAL };
+enum class MenuHotkey { StartSelect, StartA, StartB, LR };
 
 struct Settings
 {
@@ -22,10 +23,12 @@ struct Settings
     bool      mute;         // audio mute
     Region    region;       // region: auto | ntsc | pal
     char      auto_launch_rom[256];   // ROM path to boot into ("" = unset)
+    MenuHotkey menu_hotkey; // controller combo that opens the pause menu
 
     Settings(void)
     :   scale_mode(ScaleMode::Integer), widescreen(false),
-        volume(100), mute(false), region(Region::Auto)
+        volume(100), mute(false), region(Region::Auto),
+        menu_hotkey(MenuHotkey::StartSelect)
     {
         auto_launch_rom[0] = '\0';
     }
@@ -44,5 +47,9 @@ const char *region_file_value(Region r);
 
 // Region as the core's option value ("auto" | "ntsc-u" | "pal").
 const char *region_core_value(Region r);
+
+// Menu hotkey as written to the settings file
+// ("start+select" | "start+a" | "start+b" | "l+r").
+const char *menu_hotkey_file_value(MenuHotkey h);
 
 #endif
