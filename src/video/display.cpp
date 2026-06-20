@@ -11,7 +11,8 @@
 #include <stdint.h>
 
 Display::Display(void)
-:   m_pFB(0), m_pBuffer(0), m_Pitch(0), m_FbW(0), m_FbH(0), m_LastW(0), m_LastH(0)
+:   m_pFB(0), m_pBuffer(0), m_Pitch(0), m_FbW(0), m_FbH(0), m_LastW(0), m_LastH(0),
+    m_ScaleMode(ScaleMode::Integer)
 {
 }
 
@@ -69,7 +70,22 @@ void Display::Blit(const void *src, unsigned width, unsigned height, size_t pitc
         m_LastH = height;
     }
 
-    // Largest integer scale that fits the framebuffer.
+    if (m_ScaleMode == ScaleMode::Stretch && width != 0 && height != 0)
+    {
+        // Largest 4:3 rectangle that fits the framebuffer, centered; the frame
+        // is stretched (non-integer) to fill it.
+        unsigned rw = m_FbW;
+        unsigned rh = m_FbW * 3 / 4;
+        if (rh > m_FbH) { rh = m_FbH; rw = m_FbH * 4 / 3; }
+        unsigned ox = (m_FbW - rw) / 2;
+        unsigned oy = (m_FbH - rh) / 2;
+        blit_rgb565_scaled(m_pBuffer, m_Pitch, m_FbW, m_FbH,
+                           (const uint16_t *) src, (unsigned) pitch,
+                           width, height, ox, oy, rw, rh);
+        return;
+    }
+
+    // Integer mode: largest whole scale that fits the framebuffer.
     unsigned scale = 1;
     if (width != 0 && height != 0)
     {
