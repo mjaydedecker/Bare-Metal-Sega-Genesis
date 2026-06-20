@@ -35,6 +35,27 @@ int main(void)
     assert(rt.scale_mode == ScaleMode::Stretch);
     assert(rt.widescreen == true);
 
+    // Defaults for the new audio fields.
+    assert(d.volume == 100);
+    assert(d.mute == false);
+
+    // Parse + clamp volume; mute truthy.
+    Settings v = parse_settings("volume=70\nmute=on\n");
+    assert(v.volume == 70);
+    assert(v.mute == true);
+    Settings vc = parse_settings("volume=250\n");      // clamps to 100
+    assert(vc.volume == 100);
+    Settings vb = parse_settings("volume=bogus\n");    // non-numeric -> default
+    assert(vb.volume == 100);
+
+    // Round-trip includes volume + mute.
+    Settings as; as.volume = 30; as.mute = true;
+    char abuf[256];
+    serialize_settings(as, abuf, sizeof abuf);
+    Settings art = parse_settings(abuf);
+    assert(art.volume == 30);
+    assert(art.mute == true);
+
     printf("All settings tests passed\n");
     return 0;
 }

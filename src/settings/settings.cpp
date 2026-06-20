@@ -71,6 +71,25 @@ Settings parse_settings(const char *text)
                                                : ScaleMode::Integer;
         else if (ieq(key, "widescreen"))
             s.widescreen = truthy(val);
+        else if (ieq(key, "volume"))
+        {
+            unsigned v = 0;
+            bool any = false;
+            for (const char *q = val; *q >= '0' && *q <= '9'; q++)
+            {
+                v = v * 10 + (unsigned) (*q - '0');
+                any = true;
+                if (v > 100000) break;        // guard against silly input
+            }
+            if (any)
+            {
+                if (v > 100) v = 100;
+                s.volume = v;
+            }
+            // non-numeric: keep default
+        }
+        else if (ieq(key, "mute"))
+            s.mute = truthy(val);
         // unknown keys: ignored
     }
     return s;
@@ -85,6 +104,20 @@ static void appendz(char *out, size_t out_size, const char *src)
     out[len] = '\0';
 }
 
+// Append an unsigned integer as decimal text.
+static void append_uint(char *out, size_t out_size, unsigned v)
+{
+    char rev[12];
+    int  n = 0;
+    if (v == 0) rev[n++] = '0';
+    else while (v) { rev[n++] = (char) ('0' + v % 10); v /= 10; }
+    char fwd[12];
+    int  m = 0;
+    while (n) fwd[m++] = rev[--n];
+    fwd[m] = '\0';
+    appendz(out, out_size, fwd);
+}
+
 void serialize_settings(const Settings &s, char *out, size_t out_size)
 {
     if (out == 0 || out_size == 0) return;
@@ -95,5 +128,9 @@ void serialize_settings(const Settings &s, char *out, size_t out_size)
                                                               : "integer");
     appendz(out, out_size, "\nwidescreen=");
     appendz(out, out_size, s.widescreen ? "on" : "off");
+    appendz(out, out_size, "\nvolume=");
+    append_uint(out, out_size, s.volume);
+    appendz(out, out_size, "\nmute=");
+    appendz(out, out_size, s.mute ? "on" : "off");
     appendz(out, out_size, "\n");
 }
