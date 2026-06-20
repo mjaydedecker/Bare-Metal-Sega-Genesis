@@ -103,6 +103,13 @@ Settings parse_settings(const char *text)
                 s.auto_launch_rom[i] = val[i];
             s.auto_launch_rom[i] = '\0';
         }
+        else if (ieq(key, "menu_hotkey"))
+        {
+            if      (ieq(val, "start+a")) s.menu_hotkey = MenuHotkey::StartA;
+            else if (ieq(val, "start+b")) s.menu_hotkey = MenuHotkey::StartB;
+            else if (ieq(val, "l+r"))     s.menu_hotkey = MenuHotkey::LR;
+            else                          s.menu_hotkey = MenuHotkey::StartSelect;
+        }
         // unknown keys: ignored
     }
     return s;
@@ -151,6 +158,17 @@ const char *region_core_value(Region r)
     }
 }
 
+const char *menu_hotkey_file_value(MenuHotkey h)
+{
+    switch (h)
+    {
+    case MenuHotkey::StartA: return "start+a";
+    case MenuHotkey::StartB: return "start+b";
+    case MenuHotkey::LR:     return "l+r";
+    default:                 return "start+select";
+    }
+}
+
 void serialize_settings(const Settings &s, char *out, size_t out_size)
 {
     if (out == 0 || out_size == 0) return;
@@ -169,5 +187,7 @@ void serialize_settings(const Settings &s, char *out, size_t out_size)
     appendz(out, out_size, region_file_value(s.region));
     appendz(out, out_size, "\nauto_launch_rom=");
     appendz(out, out_size, s.auto_launch_rom);
+    appendz(out, out_size, "\nmenu_hotkey=");
+    appendz(out, out_size, menu_hotkey_file_value(s.menu_hotkey));
     appendz(out, out_size, "\n");
 }

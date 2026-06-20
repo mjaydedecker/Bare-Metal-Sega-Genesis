@@ -84,6 +84,25 @@ int main(void)
     assert(rrt.region == Region::PAL);
     assert(strcmp(rrt.auto_launch_rom, "SD:/roms/Sonic 2.md") == 0);
 
+    // Menu hotkey defaults + parse + invalid fallback.
+    assert(d.menu_hotkey == MenuHotkey::StartSelect);
+    assert(parse_settings("menu_hotkey=start+a\n").menu_hotkey == MenuHotkey::StartA);
+    assert(parse_settings("menu_hotkey=start+b\n").menu_hotkey == MenuHotkey::StartB);
+    assert(parse_settings("menu_hotkey=l+r\n").menu_hotkey      == MenuHotkey::LR);
+    assert(parse_settings("menu_hotkey=bogus\n").menu_hotkey    == MenuHotkey::StartSelect);
+
+    // File-value mapping.
+    assert(strcmp(menu_hotkey_file_value(MenuHotkey::StartSelect), "start+select") == 0);
+    assert(strcmp(menu_hotkey_file_value(MenuHotkey::StartA),      "start+a")      == 0);
+    assert(strcmp(menu_hotkey_file_value(MenuHotkey::StartB),      "start+b")      == 0);
+    assert(strcmp(menu_hotkey_file_value(MenuHotkey::LR),          "l+r")          == 0);
+
+    // Round-trip.
+    Settings hs; hs.menu_hotkey = MenuHotkey::LR;
+    char hbuf[512];
+    serialize_settings(hs, hbuf, sizeof hbuf);
+    assert(parse_settings(hbuf).menu_hotkey == MenuHotkey::LR);
+
     printf("All settings tests passed\n");
     return 0;
 }

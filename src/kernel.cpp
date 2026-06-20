@@ -139,7 +139,6 @@ TShutdownMode CKernel::Run (void)
 	g_gamepad = &m_Gamepad;
 
 	#define RETRO_DEVICE_MDPAD_6B RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_JOYPAD, 1)
-	const unsigned HOTKEY = GP_START | GP_SELECT;
 
 	boolean audioInited = FALSE;
 	boolean firstBoot   = TRUE;
@@ -239,8 +238,9 @@ TShutdownMode CKernel::Run (void)
 			unsigned pressed = now & ~prevBtns;
 			prevBtns = now;
 
-			// Hotkey: Start+Select both held, completed this frame.
-			if ((pressed & HOTKEY) && (now & HOTKEY) == HOTKEY)
+			// Configurable menu hotkey (both buttons held), read live.
+			unsigned hotkey = hotkey_mask (m_Settings.menu_hotkey);
+			if ((pressed & hotkey) && (now & hotkey) == hotkey)
 			{
 				MenuAction action = m_PauseMenu.Run ();
 				if (action == MenuAction::Reset)

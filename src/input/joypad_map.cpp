@@ -51,3 +51,14 @@ int16_t joypad_state(unsigned buttons, unsigned retro_id)
     }
     return (buttons & mask) ? 1 : 0;
 }
+
+unsigned hotkey_mask(MenuHotkey h)
+{
+    switch (h)
+    {
+    case MenuHotkey::StartA: return GP_START | GP_A;
+    case MenuHotkey::StartB: return GP_START | GP_B;
+    case MenuHotkey::LR:     return GP_LB | GP_RB;
+    default:                 return GP_START | GP_SELECT;
+    }
+}
