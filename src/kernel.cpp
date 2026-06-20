@@ -6,11 +6,6 @@
 
 #include "kernel.h"
 
-// ROM file to load from the SD card root.
-// Circle's FatFS supports root directory only with 8.3 filenames.
-// Copy your Genesis ROM to the SD card and rename it to this name.
-#define ROM_TITLE "GAME.MD"
-
 static const char FromKernel[] = "kernel";
 
 CKernel::CKernel (void)
@@ -22,7 +17,8 @@ CKernel::CKernel (void)
 	m_EMMC (&m_Interrupt, &m_Timer, &m_ActLED),
 	m_Audio (&m_Interrupt),
 	m_Gamepad (&m_DeviceNameService),
-	m_SDCard (m_FileSystem, m_DeviceNameService),
+	m_Storage (),
+	m_RomMenu (&m_Screen, &m_Gamepad, &m_Storage, &m_USBHCI),
 	m_pROMBuffer (0),
 	m_nROMSize (0)
 {
@@ -84,16 +80,6 @@ boolean CKernel::Initialize (void)
 
 	if (bOK)
 	{
-		m_Logger.Write (FromKernel, LogNotice, "Initialising video");
-		bOK = m_Display.Initialize ();
-		if (!bOK)
-		{
-			m_Logger.Write (FromKernel, LogPanic, "Display init failed");
-		}
-	}
-
-	if (bOK)
-	{
 		// USB gamepads enumerate asynchronously via plug-and-play; the pad is
 		// acquired later in the frame loop (UpdatePlugAndPlay + Gamepad::Poll).
 		m_Logger.Write (FromKernel, LogNotice, "Input: USB gamepad (plug-and-play)");
@@ -108,20 +94,32 @@ TShutdownMode CKernel::Run (void)
 		"Bare Metal Sega Genesis — build " __DATE__ " " __TIME__);
 
 	// Mount the SD card filesystem.
-	if (!m_SDCard.Mount ())
+	if (!m_Storage.Mount ())
 	{
 		m_Logger.Write (FromKernel, LogPanic, "SD card mount failed");
 		return ShutdownHalt;
 	}
 
-	// Load ROM from the SD card root.
-	// Rename your ROM to ROM_TITLE on the SD card before booting.
-	m_Logger.Write (FromKernel, LogNotice, "Loading ROM: %s", ROM_TITLE);
-	if (!m_SDCard.ReadFile (ROM_TITLE, &m_pROMBuffer, &m_nROMSize))
+	// Browse SD:/roms and let the user pick a ROM (renders on the console).
+	char romPath[300];
+	if (!m_RomMenu.Run (romPath, sizeof romPath))
 	{
-		m_Logger.Write (FromKernel, LogPanic,
-			"ROM not found — copy your Genesis ROM to the SD card root as %s",
-			ROM_TITLE);
+		m_Logger.Write (FromKernel, LogPanic, "No ROMs found in /roms");
+		return ShutdownHalt;
+	}
+
+	// Read the selected ROM.
+	m_Logger.Write (FromKernel, LogNotice, "Loading ROM: %s", romPath);
+	if (!m_Storage.ReadFile (romPath, &m_pROMBuffer, &m_nROMSize))
+	{
+		m_Logger.Write (FromKernel, LogPanic, "Failed to read ROM: %s", romPath);
+		return ShutdownHalt;
+	}
+
+	// Hand the screen over from the menu console to the game framebuffer.
+	if (!m_Display.Initialize ())
+	{
+		m_Logger.Write (FromKernel, LogPanic, "Display init failed");
 		return ShutdownHalt;
 	}
 
@@ -149,7 +147,7 @@ TShutdownMode CKernel::Run (void)
 
 	// Load the ROM.
 	struct retro_game_info gameInfo;
-	gameInfo.path = ROM_TITLE;
+	gameInfo.path = romPath;
 	gameInfo.data = m_pROMBuffer;
 	gameInfo.size = m_nROMSize;
 	gameInfo.meta = "";

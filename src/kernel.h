@@ -21,9 +21,9 @@
 #include <circle/usb/usbhcidevice.h>
 #include "audio/audio_driver.h"
 #include <SDCard/emmc.h>
-#include <circle/fs/fat/fatfs.h>
 #include <circle/types.h>
-#include "storage/sdcard.h"
+#include "storage/storage.h"
+#include "menu/rom_menu.h"
 #include "libretro/environment.h"
 #include "libretro/callbacks.h"
 #include "video/display.h"
@@ -62,13 +62,11 @@ private:
 	CLogger            m_Logger;
 	CUSBHCIDevice      m_USBHCI;     // gamepad input (M7)
 	CEMMCDevice        m_EMMC;       // SD card block device
-	CFATFileSystem     m_FileSystem; // FAT filesystem over EMMC
 	AudioDriver        m_Audio;      // HDMI audio output (M6)
 	Display            m_Display;    // HDMI video output (M5)
 	Gamepad            m_Gamepad;    // USB controller input (M7)
-
-	// Storage wrapper — declared after m_FileSystem and m_DeviceNameService.
-	SDCard             m_SDCard;
+	Storage            m_Storage;    // SD card filesystem (ChaN FatFS)
+	RomMenu            m_RomMenu;    // on-screen ROM browser
 
 	// ROM buffer — allocated by SDCard::ReadFile, passed to core in M4.
 	u8    *m_pROMBuffer;

@@ -24,7 +24,6 @@ DEFINE += -DKERNEL_MAX_SIZE=0x1400000
 # Genesis-Plus-GX-Wide objects are added in M4.
 OBJS = src/main.o \
        src/kernel.o \
-       src/storage/sdcard.o \
        src/libretro/environment.o \
        src/libretro/callbacks.o \
        src/runtime_stubs.o \
@@ -56,7 +55,6 @@ LIBS = libs/libgenesis.a \
        $(CIRCLEHOME)/lib/input/libinput.a \
        $(CIRCLEHOME)/lib/sound/libsound.a \
        $(CIRCLEHOME)/addon/fatfs/libfatfs.a \
-       $(CIRCLEHOME)/lib/fs/fat/libfatfs.a \
        $(CIRCLEHOME)/lib/fs/libfs.a \
        $(CIRCLEHOME)/lib/libcircle.a
 
@@ -104,16 +102,15 @@ $(CIRCLEHOME)/lib/input/libinput.a: $(CIRCLEHOME)/Config.mk
 $(CIRCLEHOME)/lib/sound/libsound.a: $(CIRCLEHOME)/Config.mk
 	$(CIRCLE_MAKE)
 
-$(CIRCLEHOME)/lib/fs/fat/libfatfs.a: $(CIRCLEHOME)/Config.mk
-	$(CIRCLE_MAKE)
-
-$(CIRCLEHOME)/lib/fs/libfs.a: $(CIRCLEHOME)/Config.mk
-	$(CIRCLE_MAKE)
-
 $(CIRCLEHOME)/addon/SDCard/libsdcard.a: $(CIRCLEHOME)/Config.mk
 	$(CIRCLE_MAKE)
 
 $(CIRCLEHOME)/addon/fatfs/libfatfs.a: $(CIRCLEHOME)/Config.mk
+	$(CIRCLE_MAKE)
+
+# libfs.a provides CPartitionManager, used by CEMMCDevice (and USB mass
+# storage) — required even though we no longer use the built-in CFATFileSystem.
+$(CIRCLEHOME)/lib/fs/libfs.a: $(CIRCLEHOME)/Config.mk
 	$(CIRCLE_MAKE)
 
 -include $(DEPS)
