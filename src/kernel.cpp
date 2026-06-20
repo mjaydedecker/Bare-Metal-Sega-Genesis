@@ -221,6 +221,7 @@ TShutdownMode CKernel::Run (void)
 				prevBtns = m_Gamepad.Buttons ();          // resync after the menu
 				next     = CTimer::GetClockTicks64 ();    // re-baseline pacing
 				if (toBrowser) break;
+				m_Display.ForceRepaint ();   // wipe the overlay from the letterbox bars
 				continue;
 			}
 

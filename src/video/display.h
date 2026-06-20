@@ -37,6 +37,11 @@ public:
     unsigned Width (void) const { return m_FbW; }     // pixels
     unsigned Height(void) const { return m_FbH; }     // pixels
 
+    // Force the next Blit to clear the whole framebuffer (repaint the letterbox
+    // bars). Used after an on-screen overlay (e.g. the pause menu) drew over the
+    // bars, which Blit otherwise only repaints on a frame-size change.
+    void ForceRepaint(void) { m_LastW = 0; m_LastH = 0; }
+
 private:
     void ClearBlack(void);
 

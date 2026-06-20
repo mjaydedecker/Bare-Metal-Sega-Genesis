@@ -18,6 +18,36 @@ static void copy_name(char *dst, const char *src, unsigned dstsize)
     dst[i] = '\0';
 }
 
+// Case-insensitive name comparison (a<b: <0, equal: 0, a>b: >0).
+static int ci_cmp(const char *a, const char *b)
+{
+    for (;;)
+    {
+        char ca = *a, cb = *b;
+        if (ca >= 'A' && ca <= 'Z') ca = (char) (ca + 32);
+        if (cb >= 'A' && cb <= 'Z') cb = (char) (cb + 32);
+        if (ca != cb) return (int) (unsigned char) ca - (int) (unsigned char) cb;
+        if (ca == '\0') return 0;
+        a++; b++;
+    }
+}
+
+// Insertion sort `n` entries by name, case-insensitive. n is small (one dir).
+static void sort_entries(Entry *e, int n)
+{
+    for (int i = 1; i < n; i++)
+    {
+        Entry key = e[i];
+        int j = i - 1;
+        while (j >= 0 && ci_cmp(e[j].name, key.name) > 0)
+        {
+            e[j + 1] = e[j];
+            j--;
+        }
+        e[j + 1] = key;
+    }
+}
+
 Storage::Storage(void)
 :   m_bMounted(false)
 {
@@ -55,6 +85,7 @@ int Storage::ListDir(const char *dir, Entry *out, int max)
             n++;
         }
     }
+    int nDirs = n;
 
     // Pass 2: ROM files. f_readdir(&d, 0) rewinds the directory.
     f_readdir(&d, 0);
@@ -69,6 +100,10 @@ int Storage::ListDir(const char *dir, Entry *out, int max)
     }
 
     f_closedir(&d);
+
+    // Sort each group alphabetically (case-insensitive): directories, then files.
+    sort_entries(out, nDirs);
+    sort_entries(out + nDirs, n - nDirs);
     return n;
 }
 
