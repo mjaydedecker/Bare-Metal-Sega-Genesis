@@ -42,6 +42,7 @@ OBJS = src/main.o \
        src/menu/pause_menu.o \
        src/menu/save_path.o \
        src/menu/save_state.o \
+       src/menu/sram.o \
        src/ui/text_canvas.o
 
 # Extra include path so src/kernel.cpp and src/libretro/*.cpp can find
