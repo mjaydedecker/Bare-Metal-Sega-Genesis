@@ -43,6 +43,7 @@ OBJS = src/main.o \
        src/menu/save_path.o \
        src/menu/save_state.o \
        src/menu/sram.o \
+       src/menu/settings_screen.o \
        src/settings/settings.o \
        src/settings/settings_store.o \
        src/ui/text_canvas.o
