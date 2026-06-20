@@ -43,6 +43,8 @@ OBJS = src/main.o \
        src/menu/save_path.o \
        src/menu/save_state.o \
        src/menu/sram.o \
+       src/settings/settings.o \
+       src/settings/settings_store.o \
        src/ui/text_canvas.o
 
 # Extra include path so src/kernel.cpp and src/libretro/*.cpp can find
@@ -65,6 +67,7 @@ LIBS = libs/libgenesis.a \
 
 EXTRACLEAN = src/*.o src/*.d src/storage/*.o src/storage/*.d \
              src/menu/*.o src/menu/*.d \
+             src/settings/*.o src/settings/*.d \
              src/ui/*.o src/ui/*.d \
              src/libretro/*.o src/libretro/*.d \
              src/video/*.o src/video/*.d \
