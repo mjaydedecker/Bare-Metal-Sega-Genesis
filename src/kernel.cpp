@@ -202,7 +202,7 @@ TShutdownMode CKernel::Run (void)
 		boolean audioOK = audioInited;
 
 		retro_set_controller_port_device (0, RETRO_DEVICE_MDPAD_6B);
-		retro_set_controller_port_device (1, RETRO_DEVICE_NONE);
+		retro_set_controller_port_device (1, RETRO_DEVICE_MDPAD_6B);
 
 		m_SaveState.SetGame (romPath);   // save/load target for this game
 		m_Sram.SetGame (romPath);

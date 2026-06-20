@@ -57,9 +57,10 @@ int16_t input_state_cb(unsigned port, unsigned device, unsigned index,
                        unsigned id)
 {
     (void)index;
-    if (port != 0 || device != RETRO_DEVICE_JOYPAD || g_gamepad == 0)
+    if (port >= Gamepad::MAX_PADS || device != RETRO_DEVICE_JOYPAD ||
+        g_gamepad == 0)
     {
         return 0;
     }
-    return joypad_state(g_gamepad->Buttons(), id);
+    return joypad_state(g_gamepad->Buttons(port), id);
 }
