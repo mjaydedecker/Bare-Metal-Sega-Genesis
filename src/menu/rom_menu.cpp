@@ -103,7 +103,7 @@ bool RomMenu::Run(char *outPath, unsigned outSize)
     {
         m_pUSBHCI->UpdatePlugAndPlay();
         m_pGamepad->Poll();
-        unsigned now = m_pGamepad->Buttons();
+        unsigned now = m_pGamepad->MenuButtons();
         unsigned pressed = now & ~prev;
         prev = now;
 
