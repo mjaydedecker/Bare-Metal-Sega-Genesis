@@ -19,9 +19,10 @@ CKernel::CKernel (void)
 	m_Audio (&m_Interrupt),
 	m_Gamepad (&m_DeviceNameService),
 	m_Storage (),
+	m_SaveState (&m_Storage),
 	m_Canvas (&m_Display),
 	m_RomMenu (&m_Canvas, &m_Gamepad, &m_Storage, &m_USBHCI),
-	m_PauseMenu (&m_Canvas, &m_Gamepad, &m_USBHCI),
+	m_PauseMenu (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_SaveState),
 	m_pROMBuffer (0),
 	m_nROMSize (0)
 {
@@ -190,6 +191,8 @@ TShutdownMode CKernel::Run (void)
 
 		retro_set_controller_port_device (0, RETRO_DEVICE_MDPAD_6B);
 		retro_set_controller_port_device (1, RETRO_DEVICE_NONE);
+
+		m_SaveState.SetGame (romPath);   // save/load target for this game
 
 		// --- Play ---
 		u64      next      = CTimer::GetClockTicks64 ();
