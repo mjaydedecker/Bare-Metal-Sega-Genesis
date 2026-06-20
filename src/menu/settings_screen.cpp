@@ -10,7 +10,7 @@
 #include "../libretro/environment.h"      // g_widescreen, g_variables_dirty
 #include <circle/timer.h>
 
-#define NUM_ROWS 2
+#define NUM_ROWS 4
 
 // RGB565 colours (match the pause menu palette).
 static const u16 BOX   = 0x0008;
@@ -20,9 +20,11 @@ static const u16 SELBG = 0x07FF;
 
 SettingsScreen::SettingsScreen(TextCanvas *pCanvas, Gamepad *pGamepad,
                                CUSBHCIDevice *pUSBHCI, Settings *pSettings,
-                               SettingsStore *pStore, Display *pDisplay)
+                               SettingsStore *pStore, Display *pDisplay,
+                               AudioDriver *pAudio)
 :   m_pCanvas(pCanvas), m_pGamepad(pGamepad), m_pUSBHCI(pUSBHCI),
-    m_pSettings(pSettings), m_pStore(pStore), m_pDisplay(pDisplay)
+    m_pSettings(pSettings), m_pStore(pStore), m_pDisplay(pDisplay),
+    m_pAudio(pAudio)
 {
 }
 
@@ -31,6 +33,21 @@ void SettingsScreen::Apply(void)
     m_pDisplay->SetScaleMode(m_pSettings->scale_mode);   // live
     g_widescreen      = m_pSettings->widescreen;         // core re-reads...
     g_variables_dirty = true;                            // ...on next poll/reset
+    m_pAudio->SetVolume(m_pSettings->volume);            // live
+    m_pAudio->SetMute(m_pSettings->mute);                // live
+}
+
+// Format a 0-100 volume as "< NNN >" into out (>= 8 bytes).
+static void fmt_volume(char *out, unsigned v)
+{
+    char rev[4];
+    int  n = 0;
+    if (v == 0) rev[n++] = '0';
+    else while (v) { rev[n++] = (char) ('0' + v % 10); v /= 10; }
+    int i = 0;
+    out[i++] = '<'; out[i++] = ' ';
+    while (n) out[i++] = rev[--n];
+    out[i++] = ' '; out[i++] = '>'; out[i] = '\0';
 }
 
 void SettingsScreen::Render(int selected)
@@ -43,11 +60,15 @@ void SettingsScreen::Render(int selected)
     m_pCanvas->FillRect(boxX, boxY, boxW, boxH, BOX);
     m_pCanvas->DrawText(boxX + cw, boxY + ch, "SETTINGS", WHITE, BOX);
 
+    char volVal[8];
+    fmt_volume(volVal, m_pSettings->volume);
     const char *scaleVal = m_pSettings->scale_mode == ScaleMode::Stretch
                                ? "< Stretch >" : "< Integer >";
     const char *wideVal  = m_pSettings->widescreen ? "< On >" : "< Off >";
-    const char *labels[NUM_ROWS] = { "Video Scale:", "Widescreen:" };
-    const char *values[NUM_ROWS] = { scaleVal, wideVal };
+    const char *muteVal  = m_pSettings->mute ? "< On >" : "< Off >";
+    const char *labels[NUM_ROWS] = { "Video Scale:", "Widescreen:",
+                                     "Volume:", "Mute:" };
+    const char *values[NUM_ROWS] = { scaleVal, wideVal, volVal, muteVal };
 
     for (int i = 0; i < NUM_ROWS; i++)
     {
@@ -89,14 +110,33 @@ void SettingsScreen::Run(void)
             selected = (selected + 1) % NUM_ROWS;
             Render(selected);
         }
-        if (pressed & (GP_LEFT | GP_RIGHT))
+        int dir = 0;
+        if (pressed & GP_LEFT)  dir = -1;
+        if (pressed & GP_RIGHT) dir = +1;
+        if (dir != 0)
         {
-            if (selected == 0)
+            switch (selected)
+            {
+            case 0:   // Video Scale (toggle, either direction)
                 m_pSettings->scale_mode =
                     m_pSettings->scale_mode == ScaleMode::Integer
                         ? ScaleMode::Stretch : ScaleMode::Integer;
-            else
+                break;
+            case 1:   // Widescreen (toggle)
                 m_pSettings->widescreen = !m_pSettings->widescreen;
+                break;
+            case 2:   // Volume (+/- 10, clamped 0-100)
+            {
+                int v = (int) m_pSettings->volume + dir * 10;
+                if (v < 0)   v = 0;
+                if (v > 100) v = 100;
+                m_pSettings->volume = (unsigned) v;
+                break;
+            }
+            case 3:   // Mute (toggle)
+                m_pSettings->mute = !m_pSettings->mute;
+                break;
+            }
 
             Apply();
             m_pStore->Save(*m_pSettings);
