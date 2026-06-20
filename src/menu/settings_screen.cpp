@@ -11,7 +11,7 @@
 #include <circle/timer.h>
 #include <string.h>   // strcmp, strncpy for the auto-launch row
 
-#define NUM_ROWS 6
+#define NUM_ROWS 7
 
 // RGB565 colours (match the pause menu palette).
 static const u16 BOX   = 0x0008;
@@ -74,11 +74,17 @@ void SettingsScreen::Render(int selected)
     bool autoOn = m_pRomPath != 0 &&
                   strcmp(m_pSettings->auto_launch_rom, m_pRomPath) == 0;
     const char *autoVal = autoOn ? "< On >" : "< Off >";
+    const char *hotkeyVal =
+        m_pSettings->menu_hotkey == MenuHotkey::StartA ? "< Start+A >" :
+        m_pSettings->menu_hotkey == MenuHotkey::StartB ? "< Start+B >" :
+        m_pSettings->menu_hotkey == MenuHotkey::LR     ? "< L+R >"     :
+                                                         "< Start+Select >";
     const char *labels[NUM_ROWS] = { "Video Scale:", "Widescreen:",
                                      "Volume:", "Mute:",
-                                     "Region:", "Auto-launch:" };
+                                     "Region:", "Auto-launch:",
+                                     "Menu Hotkey:" };
     const char *values[NUM_ROWS] = { scaleVal, wideVal, volVal, muteVal,
-                                     regionVal, autoVal };
+                                     regionVal, autoVal, hotkeyVal };
 
     for (int i = 0; i < NUM_ROWS; i++)
     {
@@ -172,6 +178,14 @@ void SettingsScreen::Run(void)
                     m_pSettings->auto_launch_rom[
                         sizeof(m_pSettings->auto_launch_rom) - 1] = '\0';
                 }
+                break;
+            }
+            case 6:   // Menu Hotkey (cycle the 4 presets)
+            {
+                int h = (int) m_pSettings->menu_hotkey + dir;
+                if (h < 0) h = 3;
+                if (h > 3) h = 0;
+                m_pSettings->menu_hotkey = (MenuHotkey) h;
                 break;
             }
             }
