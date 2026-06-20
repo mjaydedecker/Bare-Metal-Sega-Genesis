@@ -18,7 +18,8 @@ CKernel::CKernel (void)
 	m_Audio (&m_Interrupt),
 	m_Gamepad (&m_DeviceNameService),
 	m_Storage (),
-	m_RomMenu (&m_Screen, &m_Gamepad, &m_Storage, &m_USBHCI),
+	m_Canvas (&m_Display),
+	m_RomMenu (&m_Canvas, &m_Gamepad, &m_Storage, &m_USBHCI),
 	m_pROMBuffer (0),
 	m_nROMSize (0)
 {
@@ -80,6 +81,16 @@ boolean CKernel::Initialize (void)
 
 	if (bOK)
 	{
+		m_Logger.Write (FromKernel, LogNotice, "Initialising video");
+		bOK = m_Display.Initialize ();
+		if (!bOK)
+		{
+			m_Logger.Write (FromKernel, LogPanic, "Display init failed");
+		}
+	}
+
+	if (bOK)
+	{
 		// USB gamepads enumerate asynchronously via plug-and-play; the pad is
 		// acquired later in the frame loop (UpdatePlugAndPlay + Gamepad::Poll).
 		m_Logger.Write (FromKernel, LogNotice, "Input: USB gamepad (plug-and-play)");
@@ -113,13 +124,6 @@ TShutdownMode CKernel::Run (void)
 	if (!m_Storage.ReadFile (romPath, &m_pROMBuffer, &m_nROMSize))
 	{
 		m_Logger.Write (FromKernel, LogPanic, "Failed to read ROM: %s", romPath);
-		return ShutdownHalt;
-	}
-
-	// Hand the screen over from the menu console to the game framebuffer.
-	if (!m_Display.Initialize ())
-	{
-		m_Logger.Write (FromKernel, LogPanic, "Display init failed");
 		return ShutdownHalt;
 	}
 

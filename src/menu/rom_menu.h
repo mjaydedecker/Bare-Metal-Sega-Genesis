@@ -3,14 +3,14 @@
 //
 // Bare Metal Sega Genesis
 // On-screen ROM browser: scans SD:/roms, navigates subfolders with the gamepad,
-// returns the selected ROM's full path. Renders on the text console.
+// returns the selected ROM's full path. Renders on the game framebuffer.
 //
 
 #ifndef _menu_rom_menu_h
 #define _menu_rom_menu_h
 
-#include <circle/screen.h>
 #include <circle/usb/usbhcidevice.h>
+#include "../ui/text_canvas.h"
 #include "../storage/storage.h"
 #include "../input/gamepad.h"
 #include "menu_state.h"
@@ -20,7 +20,7 @@
 class RomMenu
 {
 public:
-    RomMenu(CScreenDevice *pScreen, Gamepad *pGamepad,
+    RomMenu(TextCanvas *pCanvas, Gamepad *pGamepad,
             Storage *pStorage, CUSBHCIDevice *pUSBHCI);
 
     // Browse from SD:/roms. On launch, writes the selected ROM's full path
@@ -29,10 +29,10 @@ public:
     bool Run(char *outPath, unsigned outSize);
 
 private:
-    void Scan(void);                 // ListDir(m_path) -> m_entries (+ ".." when deep)
+    void Scan(void);
     void Render(const MenuState &s);
 
-    CScreenDevice *m_pScreen;
+    TextCanvas    *m_pCanvas;
     Gamepad       *m_pGamepad;
     Storage       *m_pStorage;
     CUSBHCIDevice *m_pUSBHCI;

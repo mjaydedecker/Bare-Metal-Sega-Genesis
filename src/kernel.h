@@ -27,6 +27,7 @@
 #include "libretro/environment.h"
 #include "libretro/callbacks.h"
 #include "video/display.h"
+#include "ui/text_canvas.h"
 #include "input/gamepad.h"
 #include <libretro.h>
 
@@ -66,6 +67,7 @@ private:
 	Display            m_Display;    // HDMI video output (M5)
 	Gamepad            m_Gamepad;    // USB controller input (M7)
 	Storage            m_Storage;    // SD card filesystem (ChaN FatFS)
+	TextCanvas         m_Canvas;     // on-screen UI on the game framebuffer
 	RomMenu            m_RomMenu;    // on-screen ROM browser
 
 	// ROM buffer — allocated by SDCard::ReadFile, passed to core in M4.
