@@ -125,6 +125,8 @@ TShutdownMode CKernel::Run (void)
 	m_Audio.SetVolume (m_Settings.volume);
 	m_Audio.SetMute (m_Settings.mute);
 	g_region_value = region_core_value (m_Settings.region);
+	g_map0 = &m_Settings.map1;
+	g_map1 = &m_Settings.map2;
 
 	// libretro callbacks + core init: once for the whole session.
 	retro_set_environment (environment_cb);

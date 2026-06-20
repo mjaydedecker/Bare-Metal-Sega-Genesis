@@ -7,7 +7,31 @@
 
 #include "joypad_map.h"
 
-int16_t joypad_state(unsigned buttons, unsigned retro_id)
+unsigned pad_bit(PadButton p)
+{
+    switch (p)
+    {
+    case PadButton::A:      return GP_A;
+    case PadButton::B:      return GP_B;
+    case PadButton::X:      return GP_X;
+    case PadButton::Y:      return GP_Y;
+    case PadButton::L:      return GP_LB;
+    case PadButton::R:      return GP_RB;
+    case PadButton::Start:  return GP_START;
+    case PadButton::Select: return GP_SELECT;
+    }
+    return 0;
+}
+
+// libretro id for each Genesis button index (A,B,C,X,Y,Z,Start,Mode).
+static const unsigned k_action_id[8] = {
+    RETRO_DEVICE_ID_JOYPAD_Y, RETRO_DEVICE_ID_JOYPAD_B,
+    RETRO_DEVICE_ID_JOYPAD_A, RETRO_DEVICE_ID_JOYPAD_L,
+    RETRO_DEVICE_ID_JOYPAD_X, RETRO_DEVICE_ID_JOYPAD_R,
+    RETRO_DEVICE_ID_JOYPAD_START, RETRO_DEVICE_ID_JOYPAD_SELECT
+};
+
+int16_t joypad_state(unsigned buttons, unsigned retro_id, const ButtonMap &map)
 {
     // The core reads the pad in one call via RETRO_DEVICE_ID_JOYPAD_MASK,
     // expecting a bitmask where bit N = button id N pressed. Build it.
@@ -24,7 +48,7 @@ int16_t joypad_state(unsigned buttons, unsigned retro_id)
         int16_t ret = 0;
         for (unsigned i = 0; i < sizeof ids / sizeof ids[0]; i++)
         {
-            if (joypad_state(buttons, ids[i]))
+            if (joypad_state(buttons, ids[i], map))
             {
                 ret |= (int16_t) (1 << ids[i]);
             }
@@ -32,24 +56,28 @@ int16_t joypad_state(unsigned buttons, unsigned retro_id)
         return ret;
     }
 
-    unsigned mask;
+    // D-pad: fixed directional mapping.
+    unsigned mask = 0;
     switch (retro_id)
     {
-    case RETRO_DEVICE_ID_JOYPAD_UP:     mask = GP_UP;     break;
-    case RETRO_DEVICE_ID_JOYPAD_DOWN:   mask = GP_DOWN;   break;
-    case RETRO_DEVICE_ID_JOYPAD_LEFT:   mask = GP_LEFT;   break;
-    case RETRO_DEVICE_ID_JOYPAD_RIGHT:  mask = GP_RIGHT;  break;
-    case RETRO_DEVICE_ID_JOYPAD_A:      mask = GP_A;      break;
-    case RETRO_DEVICE_ID_JOYPAD_B:      mask = GP_B;      break;
-    case RETRO_DEVICE_ID_JOYPAD_X:      mask = GP_X;      break;
-    case RETRO_DEVICE_ID_JOYPAD_Y:      mask = GP_Y;      break;
-    case RETRO_DEVICE_ID_JOYPAD_L:      mask = GP_LB;     break;
-    case RETRO_DEVICE_ID_JOYPAD_R:      mask = GP_RB;     break;
-    case RETRO_DEVICE_ID_JOYPAD_START:  mask = GP_START;  break;
-    case RETRO_DEVICE_ID_JOYPAD_SELECT: mask = GP_SELECT; break;
-    default:                            return 0;
+    case RETRO_DEVICE_ID_JOYPAD_UP:    mask = GP_UP;    break;
+    case RETRO_DEVICE_ID_JOYPAD_DOWN:  mask = GP_DOWN;  break;
+    case RETRO_DEVICE_ID_JOYPAD_LEFT:  mask = GP_LEFT;  break;
+    case RETRO_DEVICE_ID_JOYPAD_RIGHT: mask = GP_RIGHT; break;
+    default: break;
     }
-    return (buttons & mask) ? 1 : 0;
+    if (mask) return (buttons & mask) ? 1 : 0;
+
+    // Action buttons: remappable via the ButtonMap.
+    for (int i = 0; i < 8; i++)
+    {
+        if (k_action_id[i] == retro_id)
+        {
+            return (buttons & pad_bit(map.b[i])) ? 1 : 0;
+        }
+    }
+
+    return 0;
 }
 
 unsigned hotkey_mask(MenuHotkey h)

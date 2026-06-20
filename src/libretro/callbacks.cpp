@@ -17,6 +17,8 @@
 Display *g_display = 0;
 AudioDriver *g_audio = 0;
 Gamepad *g_gamepad = 0;
+const ButtonMap *g_map0 = 0;
+const ButtonMap *g_map1 = 0;
 
 void video_refresh_cb(const void *data, unsigned width, unsigned height,
                       size_t pitch)
@@ -62,5 +64,10 @@ int16_t input_state_cb(unsigned port, unsigned device, unsigned index,
     {
         return 0;
     }
-    return joypad_state(g_gamepad->Buttons(port), id);
+    const ButtonMap *map = (port == 0) ? g_map0 : g_map1;
+    if (map == 0)
+    {
+        return 0;
+    }
+    return joypad_state(g_gamepad->Buttons(port), id, *map);
 }

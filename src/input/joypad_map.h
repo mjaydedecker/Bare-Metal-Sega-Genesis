@@ -37,7 +37,14 @@
 
 // buttons: TGamePadButton bitmask. retro_id: RETRO_DEVICE_ID_JOYPAD_*.
 // Returns 1 if the mapped button is pressed, else 0.
-int16_t joypad_state(unsigned buttons, unsigned retro_id);
+// The GP_* bit for a physical pad button.
+unsigned pad_bit(PadButton p);
+
+// buttons: physical GP_* bitmask. retro_id: RETRO_DEVICE_ID_JOYPAD_*. map: the
+// active button map (action buttons are remappable; D-pad is fixed). Returns 1
+// if the (mapped) button is pressed, else 0; for JOYPAD_MASK returns the id
+// bitmask.
+int16_t joypad_state(unsigned buttons, unsigned retro_id, const ButtonMap &map);
 
 // The GP_* button bitmask for a menu-hotkey preset (both buttons held opens
 // the pause menu).
