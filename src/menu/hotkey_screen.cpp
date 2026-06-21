@@ -57,6 +57,7 @@ void HotkeyScreen::Render(int selected)
     unsigned conflicts =
         hotkey_conflicts(m_pSettings->hotkeys, m_pSettings->menu_hotkey);
 
+    m_pCanvas->Clear(0x0000);   // wipe any larger menu drawn before this one
     m_pCanvas->FillRect(boxX, boxY, boxW, boxH, BOX);
     m_pCanvas->DrawText(boxX + cw, boxY + ch, "HOTKEYS", WHITE, BOX);
 
