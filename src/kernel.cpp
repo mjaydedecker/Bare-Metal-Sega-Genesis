@@ -23,6 +23,7 @@ CKernel::CKernel (void)
 	m_SaveState (&m_Storage),
 	m_Sram (&m_Storage),
 	m_Canvas (&m_Display),
+	m_Overlay (&m_Canvas),
 	m_RomMenu (&m_Canvas, &m_Gamepad, &m_Storage, &m_USBHCI),
 	m_Settings (),
 	m_SettingsStore (&m_Storage),

@@ -51,7 +51,8 @@ OBJS = src/main.o \
        src/settings/settings.o \
        src/settings/settings_store.o \
        src/ui/text_canvas.o \
-       src/ui/hud.o
+       src/ui/hud.o \
+       src/ui/overlay.o
 
 # Auto-generated header-dependency files (one .d per object, emitted by the
 # compiler's -MMD). Without this, the `-include $(DEPS)` below expands to
