@@ -123,6 +123,17 @@ bool environment_cb(unsigned cmd, void *data)
             retro_variable *var = reinterpret_cast<retro_variable *>(data);
             if (var != 0 && var->key != 0)
             {
+                // CRITICAL: the core reuses one retro_variable across all option
+                // reads and never resets var->value, nor does it check our
+                // return value (it does `config.x = var.value ? atoi(var.value)
+                // : default`). If we leave var->value untouched when we don't
+                // handle a key, the core reads the value we set for a PREVIOUS
+                // key. e.g. region_detect="auto" leaking into psg_preamp/
+                // fm_preamp gives atoi("auto")==0 -> both sound chips muted ->
+                // total silence. Always null it so unhandled options fall back
+                // to the core's own defaults.
+                var->value = 0;
+
                 if (strcmp(var->key,
                            "genesis_plus_gx_wide_h40_extra_columns") == 0)
                 {
@@ -136,7 +147,7 @@ bool environment_cb(unsigned cmd, void *data)
                     return true;
                 }
             }
-            return false;   // other options: core keeps its defaults
+            return false;   // unhandled: var->value nulled -> core uses defaults
         }
 
         case RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE:
