@@ -36,6 +36,7 @@ OBJS = src/main.o \
        src/input/joypad_map.o \
        src/input/gamepad.o \
        src/input/pad_reconcile.o \
+       src/input/hotkey.o \
        src/storage/storage.o \
        src/menu/rom_filter.o \
        src/menu/menu_state.o \
