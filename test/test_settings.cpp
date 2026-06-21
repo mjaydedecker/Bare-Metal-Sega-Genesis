@@ -210,8 +210,8 @@ int main(void)
     serialize_settings(i2ss, i2sbuf, sizeof i2sbuf);
     assert(parse_settings(i2sbuf).audio_output == AudioOutput::I2S);
 
-    // Vsync defaults on; parses off/on; round-trips (truthy parse, like mute).
-    assert(d.vsync == true);
+    // Vsync defaults OFF (Pi 2 vblank-wait frame cliff); parses off/on; round-trips.
+    assert(d.vsync == false);
     assert(parse_settings("vsync=off\n").vsync == false);
     assert(parse_settings("vsync=on\n").vsync  == true);
     Settings vs2; vs2.vsync = false;
