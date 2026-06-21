@@ -1,7 +1,7 @@
 # Output HDMI Mode Picker — Design
 
 **Date:** 2026-06-20
-**Status:** approved design, pending implementation plan
+**Status:** IMPLEMENTED (2026-06-20) — `Display::SetMode` (67c37c1), `VideoModeScreen` confirm-or-revert (b898f37), kernel boot-apply + Settings "Video Mode..." row; host tests in `test_settings`. Pending hardware verification only.
 **Related:** video settings spec (deferred this as "spec-2"); M5 video output (the
 framebuffer=output-mode gotcha); the settings subsystem + Settings screen.
 

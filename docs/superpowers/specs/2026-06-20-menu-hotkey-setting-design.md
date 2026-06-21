@@ -1,7 +1,7 @@
 # Menu Hotkey Setting — Design
 
 **Date:** 2026-06-20
-**Status:** approved design, pending implementation plan
+**Status:** IMPLEMENTED (merged 8ccd2d8) — `menu_hotkey` field + parse/serialize (e3cf0ff), Settings row (2e9d355), kernel wiring via `hotkey_mask` (b2324ad); host tests in `test_settings` + `test_joypad`. Pending hardware verification only.
 **Related:** FSD §4.9.2 (config key `menu_hotkey`, default `start+select`); the settings subsystem and Settings screen (video/audio/region settings).
 
 ## Summary

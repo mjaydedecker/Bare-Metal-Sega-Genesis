@@ -236,6 +236,20 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 
 ---
 
+## P. Audio latency presets
+
+- [ ] **P1 — Live change.** Pause → Settings → **Audio Latency**. Left/Right cycles
+  Low / Medium / High; selecting applies on resume without reboot.
+- [ ] **P2 — Low is clean.** Set Low on a demanding game. **Expect:** audio stays
+  clean — the underrun (U) counter in the HUD / ~5 s log does not climb steadily.
+- [ ] **P3 — High reflects in HUD.** Set High. **Expect:** the HUD `target` value
+  rises (more frames buffered); audio still clean.
+- [ ] **P4 — Medium == before.** Set Medium. **Expect:** behaves exactly as prior
+  to this feature.
+- [ ] **P5 — Persisted.** Confirm `audio_latency` in `SD:/settings.txt`; survives reboot.
+
+---
+
 ## Results summary
 
 | Group | Pass | Notes |
@@ -255,6 +269,7 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 | M. Diagnostics HUD | | |
 | N. Hotkeys + toasts | | |
 | O. Hotkey remapping | | |
+| P. Audio latency | | |
 
 Anything that fails: note the exact symptom and which ROM, and we'll debug it
 systematically (root cause first).

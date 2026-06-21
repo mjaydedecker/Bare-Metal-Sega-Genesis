@@ -245,7 +245,6 @@ TShutdownMode CKernel::Run (void)
 		double   fps            = (double) avInfo.timing.fps;
 		if (fps < 1.0 || fps > 61.0) fps = 60.0;
 		unsigned framesPerVideo = sampleRate ? (unsigned) (sampleRate / fps) : 0;
-		unsigned target         = framesPerVideo * 2;
 		u64      period_us      = (u64) (1000000.0 / fps);
 
 		// Audio: initialise once (Genesis sample rate is constant).
@@ -356,6 +355,11 @@ TShutdownMode CKernel::Run (void)
 
 			retro_run ();
 			m_Sram.Tick ();              // periodic dirty-checked SRAM auto-save
+
+			// Audio buffering depth from the live latency setting (Medium == the
+			// historical framesPerVideo*2). The gate stays one frame above target.
+			unsigned target = audio_latency_frames (m_Settings.audio_latency)
+			                  * framesPerVideo;
 
 			// Measured FPS: count frames, recompute every ~1 s (ticks are us).
 			fpsFrames++;

@@ -13,7 +13,7 @@
 #include "controls_screen.h"
 #include "video_mode_screen.h"
 
-#define NUM_ROWS 13
+#define NUM_ROWS 14
 
 // RGB565 colours (match the pause menu palette).
 static const u16 BOX   = 0x0008;
@@ -92,16 +92,21 @@ void SettingsScreen::Render(int selected)
                                ? "< Analog >" : "< HDMI >";
     const char *vsyncVal = m_pSettings->vsync ? "< On >" : "< Off >";
     const char *dbgVal   = m_pSettings->debug_overlay ? "< On >" : "< Off >";
+    const char *latVal =
+        m_pSettings->audio_latency == AudioLatency::Low  ? "< Low >"  :
+        m_pSettings->audio_latency == AudioLatency::High ? "< High >" :
+                                                           "< Medium >";
     const char *labels[NUM_ROWS] = { "Video Scale:", "Widescreen:",
                                      "Volume:", "Mute:",
                                      "Region:", "Auto-launch:",
                                      "Menu Hotkey:", "Audio out:",
                                      "Vsync:", "Debug Overlay:",
+                                     "Audio Latency:",
                                      "Controls...", "Video Mode...",
                                      "Hotkeys..." };
     const char *values[NUM_ROWS] = { scaleVal, wideVal, volVal, muteVal,
                                      regionVal, autoVal, hotkeyVal, audioVal,
-                                     vsyncVal, dbgVal, "", "", "" };
+                                     vsyncVal, dbgVal, latVal, "", "", "" };
 
     for (int i = 0; i < NUM_ROWS; i++)
     {
@@ -218,6 +223,14 @@ void SettingsScreen::Run(void)
             case 9:   // Debug Overlay (toggle diagnostics HUD; live)
                 m_pSettings->debug_overlay = !m_pSettings->debug_overlay;
                 break;
+            case 10:  // Audio Latency (cycle Low -> Medium -> High; live)
+            {
+                int l = (int) m_pSettings->audio_latency + dir;
+                if (l < (int) AudioLatency::Low)  l = (int) AudioLatency::Low;
+                if (l > (int) AudioLatency::High) l = (int) AudioLatency::High;
+                m_pSettings->audio_latency = (AudioLatency) l;
+                break;
+            }
             }
 
             Apply();
@@ -226,19 +239,19 @@ void SettingsScreen::Run(void)
         }
         if (pressed & GP_START)
         {
-            if (selected == 10)                       // Controls...
+            if (selected == 11)                       // Controls...
             {
                 m_pControls->Run();
                 prev = m_pGamepad->MenuButtons();
                 Render(selected);
             }
-            else if (selected == 11)                  // Video Mode...
+            else if (selected == 12)                  // Video Mode...
             {
                 m_pVideoMode->Run();
                 prev = m_pGamepad->MenuButtons();
                 Render(selected);
             }
-            else if (selected == 12)                  // Hotkeys...
+            else if (selected == 13)                  // Hotkeys...
             {
                 m_pHotkey->Run();
                 prev = m_pGamepad->MenuButtons();
