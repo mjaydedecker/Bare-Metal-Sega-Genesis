@@ -166,6 +166,22 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 
 ---
 
+## L. Aspect-correct scaling
+
+- [ ] **L1 — Selectable.** Pause → Settings → **Video Scale**. Left/Right cycles
+  Integer → Stretch → Aspect; the `< Aspect >` label shows.
+- [ ] **L2 — Live + persisted.** Selecting Aspect applies without reboot; confirm
+  `video_scale=aspect` in `SD:/settings.txt` and that it survives a reboot.
+- [ ] **L3 — Equal width / correct proportions.** Compare an H40/320-wide game
+  (e.g. Sonic) and an H32/256-wide game. **Expect:** both fill the SAME display
+  width and look correctly proportioned (not thin/tall).
+- [ ] **L4 — Crisp vertical.** **Expect:** vertical edges are sharp (integer
+  scale); no excessive horizontal blur.
+- [ ] **L5 — Acceptable speed.** Frame rate at the chosen video_mode is acceptable
+  vs. stretch (cap to 720p if 1080p is not smooth).
+
+---
+
 ## Results summary
 
 | Group | Pass | Notes |
@@ -181,6 +197,7 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 | I. Mode auto-revert | | |
 | J. Analog audio | | |
 | K. Tear-free (vsync) | | |
+| L. Aspect scaling | | |
 
 Anything that fails: note the exact symptom and which ROM, and we'll debug it
 systematically (root cause first).
