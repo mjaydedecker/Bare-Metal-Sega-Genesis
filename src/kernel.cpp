@@ -6,6 +6,7 @@
 
 #include "kernel.h"
 #include "input/joypad_map.h"   // GP_START, GP_SELECT bits for the menu hotkey
+#include "input/hotkey.h"       // decode_hotkey, InGameAction
 #include "audio/audio_util.h"   // classify_queue, AQ_* for metrics
 
 static const char FromKernel[] = "kernel";
@@ -16,6 +17,20 @@ static const char *scale_name (ScaleMode m)
 	return m == ScaleMode::Stretch ? "stretch"
 	     : m == ScaleMode::Aspect  ? "aspect"
 	                               : "integer";
+}
+
+// Format "Volume NNN" into out (>= 12 bytes) without snprintf.
+static void vol_toast (char *out, unsigned v)
+{
+	const char *p = "Volume ";
+	int i = 0;
+	while (*p) out[i++] = *p++;
+	char rev[4];
+	int  n = 0;
+	if (v == 0) rev[n++] = '0';
+	else while (v) { rev[n++] = (char) ('0' + v % 10); v /= 10; }
+	while (n) out[i++] = rev[--n];
+	out[i] = '\0';
 }
 
 CKernel::CKernel (void)
@@ -256,6 +271,7 @@ TShutdownMode CKernel::Run (void)
 		unsigned logCtr    = 0;
 		boolean  ledOn     = FALSE;
 		unsigned prevBtns  = 0;
+		unsigned prevP1    = 0;   // player-1 button state for in-game hotkeys
 		boolean  toBrowser = FALSE;
 
 		for (;;)
@@ -286,6 +302,56 @@ TShutdownMode CKernel::Run (void)
 				continue;
 			}
 
+			// In-game action hotkeys (player 1: Select + button), read live.
+			unsigned     p1now     = m_Gamepad.Buttons (0);
+			unsigned     p1pressed = p1now & ~prevP1;
+			prevP1 = p1now;
+			InGameAction act = decode_hotkey (p1now, p1pressed);
+			switch (act)
+			{
+			case InGameAction::QuickSave:
+				m_Overlay.ShowToast (m_SaveState.Save (1) ? "Quick-saved"
+				                                          : "Save failed");
+				break;
+			case InGameAction::QuickLoad:
+				if (!m_SaveState.Occupied (1))
+					m_Overlay.ShowToast ("No quick save");
+				else
+					m_Overlay.ShowToast (m_SaveState.Load (1) ? "Quick-loaded"
+					                                          : "Load failed");
+				break;
+			case InGameAction::VolUp:
+			case InGameAction::VolDown:
+			{
+				int dir = (act == InGameAction::VolUp) ? 10 : -10;
+				int v   = (int) m_Settings.volume + dir;
+				if (v < 0)   v = 0;
+				if (v > 100) v = 100;
+				m_Settings.volume = (unsigned) v;
+				m_Audio.SetVolume (m_Settings.volume);
+				m_SettingsStore.Save (m_Settings);
+				char t[12];
+				vol_toast (t, m_Settings.volume);
+				m_Overlay.ShowToast (t);
+				break;
+			}
+			case InGameAction::ToggleHud:
+				m_Settings.debug_overlay = !m_Settings.debug_overlay;
+				m_Overlay.SetEnabled (m_Settings.debug_overlay);
+				m_SettingsStore.Save (m_Settings);
+				m_Overlay.ShowToast (m_Settings.debug_overlay ? "HUD on" : "HUD off");
+				if (!m_Settings.debug_overlay) m_Display.ForceRepaint ();
+				break;
+			case InGameAction::Mute:
+				m_Settings.mute = !m_Settings.mute;
+				m_Audio.SetMute (m_Settings.mute);
+				m_SettingsStore.Save (m_Settings);
+				m_Overlay.ShowToast (m_Settings.mute ? "Muted" : "Unmuted");
+				break;
+			case InGameAction::None:
+				break;
+			}
+
 			retro_run ();
 			m_Sram.Tick ();              // periodic dirty-checked SRAM auto-save
 
@@ -312,6 +378,8 @@ TShutdownMode CKernel::Run (void)
 				st.scale     = scale_name (m_Settings.scale_mode);
 				m_Overlay.Draw (st);
 			}
+
+			m_Overlay.DrawToast ();   // transient toast, independent of HUD
 
 			next += period_us;
 			u64 t = CTimer::GetClockTicks64 ();

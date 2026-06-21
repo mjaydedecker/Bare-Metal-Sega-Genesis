@@ -69,5 +69,10 @@ int16_t input_state_cb(unsigned port, unsigned device, unsigned index,
     {
         return 0;
     }
-    return joypad_state(g_gamepad->Buttons(port), id, *map);
+    unsigned buttons = g_gamepad->Buttons(port);
+    if (port == 0 && (buttons & GP_SELECT))   // player-1 hotkey mode: mask input
+    {
+        return 0;
+    }
+    return joypad_state(buttons, id, *map);
 }
