@@ -48,12 +48,13 @@ struct Settings
     VideoMode  video_mode;  // HDMI output mode
     AudioOutput audio_output;  // hdmi | analog (3.5mm jack)
     bool       vsync;          // tear-free page flip (default on)
+    bool       debug_overlay;  // on-screen diagnostics HUD (default off)
 
     Settings(void)
     :   scale_mode(ScaleMode::Integer), widescreen(false),
         volume(100), mute(false), region(Region::Auto),
         menu_hotkey(MenuHotkey::StartSelect), video_mode(VideoMode::Native),
-        audio_output(AudioOutput::HDMI), vsync(true)
+        audio_output(AudioOutput::HDMI), vsync(true), debug_overlay(false)
     {
         auto_launch_rom[0] = '\0';
     }

@@ -17,6 +17,7 @@
 #include "../settings/settings_store.h"
 #include "../video/display.h"
 #include "../audio/audio_driver.h"
+#include "../ui/overlay.h"
 
 class ControlsScreen;
 class VideoModeScreen;
@@ -27,7 +28,7 @@ public:
     SettingsScreen(TextCanvas *pCanvas, Gamepad *pGamepad, CUSBHCIDevice *pUSBHCI,
                    Settings *pSettings, SettingsStore *pStore, Display *pDisplay,
                    AudioDriver *pAudio, ControlsScreen *pControls,
-                   VideoModeScreen *pVideoMode);
+                   VideoModeScreen *pVideoMode, Overlay *pOverlay);
     void Run(void);   // returns when the user backs out (B)
 
     // Tell the screen which ROM is currently running (for the auto-launch row).
@@ -47,6 +48,7 @@ private:
     const char    *m_pRomPath;
     ControlsScreen *m_pControls;
     VideoModeScreen *m_pVideoMode;
+    Overlay         *m_pOverlay;
 };
 
 #endif
