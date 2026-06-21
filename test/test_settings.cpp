@@ -52,6 +52,30 @@ int main(void)
     serialize_settings(dbg, dbgBuf, sizeof dbgBuf);
     assert(parse_settings(dbgBuf).debug_overlay == true);
 
+    // Hotkey bindings: defaults.
+    Settings hkd = parse_settings("");
+    assert(hkd.hotkeys.b[HK_QUICKSAVE].hold    == PadButton::Select);
+    assert(hkd.hotkeys.b[HK_QUICKSAVE].trigger == PadButton::X);
+    assert(hkd.hotkeys.b[HK_VOLUP].trigger     == PadButton::L);
+
+    // Valid override round-trips.
+    Settings hk = parse_settings("hotkey_mute=start+a\n");
+    assert(hk.hotkeys.b[HK_MUTE].hold    == PadButton::Start);
+    assert(hk.hotkeys.b[HK_MUTE].trigger == PadButton::A);
+    char hkbuf[1024];
+    serialize_settings(hk, hkbuf, sizeof hkbuf);
+    Settings hkrt = parse_settings(hkbuf);
+    assert(hkrt.hotkeys.b[HK_MUTE].hold    == PadButton::Start);
+    assert(hkrt.hotkeys.b[HK_MUTE].trigger == PadButton::A);
+
+    // Invalid -> default for that action: out-of-set hold (A), hold==trigger, junk.
+    assert(parse_settings("hotkey_mute=a+x\n").hotkeys.b[HK_MUTE].hold
+           == PadButton::Select);                       // A not a safe hold
+    assert(parse_settings("hotkey_mute=select+select\n").hotkeys.b[HK_MUTE].trigger
+           == PadButton::B);                            // hold==trigger rejected
+    assert(parse_settings("hotkey_mute=nonsense\n").hotkeys.b[HK_MUTE].trigger
+           == PadButton::B);                            // junk rejected
+
     // Defaults for the new audio fields.
     assert(d.volume == 100);
     assert(d.mute == false);

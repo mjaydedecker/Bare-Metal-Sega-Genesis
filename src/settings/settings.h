@@ -34,6 +34,28 @@ struct ButtonMap
     }
 };
 
+// In-game hotkey actions. Index maps to InGameAction value (index+1).
+enum { HK_QUICKSAVE, HK_QUICKLOAD, HK_VOLUP, HK_VOLDOWN, HK_TOGGLEHUD, HK_MUTE,
+       HK_COUNT };
+
+// One in-game hotkey: hold a "modifier" button, press a "trigger" button.
+struct HotkeyBinding { PadButton hold; PadButton trigger; };
+
+struct HotkeyBindings
+{
+    HotkeyBinding b[HK_COUNT];
+
+    HotkeyBindings(void)
+    {
+        b[HK_QUICKSAVE] = { PadButton::Select, PadButton::X };
+        b[HK_QUICKLOAD] = { PadButton::Select, PadButton::Y };
+        b[HK_VOLUP]     = { PadButton::Select, PadButton::L };
+        b[HK_VOLDOWN]   = { PadButton::Select, PadButton::R };
+        b[HK_TOGGLEHUD] = { PadButton::Select, PadButton::A };
+        b[HK_MUTE]      = { PadButton::Select, PadButton::B };
+    }
+};
+
 struct Settings
 {
     ScaleMode scale_mode;   // video_scale: integer | stretch
@@ -49,6 +71,7 @@ struct Settings
     AudioOutput audio_output;  // hdmi | analog (3.5mm jack)
     bool       vsync;          // tear-free page flip (default on)
     bool       debug_overlay;  // on-screen diagnostics HUD (default off)
+    HotkeyBindings hotkeys;    // in-game action hotkey bindings
 
     Settings(void)
     :   scale_mode(ScaleMode::Integer), widescreen(false),
