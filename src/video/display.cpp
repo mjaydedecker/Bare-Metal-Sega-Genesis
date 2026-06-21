@@ -48,6 +48,33 @@ boolean Display::Initialize(void)
     return TRUE;
 }
 
+boolean Display::SetMode(unsigned w, unsigned h)
+{
+    // Build the new framebuffer BEFORE discarding the current one, so a failure
+    // leaves the existing mode intact.
+    CBcmFrameBuffer *pNew = new CBcmFrameBuffer(w, h, FB_DEPTH);
+    if (pNew == 0)
+    {
+        return FALSE;
+    }
+    if (!pNew->Initialize() || pNew->GetBuffer() == 0)
+    {
+        delete pNew;
+        return FALSE;
+    }
+
+    delete m_pFB;
+    m_pFB     = pNew;
+    m_pBuffer = (u16 *) (uintptr_t) pNew->GetBuffer();
+    m_Pitch   = pNew->GetPitch();
+    m_FbW     = pNew->GetWidth();
+    m_FbH     = pNew->GetHeight();
+    m_LastW   = 0;
+    m_LastH   = 0;
+    ClearBlack();
+    return TRUE;
+}
+
 void Display::ClearBlack(void)
 {
     if (m_pBuffer != 0)
