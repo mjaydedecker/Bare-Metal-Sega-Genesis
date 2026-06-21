@@ -32,6 +32,10 @@ struct ButtonMap;
 extern const ButtonMap *g_map0;
 extern const ButtonMap *g_map1;
 
+// OR of the GP_* bits of every bound hotkey "hold" button. input_state_cb masks
+// player-1 input while any are held (hotkey mode). Set by the kernel.
+extern unsigned g_hotkey_hold_mask;
+
 // These four callbacks are passed to retro_set_video_refresh(),
 // retro_set_audio_sample(), retro_set_audio_sample_batch(),
 // retro_set_input_poll(), and retro_set_input_state() respectively.
