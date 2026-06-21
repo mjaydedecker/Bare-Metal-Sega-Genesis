@@ -18,12 +18,14 @@
 #include "../video/display.h"
 #include "../audio/audio_driver.h"
 
+class ControlsScreen;
+
 class SettingsScreen
 {
 public:
     SettingsScreen(TextCanvas *pCanvas, Gamepad *pGamepad, CUSBHCIDevice *pUSBHCI,
                    Settings *pSettings, SettingsStore *pStore, Display *pDisplay,
-                   AudioDriver *pAudio);
+                   AudioDriver *pAudio, ControlsScreen *pControls);
     void Run(void);   // returns when the user backs out (B)
 
     // Tell the screen which ROM is currently running (for the auto-launch row).
@@ -41,6 +43,7 @@ private:
     Display       *m_pDisplay;
     AudioDriver   *m_pAudio;
     const char    *m_pRomPath;
+    ControlsScreen *m_pControls;
 };
 
 #endif
