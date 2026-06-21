@@ -6,7 +6,7 @@ LIBRETRO_INC = ../libs/genesis-plus-gx-wide/libretro/libretro-common/include
 
 .PHONY: run clean
 
-run: test_blit test_joypad test_rom_filter test_menu_state test_menu_path test_save_path test_settings test_audio_util test_pad_reconcile
+run: test_blit test_joypad test_rom_filter test_menu_state test_menu_path test_save_path test_settings test_audio_util test_pad_reconcile test_hud
 	./test_blit
 	./test_joypad
 	./test_rom_filter
@@ -16,6 +16,7 @@ run: test_blit test_joypad test_rom_filter test_menu_state test_menu_path test_s
 	./test_settings
 	./test_audio_util
 	./test_pad_reconcile
+	./test_hud
 
 test_blit: test_blit.cpp ../src/video/blit.cpp ../src/video/blit.h
 	$(CXX) $(CXXFLAGS) -o $@ test_blit.cpp ../src/video/blit.cpp
@@ -44,5 +45,8 @@ test_audio_util: test_audio_util.cpp ../src/audio/audio_util.cpp ../src/audio/au
 test_pad_reconcile: test_pad_reconcile.cpp ../src/input/pad_reconcile.cpp ../src/input/pad_reconcile.h
 	$(CXX) $(CXXFLAGS) -o $@ test_pad_reconcile.cpp ../src/input/pad_reconcile.cpp
 
+test_hud: test_hud.cpp ../src/ui/hud.cpp ../src/ui/hud.h
+	$(CXX) $(CXXFLAGS) -o $@ test_hud.cpp ../src/ui/hud.cpp
+
 clean:
-	rm -f test_blit test_joypad test_rom_filter test_menu_state test_menu_path test_save_path test_settings test_audio_util test_pad_reconcile
+	rm -f test_blit test_joypad test_rom_filter test_menu_state test_menu_path test_save_path test_settings test_audio_util test_pad_reconcile test_hud
