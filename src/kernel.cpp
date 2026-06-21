@@ -26,8 +26,9 @@ CKernel::CKernel (void)
 	m_RomMenu (&m_Canvas, &m_Gamepad, &m_Storage, &m_USBHCI),
 	m_Settings (),
 	m_SettingsStore (&m_Storage),
+	m_VideoModeScreen (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore, &m_Display),
 	m_ControlsScreen (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore),
-	m_SettingsScreen (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore, &m_Display, &m_Audio, &m_ControlsScreen),
+	m_SettingsScreen (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore, &m_Display, &m_Audio, &m_ControlsScreen, &m_VideoModeScreen),
 	m_PauseMenu (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_SaveState, &m_SettingsScreen),
 	m_pROMBuffer (0),
 	m_nROMSize (0)
@@ -128,6 +129,16 @@ TShutdownMode CKernel::Run (void)
 	g_region_value = region_core_value (m_Settings.region);
 	g_map0 = &m_Settings.map1;
 	g_map1 = &m_Settings.map2;
+	if (m_Settings.video_mode != VideoMode::Native)
+	{
+		unsigned vmW, vmH;
+		video_mode_dims (m_Settings.video_mode, vmW, vmH);
+		if (!m_Display.SetMode (vmW, vmH))
+		{
+			m_Logger.Write (FromKernel, LogWarning,
+				"Saved video mode unavailable; using native");
+		}
+	}
 
 	// libretro callbacks + core init: once for the whole session.
 	retro_set_environment (environment_cb);

@@ -11,8 +11,9 @@
 #include <circle/timer.h>
 #include <string.h>   // strcmp, strncpy for the auto-launch row
 #include "controls_screen.h"
+#include "video_mode_screen.h"
 
-#define NUM_ROWS 8
+#define NUM_ROWS 9
 
 // RGB565 colours (match the pause menu palette).
 static const u16 BOX   = 0x0008;
@@ -23,10 +24,12 @@ static const u16 SELBG = 0x07FF;
 SettingsScreen::SettingsScreen(TextCanvas *pCanvas, Gamepad *pGamepad,
                                CUSBHCIDevice *pUSBHCI, Settings *pSettings,
                                SettingsStore *pStore, Display *pDisplay,
-                               AudioDriver *pAudio, ControlsScreen *pControls)
+                               AudioDriver *pAudio, ControlsScreen *pControls,
+                               VideoModeScreen *pVideoMode)
 :   m_pCanvas(pCanvas), m_pGamepad(pGamepad), m_pUSBHCI(pUSBHCI),
     m_pSettings(pSettings), m_pStore(pStore), m_pDisplay(pDisplay),
-    m_pAudio(pAudio), m_pRomPath(0), m_pControls(pControls)
+    m_pAudio(pAudio), m_pRomPath(0), m_pControls(pControls),
+    m_pVideoMode(pVideoMode)
 {
 }
 
@@ -83,9 +86,10 @@ void SettingsScreen::Render(int selected)
     const char *labels[NUM_ROWS] = { "Video Scale:", "Widescreen:",
                                      "Volume:", "Mute:",
                                      "Region:", "Auto-launch:",
-                                     "Menu Hotkey:", "Controls..." };
+                                     "Menu Hotkey:", "Controls...",
+                                     "Video Mode..." };
     const char *values[NUM_ROWS] = { scaleVal, wideVal, volVal, muteVal,
-                                     regionVal, autoVal, hotkeyVal, "" };
+                                     regionVal, autoVal, hotkeyVal, "", "" };
 
     for (int i = 0; i < NUM_ROWS; i++)
     {
@@ -195,11 +199,20 @@ void SettingsScreen::Run(void)
             m_pStore->Save(*m_pSettings);
             Render(selected);
         }
-        if ((pressed & GP_START) && selected == 7)   // Controls... (action row)
+        if (pressed & GP_START)
         {
-            m_pControls->Run();
-            prev = m_pGamepad->MenuButtons();         // resync after the sub-screen
-            Render(selected);
+            if (selected == 7)                        // Controls...
+            {
+                m_pControls->Run();
+                prev = m_pGamepad->MenuButtons();
+                Render(selected);
+            }
+            else if (selected == 8)                   // Video Mode...
+            {
+                m_pVideoMode->Run();
+                prev = m_pGamepad->MenuButtons();
+                Render(selected);
+            }
         }
         if (pressed & GP_B)
             return;
