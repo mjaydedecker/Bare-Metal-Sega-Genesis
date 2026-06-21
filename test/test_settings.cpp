@@ -103,6 +103,31 @@ int main(void)
     serialize_settings(hs, hbuf, sizeof hbuf);
     assert(parse_settings(hbuf).menu_hotkey == MenuHotkey::LR);
 
+    // PadButton tokens.
+    assert(strcmp(pad_button_token(PadButton::A), "a") == 0);
+    assert(strcmp(pad_button_token(PadButton::L), "l") == 0);
+    assert(strcmp(pad_button_token(PadButton::Select), "select") == 0);
+
+    // Default map reproduces current behavior.
+    Settings dms;
+    assert(dms.map1.b[0] == PadButton::Y);   // Genesis A -> physical Y
+    assert(dms.map1.b[2] == PadButton::A);   // Genesis C -> physical A
+    assert(dms.map2.b[7] == PadButton::Select);
+
+    // Parse a valid map; round-trips.
+    ButtonMap pm = parse_button_map("a,b,x,y,l,r,start,select");
+    assert(pm.b[0] == PadButton::A && pm.b[7] == PadButton::Select);
+    // Bad token -> default.
+    assert(parse_button_map("a,b,x,y,l,r,start,nope").b[0] == PadButton::Y);
+    // Wrong count -> default.
+    assert(parse_button_map("a,b,c").b[0] == PadButton::Y);
+
+    // Settings round-trip with a custom map.
+    Settings cs; cs.map1.b[0] = PadButton::A;
+    char cbuf[512];
+    serialize_settings(cs, cbuf, sizeof cbuf);
+    assert(parse_settings(cbuf).map1.b[0] == PadButton::A);
+
     printf("All settings tests passed\n");
     return 0;
 }

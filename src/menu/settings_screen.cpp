@@ -10,8 +10,9 @@
 #include "../libretro/environment.h"      // g_widescreen, g_variables_dirty
 #include <circle/timer.h>
 #include <string.h>   // strcmp, strncpy for the auto-launch row
+#include "controls_screen.h"
 
-#define NUM_ROWS 7
+#define NUM_ROWS 8
 
 // RGB565 colours (match the pause menu palette).
 static const u16 BOX   = 0x0008;
@@ -22,10 +23,10 @@ static const u16 SELBG = 0x07FF;
 SettingsScreen::SettingsScreen(TextCanvas *pCanvas, Gamepad *pGamepad,
                                CUSBHCIDevice *pUSBHCI, Settings *pSettings,
                                SettingsStore *pStore, Display *pDisplay,
-                               AudioDriver *pAudio)
+                               AudioDriver *pAudio, ControlsScreen *pControls)
 :   m_pCanvas(pCanvas), m_pGamepad(pGamepad), m_pUSBHCI(pUSBHCI),
     m_pSettings(pSettings), m_pStore(pStore), m_pDisplay(pDisplay),
-    m_pAudio(pAudio), m_pRomPath(0)
+    m_pAudio(pAudio), m_pRomPath(0), m_pControls(pControls)
 {
 }
 
@@ -82,9 +83,9 @@ void SettingsScreen::Render(int selected)
     const char *labels[NUM_ROWS] = { "Video Scale:", "Widescreen:",
                                      "Volume:", "Mute:",
                                      "Region:", "Auto-launch:",
-                                     "Menu Hotkey:" };
+                                     "Menu Hotkey:", "Controls..." };
     const char *values[NUM_ROWS] = { scaleVal, wideVal, volVal, muteVal,
-                                     regionVal, autoVal, hotkeyVal };
+                                     regionVal, autoVal, hotkeyVal, "" };
 
     for (int i = 0; i < NUM_ROWS; i++)
     {
@@ -192,6 +193,12 @@ void SettingsScreen::Run(void)
 
             Apply();
             m_pStore->Save(*m_pSettings);
+            Render(selected);
+        }
+        if ((pressed & GP_START) && selected == 7)   // Controls... (action row)
+        {
+            m_pControls->Run();
+            prev = m_pGamepad->MenuButtons();         // resync after the sub-screen
             Render(selected);
         }
         if (pressed & GP_B)

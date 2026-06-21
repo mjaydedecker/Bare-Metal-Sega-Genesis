@@ -110,6 +110,10 @@ Settings parse_settings(const char *text)
             else if (ieq(val, "l+r"))     s.menu_hotkey = MenuHotkey::LR;
             else                          s.menu_hotkey = MenuHotkey::StartSelect;
         }
+        else if (ieq(key, "controller_1_map"))
+            s.map1 = parse_button_map(val);
+        else if (ieq(key, "controller_2_map"))
+            s.map2 = parse_button_map(val);
         // unknown keys: ignored
     }
     return s;
@@ -169,6 +173,75 @@ const char *menu_hotkey_file_value(MenuHotkey h)
     }
 }
 
+const char *pad_button_token(PadButton p)
+{
+    switch (p)
+    {
+    case PadButton::A:      return "a";
+    case PadButton::B:      return "b";
+    case PadButton::X:      return "x";
+    case PadButton::Y:      return "y";
+    case PadButton::L:      return "l";
+    case PadButton::R:      return "r";
+    case PadButton::Start:  return "start";
+    case PadButton::Select: return "select";
+    }
+    return "a";
+}
+
+static int pad_button_from_token(const char *t)
+{
+    if (ieq(t, "a"))      return (int) PadButton::A;
+    if (ieq(t, "b"))      return (int) PadButton::B;
+    if (ieq(t, "x"))      return (int) PadButton::X;
+    if (ieq(t, "y"))      return (int) PadButton::Y;
+    if (ieq(t, "l"))      return (int) PadButton::L;
+    if (ieq(t, "r"))      return (int) PadButton::R;
+    if (ieq(t, "start"))  return (int) PadButton::Start;
+    if (ieq(t, "select")) return (int) PadButton::Select;
+    return -1;
+}
+
+ButtonMap parse_button_map(const char *val)
+{
+    PadButton tmp[8];
+    int n = 0;
+    char tok[16];
+    int ti = 0;
+    for (const char *p = val; ; p++)
+    {
+        char c = *p;
+        if (c == ',' || c == '\0')
+        {
+            tok[ti] = '\0';
+            if (n >= 8) return ButtonMap();          // too many tokens
+            int pb = pad_button_from_token(tok);
+            if (pb < 0) return ButtonMap();          // bad token
+            tmp[n++] = (PadButton) pb;
+            ti = 0;
+            if (c == '\0') break;
+        }
+        else if (ti < (int) sizeof(tok) - 1)
+        {
+            tok[ti++] = c;
+        }
+    }
+    if (n != 8) return ButtonMap();                  // wrong count
+    ButtonMap m;
+    for (int i = 0; i < 8; i++) m.b[i] = tmp[i];
+    return m;
+}
+
+// Append a button map as 8 comma-separated tokens.
+static void append_map(char *out, size_t out_size, const ButtonMap &m)
+{
+    for (int i = 0; i < 8; i++)
+    {
+        if (i) appendz(out, out_size, ",");
+        appendz(out, out_size, pad_button_token(m.b[i]));
+    }
+}
+
 void serialize_settings(const Settings &s, char *out, size_t out_size)
 {
     if (out == 0 || out_size == 0) return;
@@ -189,5 +262,9 @@ void serialize_settings(const Settings &s, char *out, size_t out_size)
     appendz(out, out_size, s.auto_launch_rom);
     appendz(out, out_size, "\nmenu_hotkey=");
     appendz(out, out_size, menu_hotkey_file_value(s.menu_hotkey));
+    appendz(out, out_size, "\ncontroller_1_map=");
+    append_map(out, out_size, s.map1);
+    appendz(out, out_size, "\ncontroller_2_map=");
+    append_map(out, out_size, s.map2);
     appendz(out, out_size, "\n");
 }

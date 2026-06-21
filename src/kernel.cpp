@@ -26,7 +26,8 @@ CKernel::CKernel (void)
 	m_RomMenu (&m_Canvas, &m_Gamepad, &m_Storage, &m_USBHCI),
 	m_Settings (),
 	m_SettingsStore (&m_Storage),
-	m_SettingsScreen (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore, &m_Display, &m_Audio),
+	m_ControlsScreen (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore),
+	m_SettingsScreen (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore, &m_Display, &m_Audio, &m_ControlsScreen),
 	m_PauseMenu (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_SaveState, &m_SettingsScreen),
 	m_pROMBuffer (0),
 	m_nROMSize (0)
@@ -125,6 +126,8 @@ TShutdownMode CKernel::Run (void)
 	m_Audio.SetVolume (m_Settings.volume);
 	m_Audio.SetMute (m_Settings.mute);
 	g_region_value = region_core_value (m_Settings.region);
+	g_map0 = &m_Settings.map1;
+	g_map1 = &m_Settings.map2;
 
 	// libretro callbacks + core init: once for the whole session.
 	retro_set_environment (environment_cb);

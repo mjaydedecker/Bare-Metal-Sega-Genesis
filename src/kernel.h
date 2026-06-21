@@ -33,6 +33,7 @@
 #include "settings/settings.h"
 #include "settings/settings_store.h"
 #include "menu/settings_screen.h"
+#include "menu/controls_screen.h"
 #include "menu/pause_menu.h"
 #include "input/gamepad.h"
 #include <libretro.h>
@@ -79,6 +80,7 @@ private:
 	RomMenu            m_RomMenu;    // on-screen ROM browser
 	Settings           m_Settings;       // user settings (video, etc.)
 	SettingsStore      m_SettingsStore;  // load/save settings to SD card
+	ControlsScreen     m_ControlsScreen; // button-remapping sub-screen
 	SettingsScreen     m_SettingsScreen; // in-emulation Settings screen
 	PauseMenu          m_PauseMenu;  // in-emulation overlay menu
 

@@ -14,6 +14,23 @@
 enum class ScaleMode { Integer, Stretch };
 enum class Region    { Auto, NTSC, PAL };
 enum class MenuHotkey { StartSelect, StartA, StartB, LR };
+enum class PadButton { A, B, X, Y, L, R, Start, Select };
+
+// Physical pad button driving each Genesis button, indexed
+// 0=A,1=B,2=C,3=X,4=Y,5=Z,6=Start,7=Mode. Default ctor reproduces the
+// historical mapping (Genesis A<-Y, B<-B, C<-A, X<-L, Y<-X, Z<-R,
+// Start<-Start, Mode<-Select).
+struct ButtonMap
+{
+    PadButton b[8];
+    ButtonMap(void)
+    {
+        b[0] = PadButton::Y; b[1] = PadButton::B;
+        b[2] = PadButton::A; b[3] = PadButton::L;
+        b[4] = PadButton::X; b[5] = PadButton::R;
+        b[6] = PadButton::Start; b[7] = PadButton::Select;
+    }
+};
 
 struct Settings
 {
@@ -24,6 +41,8 @@ struct Settings
     Region    region;       // region: auto | ntsc | pal
     char      auto_launch_rom[256];   // ROM path to boot into ("" = unset)
     MenuHotkey menu_hotkey; // controller combo that opens the pause menu
+    ButtonMap  map1;        // Player 1 button map
+    ButtonMap  map2;        // Player 2 button map
 
     Settings(void)
     :   scale_mode(ScaleMode::Integer), widescreen(false),
@@ -51,5 +70,13 @@ const char *region_core_value(Region r);
 // Menu hotkey as written to the settings file
 // ("start+select" | "start+a" | "start+b" | "l+r").
 const char *menu_hotkey_file_value(MenuHotkey h);
+
+// Physical button token for the settings file ("a"|"b"|"x"|"y"|"l"|"r"|
+// "start"|"select").
+const char *pad_button_token(PadButton p);
+
+// Parse a comma-encoded 8-token button map ("a,b,x,y,l,r,start,select" in
+// Genesis order). Any bad token or wrong count yields the default map.
+ButtonMap parse_button_map(const char *val);
 
 #endif

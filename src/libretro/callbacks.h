@@ -26,6 +26,12 @@ extern AudioDriver *g_audio;
 class Gamepad;
 extern Gamepad *g_gamepad;
 
+// Per-port button maps (point into the kernel's Settings). input_state_cb reads
+// them so the core sees the user's remapping.
+struct ButtonMap;
+extern const ButtonMap *g_map0;
+extern const ButtonMap *g_map1;
+
 // These four callbacks are passed to retro_set_video_refresh(),
 // retro_set_audio_sample(), retro_set_audio_sample_batch(),
 // retro_set_input_poll(), and retro_set_input_state() respectively.
