@@ -123,6 +123,7 @@ TShutdownMode CKernel::Run (void)
 	// Load user settings and apply them before the core reads variables.
 	m_SettingsStore.Load (&m_Settings);
 	m_Display.SetScaleMode (m_Settings.scale_mode);
+	m_Display.SetVsync (m_Settings.vsync);
 	g_widescreen = m_Settings.widescreen;
 	m_Audio.SetVolume (m_Settings.volume);
 	m_Audio.SetMute (m_Settings.mute);

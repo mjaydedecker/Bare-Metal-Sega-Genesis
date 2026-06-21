@@ -150,6 +150,22 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 
 ---
 
+## K. Tear-free output (vsync)
+
+- [ ] **K1 — No tearing.** Play a horizontally-scrolling game (e.g. Sonic).
+  **Expect:** no tear line across the screen during scroll (vsync defaults on).
+- [ ] **K2 — Toggle proves the path.** Pause → Settings → **Vsync** = Off, resume.
+  **Expect:** tearing returns (off == old single-buffer path). Set back to On →
+  tearing gone. (Live, no reboot.)
+- [ ] **K3 — No pacing regression.** With Vsync on, confirm the game runs full
+  speed and the periodic underrun/overrun log doesn't climb vs. Vsync off.
+- [ ] **K4 — Menus clean.** Open/close the pause menu several times during play.
+  **Expect:** no menu remnants or letterbox-bar artifacts after resuming.
+- [ ] **K5 — Persisted.** Confirm `vsync=on` (or `off`) in `SD:/settings.txt`;
+  survives reboot.
+
+---
+
 ## Results summary
 
 | Group | Pass | Notes |
@@ -164,6 +180,7 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 | H. menu_hotkey | | |
 | I. Mode auto-revert | | |
 | J. Analog audio | | |
+| K. Tear-free (vsync) | | |
 
 Anything that fails: note the exact symptom and which ROM, and we'll debug it
 systematically (root cause first).

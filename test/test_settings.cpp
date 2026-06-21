@@ -161,6 +161,15 @@ int main(void)
     serialize_settings(aos, aobuf, sizeof aobuf);
     assert(parse_settings(aobuf).audio_output == AudioOutput::Analog);
 
+    // Vsync defaults on; parses off/on; round-trips (truthy parse, like mute).
+    assert(d.vsync == true);
+    assert(parse_settings("vsync=off\n").vsync == false);
+    assert(parse_settings("vsync=on\n").vsync  == true);
+    Settings vs2; vs2.vsync = false;
+    char vsbuf[512];
+    serialize_settings(vs2, vsbuf, sizeof vsbuf);
+    assert(parse_settings(vsbuf).vsync == false);
+
     printf("All settings tests passed\n");
     return 0;
 }

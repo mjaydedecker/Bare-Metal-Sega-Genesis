@@ -11,7 +11,9 @@
 #include <stdint.h>
 
 Display::Display(void)
-:   m_pFB(0), m_pBuffer(0), m_Pitch(0), m_FbW(0), m_FbH(0), m_LastW(0), m_LastH(0),
+:   m_pFB(0), m_pFront(0), m_pBack(0), m_FrontIsPage0(true),
+    m_DoubleBuffered(false), m_Vsync(true),
+    m_Pitch(0), m_FbW(0), m_FbH(0), m_LastW(0), m_LastH(0),
     m_ScaleMode(ScaleMode::Integer)
 {
 }
@@ -22,29 +24,83 @@ Display::~Display(void)
     m_pFB = 0;
 }
 
-boolean Display::Initialize(void)
+// Build a framebuffer for the requested mode (0,0 => firmware's current mode),
+// preferring a two-page (double-height virtual) surface for tear-free flipping.
+// Returns 0 on total failure; sets `doubled` to whether two pages were obtained.
+CBcmFrameBuffer *Display::BuildFB(unsigned reqW, unsigned reqH, bool &doubled)
 {
-    // Width/height 0 => CBcmFrameBuffer uses the firmware's current display
-    // mode, which the TV already accepts (the same mode the M4 console used).
-    m_pFB = new CBcmFrameBuffer(0, 0, FB_DEPTH);
-    if (m_pFB == 0)
+    unsigned w = reqW, h = reqH;
+
+    // For the firmware's current mode (0,0) we must learn its dimensions before
+    // we can request a double-height virtual framebuffer.
+    if (w == 0 || h == 0)
     {
-        return FALSE;
-    }
-    if (!m_pFB->Initialize() || m_pFB->GetBuffer() == 0)
-    {
-        delete m_pFB;
-        m_pFB = 0;
-        return FALSE;
+        CBcmFrameBuffer *probe = new CBcmFrameBuffer(reqW, reqH, FB_DEPTH);
+        if (probe != 0 && probe->Initialize() && probe->GetBuffer() != 0)
+        {
+            w = probe->GetWidth();
+            h = probe->GetHeight();
+        }
+        delete probe;
+        if (w == 0 || h == 0)
+        {
+            doubled = false;
+            return 0;
+        }
     }
 
-    m_pBuffer = (u16 *) (uintptr_t) m_pFB->GetBuffer();
-    m_Pitch   = m_pFB->GetPitch();
-    m_FbW     = m_pFB->GetWidth();
-    m_FbH     = m_pFB->GetHeight();
-    m_LastW   = 0;
-    m_LastH   = 0;
+    // Prefer two pages: virtual height = 2x physical.
+    CBcmFrameBuffer *fb = new CBcmFrameBuffer(w, h, FB_DEPTH, w, 2 * h);
+    if (fb != 0 && fb->Initialize() && fb->GetBuffer() != 0)
+    {
+        doubled = true;
+        return fb;
+    }
+    delete fb;
+
+    // Fall back to a single page (today's behavior).
+    fb = new CBcmFrameBuffer(w, h, FB_DEPTH);
+    if (fb != 0 && fb->Initialize() && fb->GetBuffer() != 0)
+    {
+        doubled = false;
+        return fb;
+    }
+    delete fb;
+    doubled = false;
+    return 0;
+}
+
+// Wire the display state to a freshly-built framebuffer. The new FB defaults to
+// virtual offset (0,0), so page 0 is visible (front).
+void Display::Adopt(CBcmFrameBuffer *fb, bool doubled)
+{
+    m_pFB            = fb;
+    m_Pitch          = fb->GetPitch();
+    m_FbW            = fb->GetWidth();
+    m_FbH            = fb->GetHeight();
+    m_DoubleBuffered = doubled;
+    m_FrontIsPage0   = true;
+
+    u16 *page0 = (u16 *) (uintptr_t) fb->GetBuffer();
+    m_pFront = page0;
+    m_pBack  = doubled
+        ? (u16 *) ((u8 *) page0 + (size_t) m_Pitch * m_FbH)
+        : page0;
+
+    m_LastW = 0;
+    m_LastH = 0;
     ClearBlack();
+}
+
+boolean Display::Initialize(void)
+{
+    bool doubled = false;
+    CBcmFrameBuffer *fb = BuildFB(0, 0, doubled);
+    if (fb == 0)
+    {
+        return FALSE;
+    }
+    Adopt(fb, doubled);
     return TRUE;
 }
 
@@ -52,47 +108,55 @@ boolean Display::SetMode(unsigned w, unsigned h)
 {
     // Build the new framebuffer BEFORE discarding the current one, so a failure
     // leaves the existing mode intact.
-    CBcmFrameBuffer *pNew = new CBcmFrameBuffer(w, h, FB_DEPTH);
+    bool doubled = false;
+    CBcmFrameBuffer *pNew = BuildFB(w, h, doubled);
     if (pNew == 0)
     {
         return FALSE;
     }
-    if (!pNew->Initialize() || pNew->GetBuffer() == 0)
-    {
-        delete pNew;
-        return FALSE;
-    }
-
     delete m_pFB;
-    m_pFB     = pNew;
-    m_pBuffer = (u16 *) (uintptr_t) pNew->GetBuffer();
-    m_Pitch   = pNew->GetPitch();
-    m_FbW     = pNew->GetWidth();
-    m_FbH     = pNew->GetHeight();
-    m_LastW   = 0;
-    m_LastH   = 0;
-    ClearBlack();
+    Adopt(pNew, doubled);
     return TRUE;
 }
 
 void Display::ClearBlack(void)
 {
-    if (m_pBuffer != 0)
+    if (m_pFront != 0)
     {
-        memset(m_pBuffer, 0, (size_t) m_Pitch * m_FbH);
+        memset(m_pFront, 0, (size_t) m_Pitch * m_FbH);
     }
+    if (m_DoubleBuffered && m_pBack != 0)
+    {
+        memset(m_pBack, 0, (size_t) m_Pitch * m_FbH);
+    }
+}
+
+// Flip at vblank: wait for vsync, pan to the page we just drew (the back page),
+// then swap front/back so the next Blit targets the now-hidden page.
+void Display::Present(void)
+{
+    m_pFB->WaitForVerticalSync();
+    m_pFB->SetVirtualOffset(0, m_FrontIsPage0 ? m_FbH : 0);
+
+    u16 *tmp = m_pFront;
+    m_pFront = m_pBack;
+    m_pBack  = tmp;
+    m_FrontIsPage0 = !m_FrontIsPage0;
 }
 
 void Display::Blit(const void *src, unsigned width, unsigned height, size_t pitch)
 {
-    if (m_pBuffer == 0 || src == 0)   // no surface, or dupe frame
+    if (m_pFront == 0 || src == 0)   // no surface, or dupe frame
     {
         return;
     }
 
+    bool flip   = m_Vsync && m_DoubleBuffered;
+    u16 *target = flip ? m_pBack : m_pFront;
+
     if (width != m_LastW || height != m_LastH)
     {
-        ClearBlack();                 // repaint letterbox/pillarbox bars
+        ClearBlack();                 // both pages: repaint letterbox/pillarbox
         m_LastW = width;
         m_LastH = height;
     }
@@ -106,9 +170,10 @@ void Display::Blit(const void *src, unsigned width, unsigned height, size_t pitc
         if (rh > m_FbH) { rh = m_FbH; rw = m_FbH * 4 / 3; }
         unsigned ox = (m_FbW - rw) / 2;
         unsigned oy = (m_FbH - rh) / 2;
-        blit_rgb565_scaled(m_pBuffer, m_Pitch, m_FbW, m_FbH,
+        blit_rgb565_scaled(target, m_Pitch, m_FbW, m_FbH,
                            (const uint16_t *) src, (unsigned) pitch,
                            width, height, ox, oy, rw, rh);
+        if (flip) Present();
         return;
     }
 
@@ -125,6 +190,7 @@ void Display::Blit(const void *src, unsigned width, unsigned height, size_t pitc
         }
     }
 
-    blit_rgb565(m_pBuffer, m_Pitch, m_FbW, m_FbH,
+    blit_rgb565(target, m_Pitch, m_FbW, m_FbH,
                 (const uint16_t *) src, (unsigned) pitch, width, height, scale);
+    if (flip) Present();
 }
