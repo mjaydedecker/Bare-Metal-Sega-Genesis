@@ -7,6 +7,7 @@
 
 #include "gamepad.h"
 #include "joypad_map.h"
+#include "pad_reconcile.h"
 
 // Direction-bit constants mirror Circle's TGamePadButton (host-tested in
 // joypad_map). We fold the hat into these.
@@ -97,15 +98,25 @@ void Gamepad::Poll(void)
 
     for (unsigned i = 0; i < MAX_PADS; i++)
     {
-        if (m_pDevice[i] == 0)   // plug-and-play: pads appear shortly after boot
+        CUSBGamePadDevice *dev = (CUSBGamePadDevice *)
+            m_pNameService->GetDevice("upad", i + 1, FALSE);
+
+        switch (pad_reconcile(m_pDevice[i], dev))
         {
-            m_pDevice[i] = (CUSBGamePadDevice *)
-                m_pNameService->GetDevice("upad", i + 1, FALSE);
-            if (m_pDevice[i] != 0)
-            {
-                // Circle only decodes reports while a handler is registered.
-                m_pDevice[i]->RegisterStatusHandler(handlers[i]);
-            }
+        case PadAction::Clear:           // unplugged: stop ghost inputs, free slot
+            s_buttons[i] = 0;
+            m_pDevice[i] = 0;
+            break;
+
+        case PadAction::Acquire:         // first plug / re-plug / swap
+            m_pDevice[i] = dev;
+            s_buttons[i] = 0;
+            // Circle only decodes reports while a handler is registered.
+            dev->RegisterStatusHandler(handlers[i]);
+            break;
+
+        case PadAction::Keep:            // same device, or still absent
+            break;
         }
     }
 }
