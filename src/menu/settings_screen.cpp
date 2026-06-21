@@ -13,7 +13,7 @@
 #include "controls_screen.h"
 #include "video_mode_screen.h"
 
-#define NUM_ROWS 9
+#define NUM_ROWS 10
 
 // RGB565 colours (match the pause menu palette).
 static const u16 BOX   = 0x0008;
@@ -83,13 +83,16 @@ void SettingsScreen::Render(int selected)
         m_pSettings->menu_hotkey == MenuHotkey::StartB ? "< Start+B >" :
         m_pSettings->menu_hotkey == MenuHotkey::LR     ? "< L+R >"     :
                                                          "< Start+Select >";
+    const char *audioVal = m_pSettings->audio_output == AudioOutput::Analog
+                               ? "< Analog >" : "< HDMI >";
     const char *labels[NUM_ROWS] = { "Video Scale:", "Widescreen:",
                                      "Volume:", "Mute:",
                                      "Region:", "Auto-launch:",
-                                     "Menu Hotkey:", "Controls...",
-                                     "Video Mode..." };
+                                     "Menu Hotkey:", "Audio out:",
+                                     "Controls...", "Video Mode..." };
     const char *values[NUM_ROWS] = { scaleVal, wideVal, volVal, muteVal,
-                                     regionVal, autoVal, hotkeyVal, "", "" };
+                                     regionVal, autoVal, hotkeyVal, audioVal,
+                                     "", "" };
 
     for (int i = 0; i < NUM_ROWS; i++)
     {
@@ -104,7 +107,7 @@ void SettingsScreen::Render(int selected)
     }
 
     m_pCanvas->DrawText(boxX + cw, boxY + ch * (NUM_ROWS + 3),
-                        "Widescreen: on reset.  Region: on reload.",
+                        "Widescreen: reset.  Region: reload.  Audio: reboot.",
                         WHITE, BOX);
     m_pCanvas->DrawText(boxX + cw, boxY + ch * (NUM_ROWS + 4),
                         "Auto-launch boots this game.  B: back", WHITE, BOX);
@@ -193,6 +196,11 @@ void SettingsScreen::Run(void)
                 m_pSettings->menu_hotkey = (MenuHotkey) h;
                 break;
             }
+            case 7:   // Audio out (toggle HDMI <-> Analog; applies on reboot)
+                m_pSettings->audio_output =
+                    m_pSettings->audio_output == AudioOutput::HDMI
+                        ? AudioOutput::Analog : AudioOutput::HDMI;
+                break;
             }
 
             Apply();
@@ -201,13 +209,13 @@ void SettingsScreen::Run(void)
         }
         if (pressed & GP_START)
         {
-            if (selected == 7)                        // Controls...
+            if (selected == 8)                        // Controls...
             {
                 m_pControls->Run();
                 prev = m_pGamepad->MenuButtons();
                 Render(selected);
             }
-            else if (selected == 8)                   // Video Mode...
+            else if (selected == 9)                   // Video Mode...
             {
                 m_pVideoMode->Run();
                 prev = m_pGamepad->MenuButtons();

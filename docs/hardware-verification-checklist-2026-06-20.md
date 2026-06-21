@@ -135,6 +135,21 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 
 ---
 
+## J. Analog (3.5mm) audio output
+
+- [ ] **J1 — Switch to analog.** Pause → Settings → **Audio out** = Analog.
+  Plug headphones/speakers into the Pi's 3.5mm jack and **reboot** (applies on
+  boot, not live). **Expect:** game audio comes out of the 3.5mm jack; HDMI is
+  silent.
+- [ ] **J2 — Volume/mute still work on analog.** With Analog selected, change
+  volume and toggle mute. **Expect:** they scale/silence the analog output the
+  same as HDMI.
+- [ ] **J3 — Persisted.** Confirm `audio_output=analog` in `SD:/settings.txt`.
+- [ ] **J4 — Back to HDMI.** Set Audio out = HDMI, reboot.
+  **Expect:** audio returns to HDMI; `audio_output=hdmi` in the file.
+
+---
+
 ## Results summary
 
 | Group | Pass | Notes |
@@ -148,6 +163,7 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 | G. auto_launch_rom | | |
 | H. menu_hotkey | | |
 | I. Mode auto-revert | | |
+| J. Analog audio | | |
 
 Anything that fails: note the exact symptom and which ROM, and we'll debug it
 systematically (root cause first).

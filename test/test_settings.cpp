@@ -149,6 +149,18 @@ int main(void)
     serialize_settings(vms, vmbuf, sizeof vmbuf);
     assert(parse_settings(vmbuf).video_mode == VideoMode::P480);
 
+    // Audio output defaults + parse + invalid fallback + file value + round-trip.
+    assert(d.audio_output == AudioOutput::HDMI);
+    assert(parse_settings("audio_output=analog\n").audio_output == AudioOutput::Analog);
+    assert(parse_settings("audio_output=hdmi\n").audio_output   == AudioOutput::HDMI);
+    assert(parse_settings("audio_output=bogus\n").audio_output  == AudioOutput::HDMI);
+    assert(strcmp(audio_output_file_value(AudioOutput::HDMI),   "hdmi")   == 0);
+    assert(strcmp(audio_output_file_value(AudioOutput::Analog), "analog") == 0);
+    Settings aos; aos.audio_output = AudioOutput::Analog;
+    char aobuf[512];
+    serialize_settings(aos, aobuf, sizeof aobuf);
+    assert(parse_settings(aobuf).audio_output == AudioOutput::Analog);
+
     printf("All settings tests passed\n");
     return 0;
 }

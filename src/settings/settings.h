@@ -16,6 +16,7 @@ enum class Region    { Auto, NTSC, PAL };
 enum class MenuHotkey { StartSelect, StartA, StartB, LR };
 enum class PadButton { A, B, X, Y, L, R, Start, Select };
 enum class VideoMode { Native, P1080, P720, P480 };
+enum class AudioOutput { HDMI, Analog };
 
 // Physical pad button driving each Genesis button, indexed
 // 0=A,1=B,2=C,3=X,4=Y,5=Z,6=Start,7=Mode. Default ctor reproduces the
@@ -45,11 +46,13 @@ struct Settings
     ButtonMap  map1;        // Player 1 button map
     ButtonMap  map2;        // Player 2 button map
     VideoMode  video_mode;  // HDMI output mode
+    AudioOutput audio_output;  // hdmi | analog (3.5mm jack)
 
     Settings(void)
     :   scale_mode(ScaleMode::Integer), widescreen(false),
         volume(100), mute(false), region(Region::Auto),
-        menu_hotkey(MenuHotkey::StartSelect), video_mode(VideoMode::Native)
+        menu_hotkey(MenuHotkey::StartSelect), video_mode(VideoMode::Native),
+        audio_output(AudioOutput::HDMI)
     {
         auto_launch_rom[0] = '\0';
     }
@@ -86,5 +89,8 @@ void video_mode_dims(VideoMode m, unsigned &w, unsigned &h);
 
 // VideoMode as written to the settings file ("native"|"1080p"|"720p"|"480p").
 const char *video_mode_file_value(VideoMode m);
+
+// Audio output as written to the settings file ("hdmi" | "analog").
+const char *audio_output_file_value(AudioOutput o);
 
 #endif

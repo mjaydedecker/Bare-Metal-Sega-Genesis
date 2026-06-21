@@ -121,6 +121,9 @@ Settings parse_settings(const char *text)
             else if (ieq(val, "480p"))  s.video_mode = VideoMode::P480;
             else                        s.video_mode = VideoMode::Native;
         }
+        else if (ieq(key, "audio_output"))
+            s.audio_output = ieq(val, "analog") ? AudioOutput::Analog
+                                                : AudioOutput::HDMI;
         // unknown keys: ignored
     }
     return s;
@@ -271,6 +274,11 @@ const char *video_mode_file_value(VideoMode m)
     }
 }
 
+const char *audio_output_file_value(AudioOutput o)
+{
+    return o == AudioOutput::Analog ? "analog" : "hdmi";
+}
+
 void serialize_settings(const Settings &s, char *out, size_t out_size)
 {
     if (out == 0 || out_size == 0) return;
@@ -297,5 +305,7 @@ void serialize_settings(const Settings &s, char *out, size_t out_size)
     append_map(out, out_size, s.map2);
     appendz(out, out_size, "\nvideo_mode=");
     appendz(out, out_size, video_mode_file_value(s.video_mode));
+    appendz(out, out_size, "\naudio_output=");
+    appendz(out, out_size, audio_output_file_value(s.audio_output));
     appendz(out, out_size, "\n");
 }
