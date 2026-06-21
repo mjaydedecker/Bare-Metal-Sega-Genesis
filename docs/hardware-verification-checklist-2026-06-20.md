@@ -182,6 +182,23 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 
 ---
 
+## M. Diagnostics HUD (debug_overlay)
+
+- [ ] **M1 — Toggle.** Pause → Settings → **Debug Overlay** = On, resume.
+  **Expect:** a small text box (top-left) shows FPS, U/O, AQ, ROM, mode/scale.
+- [ ] **M2 — Live values.** FPS reads ~60 on a game that keeps up; the U/O and
+  AQ numbers update over time and match the ~5 s `audio underruns/overruns` log.
+- [ ] **M3 — Context correct.** ROM name and `mode  scale` line match the loaded
+  game and current settings (e.g. `1080p  aspect`).
+- [ ] **M4 — Clean off.** Set Debug Overlay = Off; **Expect:** the HUD disappears
+  with no ghost text left in the letterbox bars or over the game.
+- [ ] **M5 — No regression.** With the HUD on, confirm FPS and the underrun count
+  do not worsen versus HUD off.
+- [ ] **M6 — Persisted.** Confirm `debug_overlay=on` in `SD:/settings.txt`;
+  survives reboot (HUD shows from boot).
+
+---
+
 ## Results summary
 
 | Group | Pass | Notes |
@@ -198,6 +215,7 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 | J. Analog audio | | |
 | K. Tear-free (vsync) | | |
 | L. Aspect scaling | | |
+| M. Diagnostics HUD | | |
 
 Anything that fails: note the exact symptom and which ROM, and we'll debug it
 systematically (root cause first).
