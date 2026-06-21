@@ -259,6 +259,21 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 
 ---
 
+## Q. Boot splash screen
+
+- [ ] **Q1 — Embedded logo on boot.** Power on. **Expect:** the placeholder logo
+  (three colored bars on a dark field) appears early and stays through the USB/SD
+  wait, then the ROM browser replaces it. No corruption or hang.
+- [ ] **Q2 — SD override.** Make `splash.raw` with
+  `python3 tools/mksplash.py --placeholder --raw splash.raw` (or from a PNG),
+  copy it to the SD root, reboot. **Expect:** after the card mounts, that image
+  replaces the embedded logo for the rest of boot.
+- [ ] **Q3 — Bad/absent override is harmless.** Remove or truncate
+  `SD:/splash.raw`, reboot. **Expect:** the embedded logo shows for the whole
+  boot; no hang.
+
+---
+
 ## Results summary
 
 | Group | Pass | Notes |
@@ -279,6 +294,7 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 | N. Hotkeys + toasts | | |
 | O. Hotkey remapping | | |
 | P. Audio latency | | |
+| Q. Boot splash | | |
 
 Anything that fails: note the exact symptom and which ROM, and we'll debug it
 systematically (root cause first).
