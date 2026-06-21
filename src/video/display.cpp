@@ -177,6 +177,18 @@ void Display::Blit(const void *src, unsigned width, unsigned height, size_t pitc
         return;
     }
 
+    if (m_ScaleMode == ScaleMode::Aspect && width != 0 && height != 0)
+    {
+        // True 4:3 box: vertical integer (crisp), horizontal stretch to 4:3.
+        unsigned ox, oy, ow, oh;
+        aspect_rect(m_FbW, m_FbH, width, height, &ox, &oy, &ow, &oh);
+        blit_rgb565_scaled(target, m_Pitch, m_FbW, m_FbH,
+                           (const uint16_t *) src, (unsigned) pitch,
+                           width, height, ox, oy, ow, oh);
+        if (flip) Present();
+        return;
+    }
+
     // Integer mode: largest whole scale that fits the framebuffer.
     unsigned scale = 1;
     if (width != 0 && height != 0)
