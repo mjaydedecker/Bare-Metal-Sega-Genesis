@@ -13,7 +13,7 @@
 #include "controls_screen.h"
 #include "video_mode_screen.h"
 
-#define NUM_ROWS 12
+#define NUM_ROWS 13
 
 // RGB565 colours (match the pause menu palette).
 static const u16 BOX   = 0x0008;
@@ -25,11 +25,12 @@ SettingsScreen::SettingsScreen(TextCanvas *pCanvas, Gamepad *pGamepad,
                                CUSBHCIDevice *pUSBHCI, Settings *pSettings,
                                SettingsStore *pStore, Display *pDisplay,
                                AudioDriver *pAudio, ControlsScreen *pControls,
-                               VideoModeScreen *pVideoMode, Overlay *pOverlay)
+                               VideoModeScreen *pVideoMode, Overlay *pOverlay,
+                               HotkeyScreen *pHotkey)
 :   m_pCanvas(pCanvas), m_pGamepad(pGamepad), m_pUSBHCI(pUSBHCI),
     m_pSettings(pSettings), m_pStore(pStore), m_pDisplay(pDisplay),
     m_pAudio(pAudio), m_pRomPath(0), m_pControls(pControls),
-    m_pVideoMode(pVideoMode), m_pOverlay(pOverlay)
+    m_pVideoMode(pVideoMode), m_pOverlay(pOverlay), m_pHotkey(pHotkey)
 {
 }
 
@@ -96,10 +97,11 @@ void SettingsScreen::Render(int selected)
                                      "Region:", "Auto-launch:",
                                      "Menu Hotkey:", "Audio out:",
                                      "Vsync:", "Debug Overlay:",
-                                     "Controls...", "Video Mode..." };
+                                     "Controls...", "Video Mode...",
+                                     "Hotkeys..." };
     const char *values[NUM_ROWS] = { scaleVal, wideVal, volVal, muteVal,
                                      regionVal, autoVal, hotkeyVal, audioVal,
-                                     vsyncVal, dbgVal, "", "" };
+                                     vsyncVal, dbgVal, "", "", "" };
 
     for (int i = 0; i < NUM_ROWS; i++)
     {
@@ -233,6 +235,12 @@ void SettingsScreen::Run(void)
             else if (selected == 11)                  // Video Mode...
             {
                 m_pVideoMode->Run();
+                prev = m_pGamepad->MenuButtons();
+                Render(selected);
+            }
+            else if (selected == 12)                  // Hotkeys...
+            {
+                m_pHotkey->Run();
                 prev = m_pGamepad->MenuButtons();
                 Render(selected);
             }

@@ -18,6 +18,7 @@
 #include "../video/display.h"
 #include "../audio/audio_driver.h"
 #include "../ui/overlay.h"
+#include "hotkey_screen.h"
 
 class ControlsScreen;
 class VideoModeScreen;
@@ -28,7 +29,8 @@ public:
     SettingsScreen(TextCanvas *pCanvas, Gamepad *pGamepad, CUSBHCIDevice *pUSBHCI,
                    Settings *pSettings, SettingsStore *pStore, Display *pDisplay,
                    AudioDriver *pAudio, ControlsScreen *pControls,
-                   VideoModeScreen *pVideoMode, Overlay *pOverlay);
+                   VideoModeScreen *pVideoMode, Overlay *pOverlay,
+                   HotkeyScreen *pHotkey);
     void Run(void);   // returns when the user backs out (B)
 
     // Tell the screen which ROM is currently running (for the auto-launch row).
@@ -49,6 +51,7 @@ private:
     ControlsScreen *m_pControls;
     VideoModeScreen *m_pVideoMode;
     Overlay         *m_pOverlay;
+    HotkeyScreen    *m_pHotkey;
 };
 
 #endif
