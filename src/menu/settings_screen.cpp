@@ -88,8 +88,10 @@ void SettingsScreen::Render(int selected)
         m_pSettings->menu_hotkey == MenuHotkey::StartB ? "< Start+B >" :
         m_pSettings->menu_hotkey == MenuHotkey::LR     ? "< L+R >"     :
                                                          "< Start+Select >";
-    const char *audioVal = m_pSettings->audio_output == AudioOutput::Analog
-                               ? "< Analog >" : "< HDMI >";
+    const char *audioVal =
+        m_pSettings->audio_output == AudioOutput::Analog ? "< Analog >"  :
+        m_pSettings->audio_output == AudioOutput::I2S    ? "< I2S DAC >" :
+                                                           "< HDMI >";
     const char *vsyncVal = m_pSettings->vsync ? "< On >" : "< Off >";
     const char *dbgVal   = m_pSettings->debug_overlay ? "< On >" : "< Off >";
     const char *latVal =
@@ -212,11 +214,14 @@ void SettingsScreen::Run(void)
                 m_pSettings->menu_hotkey = (MenuHotkey) h;
                 break;
             }
-            case 7:   // Audio out (toggle HDMI <-> Analog; applies on reboot)
-                m_pSettings->audio_output =
-                    m_pSettings->audio_output == AudioOutput::HDMI
-                        ? AudioOutput::Analog : AudioOutput::HDMI;
+            case 7:   // Audio out (cycle HDMI -> Analog -> I2S; applies on reboot)
+            {
+                int a = (int) m_pSettings->audio_output + dir;
+                if (a < 0) a = 2;
+                if (a > 2) a = 0;
+                m_pSettings->audio_output = (AudioOutput) a;
                 break;
+            }
             case 8:   // Vsync (toggle tear-free page flip; live)
                 m_pSettings->vsync = !m_pSettings->vsync;
                 break;

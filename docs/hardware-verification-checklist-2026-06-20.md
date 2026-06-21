@@ -147,6 +147,15 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 - [ ] **J3 — Persisted.** Confirm `audio_output=analog` in `SD:/settings.txt`.
 - [ ] **J4 — Back to HDMI.** Set Audio out = HDMI, reboot.
   **Expect:** audio returns to HDMI; `audio_output=hdmi` in the file.
+- [ ] **J5 — I2S DAC output.** Connect a PCM5102 I2S DAC HAT. Settings → **Audio
+  out** = I2S DAC → reboot. **Expect:** game audio comes from the DAC; HDMI and
+  the 3.5 mm jack are silent. Confirm `audio_output=i2s` in `SD:/settings.txt`.
+- [ ] **J6 — I2S volume/mute + clean.** With I2S selected, change volume and
+  toggle mute (they should scale/silence the DAC like the other outputs).
+  **Expect:** audio is clean — no choppiness/dropouts. If choppy, note it: the
+  fix is a smaller explicit `nChunkSize` in the `CI2SSoundBaseDevice` ctor.
+- [ ] **J7 — Back to HDMI from I2S.** Set Audio out = HDMI, reboot. **Expect:**
+  audio returns to HDMI; `audio_output=hdmi` in the file.
 
 ---
 

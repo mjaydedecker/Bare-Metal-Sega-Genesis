@@ -16,7 +16,7 @@ enum class Region    { Auto, NTSC, PAL };
 enum class MenuHotkey { StartSelect, StartA, StartB, LR };
 enum class PadButton { A, B, X, Y, L, R, Start, Select };
 enum class VideoMode { Native, P1080, P720, P480 };
-enum class AudioOutput { HDMI, Analog };
+enum class AudioOutput { HDMI, Analog, I2S };
 enum class AudioLatency { Low, Medium, High };
 
 // Physical pad button driving each Genesis button, indexed

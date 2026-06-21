@@ -202,6 +202,14 @@ int main(void)
     serialize_settings(aos, aobuf, sizeof aobuf);
     assert(parse_settings(aobuf).audio_output == AudioOutput::Analog);
 
+    // I2S output parses, file value, round-trips.
+    assert(parse_settings("audio_output=i2s\n").audio_output == AudioOutput::I2S);
+    assert(strcmp(audio_output_file_value(AudioOutput::I2S), "i2s") == 0);
+    Settings i2ss; i2ss.audio_output = AudioOutput::I2S;
+    char i2sbuf[512];
+    serialize_settings(i2ss, i2sbuf, sizeof i2sbuf);
+    assert(parse_settings(i2sbuf).audio_output == AudioOutput::I2S);
+
     // Vsync defaults on; parses off/on; round-trips (truthy parse, like mute).
     assert(d.vsync == true);
     assert(parse_settings("vsync=off\n").vsync == false);

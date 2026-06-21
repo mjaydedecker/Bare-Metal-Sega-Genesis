@@ -13,6 +13,7 @@
 #include <circle/sound/soundbasedevice.h>
 #include <circle/sound/hdmisoundbasedevice.h>
 #include <circle/sound/pwmsoundbasedevice.h>
+#include <circle/sound/i2ssoundbasedevice.h>
 #include <circle/types.h>
 #include "../settings/settings.h"   // AudioOutput
 
