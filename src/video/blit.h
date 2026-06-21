@@ -37,4 +37,13 @@ void blit_rgb565_scaled(uint16_t *dst, unsigned dst_pitch_bytes,
                         unsigned out_x, unsigned out_y,
                         unsigned out_w, unsigned out_h);
 
+// Compute the output rectangle for "aspect" scaling: a true 4:3 box with
+// VERTICAL INTEGER scaling (crisp row-replication) and the source width
+// stretched to the 4:3 width. Given framebuffer fb_w*fb_h and source w*h,
+// writes the centered destination rect (out_x,out_y,out_w,out_h). All four
+// outputs are 0 if any input dimension is 0. Pure; no Circle dependency.
+void aspect_rect(unsigned fb_w, unsigned fb_h, unsigned w, unsigned h,
+                 unsigned *out_x, unsigned *out_y,
+                 unsigned *out_w, unsigned *out_h);
+
 #endif

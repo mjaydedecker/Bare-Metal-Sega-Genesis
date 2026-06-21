@@ -35,6 +35,15 @@ int main(void)
     assert(rt.scale_mode == ScaleMode::Stretch);
     assert(rt.widescreen == true);
 
+    // Aspect mode parses and round-trips.
+    Settings asp = parse_settings("video_scale=aspect\n");
+    assert(asp.scale_mode == ScaleMode::Aspect);
+
+    Settings aspSrc; aspSrc.scale_mode = ScaleMode::Aspect;
+    char aspBuf[256];
+    serialize_settings(aspSrc, aspBuf, sizeof aspBuf);
+    assert(parse_settings(aspBuf).scale_mode == ScaleMode::Aspect);
+
     // Defaults for the new audio fields.
     assert(d.volume == 100);
     assert(d.mute == false);

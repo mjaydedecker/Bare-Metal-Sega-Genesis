@@ -69,8 +69,10 @@ void SettingsScreen::Render(int selected)
 
     char volVal[8];
     fmt_volume(volVal, m_pSettings->volume);
-    const char *scaleVal = m_pSettings->scale_mode == ScaleMode::Stretch
-                               ? "< Stretch >" : "< Integer >";
+    const char *scaleVal =
+        m_pSettings->scale_mode == ScaleMode::Stretch ? "< Stretch >" :
+        m_pSettings->scale_mode == ScaleMode::Aspect  ? "< Aspect >"  :
+                                                        "< Integer >";
     const char *wideVal  = m_pSettings->widescreen ? "< On >" : "< Off >";
     const char *muteVal  = m_pSettings->mute ? "< On >" : "< Off >";
     const char *regionVal =
@@ -147,11 +149,13 @@ void SettingsScreen::Run(void)
         {
             switch (selected)
             {
-            case 0:   // Video Scale (toggle, either direction)
-                m_pSettings->scale_mode =
-                    m_pSettings->scale_mode == ScaleMode::Integer
-                        ? ScaleMode::Stretch : ScaleMode::Integer;
+            case 0:   // Video Scale: cycle Integer -> Stretch -> Aspect
+            {
+                // dir is +1 (Right) or -1 (Left); wrap through the 3 modes.
+                int n = (int) m_pSettings->scale_mode + (dir > 0 ? 1 : 2);
+                m_pSettings->scale_mode = (ScaleMode) (n % 3);
                 break;
+            }
             case 1:   // Widescreen (toggle)
                 m_pSettings->widescreen = !m_pSettings->widescreen;
                 break;
