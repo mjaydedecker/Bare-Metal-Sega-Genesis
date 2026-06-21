@@ -13,7 +13,7 @@
 #include "controls_screen.h"
 #include "video_mode_screen.h"
 
-#define NUM_ROWS 11
+#define NUM_ROWS 12
 
 // RGB565 colours (match the pause menu palette).
 static const u16 BOX   = 0x0008;
@@ -25,11 +25,11 @@ SettingsScreen::SettingsScreen(TextCanvas *pCanvas, Gamepad *pGamepad,
                                CUSBHCIDevice *pUSBHCI, Settings *pSettings,
                                SettingsStore *pStore, Display *pDisplay,
                                AudioDriver *pAudio, ControlsScreen *pControls,
-                               VideoModeScreen *pVideoMode)
+                               VideoModeScreen *pVideoMode, Overlay *pOverlay)
 :   m_pCanvas(pCanvas), m_pGamepad(pGamepad), m_pUSBHCI(pUSBHCI),
     m_pSettings(pSettings), m_pStore(pStore), m_pDisplay(pDisplay),
     m_pAudio(pAudio), m_pRomPath(0), m_pControls(pControls),
-    m_pVideoMode(pVideoMode)
+    m_pVideoMode(pVideoMode), m_pOverlay(pOverlay)
 {
 }
 
@@ -42,6 +42,7 @@ void SettingsScreen::Apply(void)
     g_variables_dirty = true;                            // ...on next poll/reset
     m_pAudio->SetVolume(m_pSettings->volume);            // live
     m_pAudio->SetMute(m_pSettings->mute);                // live
+    m_pOverlay->SetEnabled(m_pSettings->debug_overlay);  // live
 }
 
 // Format a 0-100 volume as "< NNN >" into out (>= 8 bytes).
@@ -89,15 +90,16 @@ void SettingsScreen::Render(int selected)
     const char *audioVal = m_pSettings->audio_output == AudioOutput::Analog
                                ? "< Analog >" : "< HDMI >";
     const char *vsyncVal = m_pSettings->vsync ? "< On >" : "< Off >";
+    const char *dbgVal   = m_pSettings->debug_overlay ? "< On >" : "< Off >";
     const char *labels[NUM_ROWS] = { "Video Scale:", "Widescreen:",
                                      "Volume:", "Mute:",
                                      "Region:", "Auto-launch:",
                                      "Menu Hotkey:", "Audio out:",
-                                     "Vsync:",
+                                     "Vsync:", "Debug Overlay:",
                                      "Controls...", "Video Mode..." };
     const char *values[NUM_ROWS] = { scaleVal, wideVal, volVal, muteVal,
                                      regionVal, autoVal, hotkeyVal, audioVal,
-                                     vsyncVal, "", "" };
+                                     vsyncVal, dbgVal, "", "" };
 
     for (int i = 0; i < NUM_ROWS; i++)
     {
@@ -211,6 +213,9 @@ void SettingsScreen::Run(void)
             case 8:   // Vsync (toggle tear-free page flip; live)
                 m_pSettings->vsync = !m_pSettings->vsync;
                 break;
+            case 9:   // Debug Overlay (toggle diagnostics HUD; live)
+                m_pSettings->debug_overlay = !m_pSettings->debug_overlay;
+                break;
             }
 
             Apply();
@@ -219,13 +224,13 @@ void SettingsScreen::Run(void)
         }
         if (pressed & GP_START)
         {
-            if (selected == 9)                        // Controls...
+            if (selected == 10)                       // Controls...
             {
                 m_pControls->Run();
                 prev = m_pGamepad->MenuButtons();
                 Render(selected);
             }
-            else if (selected == 10)                  // Video Mode...
+            else if (selected == 11)                  // Video Mode...
             {
                 m_pVideoMode->Run();
                 prev = m_pGamepad->MenuButtons();
