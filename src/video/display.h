@@ -35,32 +35,42 @@ public:
     boolean SetMode(unsigned w, unsigned h);
 
     // Select integer (sharp, letterboxed) vs stretch (aspect-fill) scaling.
-    // Takes effect on the next Blit.
     void SetScaleMode(ScaleMode mode) { m_ScaleMode = mode; }
+
+    // Enable/disable the tear-free vsync page flip. Live; takes effect on the
+    // next Blit. When off (or if double-buffering is unavailable) Blit draws
+    // straight to the visible page with no flip.
+    void SetVsync(bool on) { m_Vsync = on; }
 
     // Copy one RGB565 frame, integer-scaled and centered. pitch is the source
     // row stride in bytes.
     void Blit(const void *src, unsigned width, unsigned height, size_t pitch);
 
-    // Framebuffer accessors for on-screen UI (TextCanvas draws into this).
-    u16     *Buffer(void) const { return m_pBuffer; }
+    // Framebuffer accessors for on-screen UI (TextCanvas draws into the visible
+    // page). Game frames go through Blit(), never Buffer().
+    u16     *Buffer(void) const { return m_pFront; }
     unsigned Pitch (void) const { return m_Pitch; }   // bytes per row
     unsigned Width (void) const { return m_FbW; }     // pixels
     unsigned Height(void) const { return m_FbH; }     // pixels
 
-    // Force the next Blit to clear the whole framebuffer (repaint the letterbox
-    // bars). Used after an on-screen overlay (e.g. the pause menu) drew over the
-    // bars, which Blit otherwise only repaints on a frame-size change.
+    // Force the next Blit to clear the framebuffer (repaint letterbox bars).
     void ForceRepaint(void) { m_LastW = 0; m_LastH = 0; }
 
 private:
-    void ClearBlack(void);
+    void ClearBlack(void);                 // clears both pages when double-buffered
+    void Present(void);                    // vsync flip + swap front/back
+    CBcmFrameBuffer *BuildFB(unsigned reqW, unsigned reqH, bool &doubled);
+    void Adopt(CBcmFrameBuffer *fb, bool doubled);
 
     CBcmFrameBuffer *m_pFB;
-    u16             *m_pBuffer;   // framebuffer base
-    unsigned         m_Pitch;     // framebuffer pitch in bytes
-    unsigned         m_FbW;       // framebuffer width in pixels (native mode)
-    unsigned         m_FbH;       // framebuffer height in pixels (native mode)
+    u16             *m_pFront;        // visible page base (UI + non-vsync draw)
+    u16             *m_pBack;         // off-screen page base (== front if single)
+    bool             m_FrontIsPage0;  // which physical page is currently visible
+    bool             m_DoubleBuffered;
+    bool             m_Vsync;
+    unsigned         m_Pitch;         // framebuffer pitch in bytes
+    unsigned         m_FbW;           // framebuffer width in pixels
+    unsigned         m_FbH;           // framebuffer height in pixels
     unsigned         m_LastW;
     unsigned         m_LastH;
     ScaleMode        m_ScaleMode;
