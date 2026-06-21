@@ -211,6 +211,29 @@ int main(void)
     serialize_settings(vs2, vsbuf, sizeof vsbuf);
     assert(parse_settings(vsbuf).vsync == false);
 
+    // Audio latency: default Medium; parse each keyword; invalid -> Medium.
+    assert(d.audio_latency == AudioLatency::Medium);
+    assert(parse_settings("audio_latency=low\n").audio_latency    == AudioLatency::Low);
+    assert(parse_settings("audio_latency=medium\n").audio_latency == AudioLatency::Medium);
+    assert(parse_settings("audio_latency=high\n").audio_latency   == AudioLatency::High);
+    assert(parse_settings("audio_latency=bogus\n").audio_latency  == AudioLatency::Medium);
+
+    // Frame multipliers.
+    assert(audio_latency_frames(AudioLatency::Low)    == 1);
+    assert(audio_latency_frames(AudioLatency::Medium) == 2);
+    assert(audio_latency_frames(AudioLatency::High)   == 3);
+
+    // File-value mapping.
+    assert(strcmp(audio_latency_file_value(AudioLatency::Low),    "low")    == 0);
+    assert(strcmp(audio_latency_file_value(AudioLatency::Medium), "medium") == 0);
+    assert(strcmp(audio_latency_file_value(AudioLatency::High),   "high")   == 0);
+
+    // Round-trip.
+    Settings als; als.audio_latency = AudioLatency::High;
+    char albuf[512];
+    serialize_settings(als, albuf, sizeof albuf);
+    assert(parse_settings(albuf).audio_latency == AudioLatency::High);
+
     printf("All settings tests passed\n");
     return 0;
 }

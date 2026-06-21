@@ -127,6 +127,12 @@ Settings parse_settings(const char *text)
         else if (ieq(key, "audio_output"))
             s.audio_output = ieq(val, "analog") ? AudioOutput::Analog
                                                 : AudioOutput::HDMI;
+        else if (ieq(key, "audio_latency"))
+        {
+            if      (ieq(val, "low"))  s.audio_latency = AudioLatency::Low;
+            else if (ieq(val, "high")) s.audio_latency = AudioLatency::High;
+            else                       s.audio_latency = AudioLatency::Medium;
+        }
         else if (ieq(key, "vsync"))
             s.vsync = truthy(val);
         else if (ieq(key, "debug_overlay"))
@@ -316,6 +322,26 @@ const char *audio_output_file_value(AudioOutput o)
     return o == AudioOutput::Analog ? "analog" : "hdmi";
 }
 
+const char *audio_latency_file_value(AudioLatency l)
+{
+    switch (l)
+    {
+    case AudioLatency::Low:  return "low";
+    case AudioLatency::High: return "high";
+    default:                 return "medium";
+    }
+}
+
+unsigned audio_latency_frames(AudioLatency l)
+{
+    switch (l)
+    {
+    case AudioLatency::Low:  return 1;
+    case AudioLatency::High: return 3;
+    default:                 return 2;   // Medium == today's behavior
+    }
+}
+
 void serialize_settings(const Settings &s, char *out, size_t out_size)
 {
     if (out == 0 || out_size == 0) return;
@@ -346,6 +372,8 @@ void serialize_settings(const Settings &s, char *out, size_t out_size)
     appendz(out, out_size, video_mode_file_value(s.video_mode));
     appendz(out, out_size, "\naudio_output=");
     appendz(out, out_size, audio_output_file_value(s.audio_output));
+    appendz(out, out_size, "\naudio_latency=");
+    appendz(out, out_size, audio_latency_file_value(s.audio_latency));
     appendz(out, out_size, "\nvsync=");
     appendz(out, out_size, s.vsync ? "on" : "off");
     appendz(out, out_size, "\ndebug_overlay=");

@@ -17,6 +17,7 @@ enum class MenuHotkey { StartSelect, StartA, StartB, LR };
 enum class PadButton { A, B, X, Y, L, R, Start, Select };
 enum class VideoMode { Native, P1080, P720, P480 };
 enum class AudioOutput { HDMI, Analog };
+enum class AudioLatency { Low, Medium, High };
 
 // Physical pad button driving each Genesis button, indexed
 // 0=A,1=B,2=C,3=X,4=Y,5=Z,6=Start,7=Mode. Default ctor reproduces the
@@ -71,13 +72,15 @@ struct Settings
     AudioOutput audio_output;  // hdmi | analog (3.5mm jack)
     bool       vsync;          // tear-free page flip (default on)
     bool       debug_overlay;  // on-screen diagnostics HUD (default off)
+    AudioLatency audio_latency; // audio buffering depth: low | medium | high
     HotkeyBindings hotkeys;    // in-game action hotkey bindings
 
     Settings(void)
     :   scale_mode(ScaleMode::Integer), widescreen(false),
         volume(100), mute(false), region(Region::Auto),
         menu_hotkey(MenuHotkey::StartSelect), video_mode(VideoMode::Native),
-        audio_output(AudioOutput::HDMI), vsync(true), debug_overlay(false)
+        audio_output(AudioOutput::HDMI), vsync(true), debug_overlay(false),
+        audio_latency(AudioLatency::Medium)
     {
         auto_launch_rom[0] = '\0';
     }
@@ -117,5 +120,12 @@ const char *video_mode_file_value(VideoMode m);
 
 // Audio output as written to the settings file ("hdmi" | "analog").
 const char *audio_output_file_value(AudioOutput o);
+
+// AudioLatency as written to the settings file ("low" | "medium" | "high").
+const char *audio_latency_file_value(AudioLatency l);
+
+// Target buffered-audio depth as a video-frame multiplier (Low=1, Medium=2,
+// High=3); the kernel computes target = audio_latency_frames(l) * framesPerVideo.
+unsigned audio_latency_frames(AudioLatency l);
 
 #endif
