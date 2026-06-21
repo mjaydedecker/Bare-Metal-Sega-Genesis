@@ -13,7 +13,7 @@
 #include "controls_screen.h"
 #include "video_mode_screen.h"
 
-#define NUM_ROWS 10
+#define NUM_ROWS 11
 
 // RGB565 colours (match the pause menu palette).
 static const u16 BOX   = 0x0008;
@@ -36,6 +36,7 @@ SettingsScreen::SettingsScreen(TextCanvas *pCanvas, Gamepad *pGamepad,
 void SettingsScreen::Apply(void)
 {
     m_pDisplay->SetScaleMode(m_pSettings->scale_mode);   // live
+    m_pDisplay->SetVsync(m_pSettings->vsync);            // live
     g_widescreen      = m_pSettings->widescreen;         // core re-reads...
     g_region_value    = region_core_value(m_pSettings->region);
     g_variables_dirty = true;                            // ...on next poll/reset
@@ -85,14 +86,16 @@ void SettingsScreen::Render(int selected)
                                                          "< Start+Select >";
     const char *audioVal = m_pSettings->audio_output == AudioOutput::Analog
                                ? "< Analog >" : "< HDMI >";
+    const char *vsyncVal = m_pSettings->vsync ? "< On >" : "< Off >";
     const char *labels[NUM_ROWS] = { "Video Scale:", "Widescreen:",
                                      "Volume:", "Mute:",
                                      "Region:", "Auto-launch:",
                                      "Menu Hotkey:", "Audio out:",
+                                     "Vsync:",
                                      "Controls...", "Video Mode..." };
     const char *values[NUM_ROWS] = { scaleVal, wideVal, volVal, muteVal,
                                      regionVal, autoVal, hotkeyVal, audioVal,
-                                     "", "" };
+                                     vsyncVal, "", "" };
 
     for (int i = 0; i < NUM_ROWS; i++)
     {
@@ -201,6 +204,9 @@ void SettingsScreen::Run(void)
                     m_pSettings->audio_output == AudioOutput::HDMI
                         ? AudioOutput::Analog : AudioOutput::HDMI;
                 break;
+            case 8:   // Vsync (toggle tear-free page flip; live)
+                m_pSettings->vsync = !m_pSettings->vsync;
+                break;
             }
 
             Apply();
@@ -209,13 +215,13 @@ void SettingsScreen::Run(void)
         }
         if (pressed & GP_START)
         {
-            if (selected == 8)                        // Controls...
+            if (selected == 9)                        // Controls...
             {
                 m_pControls->Run();
                 prev = m_pGamepad->MenuButtons();
                 Render(selected);
             }
-            else if (selected == 9)                   // Video Mode...
+            else if (selected == 10)                  // Video Mode...
             {
                 m_pVideoMode->Run();
                 prev = m_pGamepad->MenuButtons();
