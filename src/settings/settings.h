@@ -11,7 +11,7 @@
 
 #include <stddef.h>
 
-enum class ScaleMode { Integer, Stretch };
+enum class ScaleMode { Integer, Stretch, Aspect };
 enum class Region    { Auto, NTSC, PAL };
 enum class MenuHotkey { StartSelect, StartA, StartB, LR };
 enum class PadButton { A, B, X, Y, L, R, Start, Select };

@@ -68,6 +68,7 @@ Settings parse_settings(const char *text)
 
         if (ieq(key, "video_scale"))
             s.scale_mode = ieq(val, "stretch") ? ScaleMode::Stretch
+                         : ieq(val, "aspect")  ? ScaleMode::Aspect
                                                : ScaleMode::Integer;
         else if (ieq(key, "widescreen"))
             s.widescreen = truthy(val);
@@ -287,8 +288,10 @@ void serialize_settings(const Settings &s, char *out, size_t out_size)
     out[0] = '\0';
     appendz(out, out_size, "# Bare Metal Sega Genesis settings\n");
     appendz(out, out_size, "video_scale=");
-    appendz(out, out_size, s.scale_mode == ScaleMode::Stretch ? "stretch"
-                                                              : "integer");
+    appendz(out, out_size,
+            s.scale_mode == ScaleMode::Stretch ? "stretch"
+          : s.scale_mode == ScaleMode::Aspect  ? "aspect"
+                                               : "integer");
     appendz(out, out_size, "\nwidescreen=");
     appendz(out, out_size, s.widescreen ? "on" : "off");
     appendz(out, out_size, "\nvolume=");
