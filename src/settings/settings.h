@@ -47,12 +47,13 @@ struct Settings
     ButtonMap  map2;        // Player 2 button map
     VideoMode  video_mode;  // HDMI output mode
     AudioOutput audio_output;  // hdmi | analog (3.5mm jack)
+    bool       vsync;          // tear-free page flip (default on)
 
     Settings(void)
     :   scale_mode(ScaleMode::Integer), widescreen(false),
         volume(100), mute(false), region(Region::Auto),
         menu_hotkey(MenuHotkey::StartSelect), video_mode(VideoMode::Native),
-        audio_output(AudioOutput::HDMI)
+        audio_output(AudioOutput::HDMI), vsync(true)
     {
         auto_launch_rom[0] = '\0';
     }

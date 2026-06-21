@@ -124,6 +124,8 @@ Settings parse_settings(const char *text)
         else if (ieq(key, "audio_output"))
             s.audio_output = ieq(val, "analog") ? AudioOutput::Analog
                                                 : AudioOutput::HDMI;
+        else if (ieq(key, "vsync"))
+            s.vsync = truthy(val);
         // unknown keys: ignored
     }
     return s;
@@ -307,5 +309,7 @@ void serialize_settings(const Settings &s, char *out, size_t out_size)
     appendz(out, out_size, video_mode_file_value(s.video_mode));
     appendz(out, out_size, "\naudio_output=");
     appendz(out, out_size, audio_output_file_value(s.audio_output));
+    appendz(out, out_size, "\nvsync=");
+    appendz(out, out_size, s.vsync ? "on" : "off");
     appendz(out, out_size, "\n");
 }
