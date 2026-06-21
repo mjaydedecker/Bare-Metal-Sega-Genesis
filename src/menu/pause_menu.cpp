@@ -44,6 +44,7 @@ void PauseMenu::Render(int selected)
     int boxW = cw * 26;
     int boxH = ch * (NUM_ENTRIES + 3);
 
+    m_pCanvas->Clear(0x0000);   // wipe any larger menu drawn before this one
     m_pCanvas->FillRect(boxX, boxY, boxW, boxH, BOX);
     m_pCanvas->DrawText(boxX + cw, boxY + ch, "PAUSED", WHITE, BOX);
 

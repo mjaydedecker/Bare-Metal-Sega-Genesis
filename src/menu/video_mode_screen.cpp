@@ -41,6 +41,7 @@ void VideoModeScreen::Render(VideoMode sel)
     int ch = (int) m_pCanvas->CharH();
     int boxX = cw * 3, boxY = ch * 2, boxW = cw * 34, boxH = ch * 6;
 
+    m_pCanvas->Clear(0x0000);   // wipe any larger menu drawn before this one
     m_pCanvas->FillRect(boxX, boxY, boxW, boxH, BOX);
     m_pCanvas->DrawText(boxX + cw, boxY + ch, "VIDEO MODE", WHITE, BOX);
 

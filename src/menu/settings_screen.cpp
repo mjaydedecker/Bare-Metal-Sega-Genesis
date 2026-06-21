@@ -66,6 +66,7 @@ void SettingsScreen::Render(int selected)
     int boxX = cw * 3, boxY = ch * 2;
     int boxW = cw * 38, boxH = ch * (NUM_ROWS + 5);
 
+    m_pCanvas->Clear(0x0000);   // wipe any larger menu drawn before this one
     m_pCanvas->FillRect(boxX, boxY, boxW, boxH, BOX);
     m_pCanvas->DrawText(boxX + cw, boxY + ch, "SETTINGS", WHITE, BOX);
 

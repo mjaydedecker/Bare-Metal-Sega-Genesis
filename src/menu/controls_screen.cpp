@@ -53,6 +53,7 @@ void ControlsScreen::Render(int player, int selected)
 
     const ButtonMap &map = (player == 0) ? m_pSettings->map1 : m_pSettings->map2;
 
+    m_pCanvas->Clear(0x0000);   // wipe any larger menu drawn before this one
     m_pCanvas->FillRect(boxX, boxY, boxW, boxH, BOX);
     m_pCanvas->DrawText(boxX + cw, boxY + ch, "CONTROLS", WHITE, BOX);
 
