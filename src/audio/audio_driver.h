@@ -10,8 +10,11 @@
 #define _audio_audio_driver_h
 
 #include <circle/interrupt.h>
+#include <circle/sound/soundbasedevice.h>
 #include <circle/sound/hdmisoundbasedevice.h>
+#include <circle/sound/pwmsoundbasedevice.h>
 #include <circle/types.h>
+#include "../settings/settings.h"   // AudioOutput
 
 class AudioDriver
 {
@@ -21,8 +24,9 @@ public:
     AudioDriver(CInterruptSystem *pInterrupt);
     ~AudioDriver(void);
 
-    // Allocate the queue and start the HDMI device at nSampleRate.
-    boolean Initialize(unsigned nSampleRate);
+    // Allocate the queue and start the sound device at nSampleRate.
+    // out selects the physical output (HDMI or the 3.5mm analog jack).
+    boolean Initialize(unsigned nSampleRate, AudioOutput out);
 
     // Push nFrames of interleaved signed-16 stereo samples.
     void Write(const s16 *pSamples, unsigned nFrames);
@@ -47,7 +51,7 @@ private:
     static const unsigned STAGE_FRAMES = 1024;   // gain staging chunk size
 
     CInterruptSystem     *m_pInterrupt;
-    CHDMISoundBaseDevice *m_pDevice;
+    CSoundBaseDevice     *m_pDevice;
     unsigned              m_Volume;     // 0-100
     bool                  m_Mute;
     unsigned              m_Underruns;

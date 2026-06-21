@@ -31,14 +31,18 @@ AudioDriver::~AudioDriver(void)
     m_pDevice = 0;
 }
 
-boolean AudioDriver::Initialize(unsigned nSampleRate)
+boolean AudioDriver::Initialize(unsigned nSampleRate, AudioOutput out)
 {
     if (nSampleRate == 0)
     {
         return FALSE;
     }
 
-    m_pDevice = new CHDMISoundBaseDevice(m_pInterrupt, nSampleRate);
+    if (out == AudioOutput::Analog)
+        m_pDevice = new CPWMSoundBaseDevice(m_pInterrupt, nSampleRate);
+    else
+        m_pDevice = new CHDMISoundBaseDevice(m_pInterrupt, nSampleRate);
+
     if (m_pDevice == 0)
     {
         return FALSE;

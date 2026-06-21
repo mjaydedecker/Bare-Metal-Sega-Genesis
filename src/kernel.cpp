@@ -221,7 +221,7 @@ TShutdownMode CKernel::Run (void)
 		u64      period_us      = (u64) (1000000.0 / fps);
 
 		// Audio: initialise once (Genesis sample rate is constant).
-		if (!audioInited && sampleRate > 0 && m_Audio.Initialize (sampleRate))
+		if (!audioInited && sampleRate > 0 && m_Audio.Initialize (sampleRate, m_Settings.audio_output))
 		{
 			audioInited = TRUE;
 			g_audio = &m_Audio;
