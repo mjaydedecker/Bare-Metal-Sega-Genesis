@@ -125,8 +125,11 @@ Settings parse_settings(const char *text)
             else                        s.video_mode = VideoMode::Native;
         }
         else if (ieq(key, "audio_output"))
-            s.audio_output = ieq(val, "analog") ? AudioOutput::Analog
-                                                : AudioOutput::HDMI;
+        {
+            if      (ieq(val, "analog")) s.audio_output = AudioOutput::Analog;
+            else if (ieq(val, "i2s"))    s.audio_output = AudioOutput::I2S;
+            else                         s.audio_output = AudioOutput::HDMI;
+        }
         else if (ieq(key, "audio_latency"))
         {
             if      (ieq(val, "low"))  s.audio_latency = AudioLatency::Low;
@@ -319,7 +322,12 @@ const char *video_mode_file_value(VideoMode m)
 
 const char *audio_output_file_value(AudioOutput o)
 {
-    return o == AudioOutput::Analog ? "analog" : "hdmi";
+    switch (o)
+    {
+    case AudioOutput::Analog: return "analog";
+    case AudioOutput::I2S:    return "i2s";
+    default:                  return "hdmi";
+    }
 }
 
 const char *audio_latency_file_value(AudioLatency l)
