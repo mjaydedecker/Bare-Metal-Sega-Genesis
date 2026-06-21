@@ -40,6 +40,10 @@ boolean AudioDriver::Initialize(unsigned nSampleRate, AudioOutput out)
 
     if (out == AudioOutput::Analog)
         m_pDevice = new CPWMSoundBaseDevice(m_pInterrupt, nSampleRate);
+    else if (out == AudioOutput::I2S)
+        // PCM5102-class DAC: Pi is I2S master, no codec I2C init needed, so all
+        // I2S-specific ctor args (nChunkSize, bSlave, pI2CMaster) take defaults.
+        m_pDevice = new CI2SSoundBaseDevice(m_pInterrupt, nSampleRate);
     else
         m_pDevice = new CHDMISoundBaseDevice(m_pInterrupt, nSampleRate);
 
