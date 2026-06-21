@@ -172,6 +172,45 @@ static void test_scaled_out_of_bounds_noop(void) {
     printf("test_scaled_out_of_bounds_noop OK\n");
 }
 
+// 320x224 and 256x224 into 1920x1080 must produce the SAME width and a 4:3 box.
+static void test_aspect_h32_h40_same_width(void) {
+    unsigned x40, y40, w40, h40, x32, y32, w32, h32;
+    aspect_rect(1920, 1080, 320, 224, &x40, &y40, &w40, &h40);
+    aspect_rect(1920, 1080, 256, 224, &x32, &y32, &w32, &h32);
+
+    // Same source height -> identical output box for both widths.
+    assert(w40 == w32);
+    assert(h40 == h32);
+    // Vertical scale is integer: out_h is a whole multiple of source height.
+    assert(h40 % 224 == 0);
+    // Box is ~4:3 (within integer rounding of the /3 *4).
+    assert(w40 * 3 <= h40 * 4 && (w40 + 4) * 3 >= h40 * 4);
+    // Fits and is centered.
+    assert(x40 + w40 <= 1920 && y40 + h40 <= 1080);
+    assert(x40 == (1920 - w40) / 2 && y40 == (1080 - h40) / 2);
+    printf("test_aspect_h32_h40_same_width OK\n");
+}
+
+// Vertical integer scale picks the largest whole factor fitting the 4:3 box.
+static void test_aspect_vertical_integer(void) {
+    unsigned x, y, w, h;
+    aspect_rect(1920, 1080, 320, 224, &x, &y, &w, &h);
+    // 4:3 box in 1920x1080 is 1440x1080; 1080/224 = 4 -> out_h = 896.
+    assert(h == 896);
+    assert(w == 896 * 4 / 3);  // 1194
+    printf("test_aspect_vertical_integer OK\n");
+}
+
+// Degenerate inputs are safe (all zeros).
+static void test_aspect_degenerate(void) {
+    unsigned x = 9, y = 9, w = 9, h = 9;
+    aspect_rect(1920, 1080, 0, 224, &x, &y, &w, &h);
+    assert(x == 0 && y == 0 && w == 0 && h == 0);
+    aspect_rect(0, 0, 320, 224, &x, &y, &w, &h);
+    assert(x == 0 && y == 0 && w == 0 && h == 0);
+    printf("test_aspect_degenerate OK\n");
+}
+
 int main(void) {
     test_centering_256x224();
     test_source_stride_honored();
@@ -183,6 +222,9 @@ int main(void) {
     test_scale_reduced_to_fit();
     test_scaled_stretch_rect();
     test_scaled_out_of_bounds_noop();
+    test_aspect_h32_h40_same_width();
+    test_aspect_vertical_integer();
+    test_aspect_degenerate();
     printf("All blit tests passed\n");
     return 0;
 }

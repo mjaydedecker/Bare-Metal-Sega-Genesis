@@ -92,3 +92,29 @@ void blit_rgb565_scaled(uint16_t *dst, unsigned dst_pitch_bytes,
         }
     }
 }
+
+void aspect_rect(unsigned fb_w, unsigned fb_h, unsigned w, unsigned h,
+                 unsigned *out_x, unsigned *out_y,
+                 unsigned *out_w, unsigned *out_h)
+{
+    *out_x = *out_y = *out_w = *out_h = 0;
+    if (w == 0 || h == 0 || fb_w == 0 || fb_h == 0) return;
+
+    // Largest 4:3 rectangle that fits the framebuffer.
+    unsigned rh = fb_w * 3 / 4;
+    if (rh > fb_h) rh = fb_h;     // height-bound; rw would be rh*4/3 (implicit)
+
+    // Vertical: largest integer factor that fits the 4:3 box height.
+    unsigned sv = rh / h;
+    if (sv < 1) sv = 1;
+    unsigned oh = h * sv;
+
+    // Horizontal: stretch to 4:3 width, clamped to the framebuffer.
+    unsigned ow = oh * 4 / 3;
+    if (ow > fb_w) ow = fb_w;
+
+    *out_w = ow;
+    *out_h = oh;
+    *out_x = (fb_w - ow) / 2;
+    *out_y = (fb_h - oh) / 2;
+}
