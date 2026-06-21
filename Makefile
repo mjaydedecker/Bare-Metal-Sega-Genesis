@@ -31,6 +31,9 @@ OBJS = src/main.o \
        src/stdlib_stubs.o \
        src/video/blit.o \
        src/video/display.o \
+       src/video/splash.o \
+       src/video/splash_draw.o \
+       src/video/splash_data.o \
        src/audio/audio_driver.o \
        src/audio/audio_util.o \
        src/input/joypad_map.o \

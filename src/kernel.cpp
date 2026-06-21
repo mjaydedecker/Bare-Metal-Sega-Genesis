@@ -8,6 +8,7 @@
 #include "input/joypad_map.h"   // GP_START, GP_SELECT bits for the menu hotkey
 #include "input/hotkey.h"       // decode_hotkey, InGameAction
 #include "audio/audio_util.h"   // classify_queue, AQ_* for metrics
+#include "video/splash.h"       // splash_show_embedded, splash_apply_override
 
 static const char FromKernel[] = "kernel";
 
@@ -104,6 +105,21 @@ boolean CKernel::Initialize (void)
 
 	if (bOK)
 	{
+		m_Logger.Write (FromKernel, LogNotice, "Initialising video");
+		bOK = m_Display.Initialize ();
+		if (!bOK)
+		{
+			m_Logger.Write (FromKernel, LogPanic, "Display init failed");
+		}
+		else
+		{
+			// Branded splash up ASAP, masking the USB/SD init that follows.
+			splash_show_embedded (&m_Canvas, &m_Display);
+		}
+	}
+
+	if (bOK)
+	{
 		m_Logger.Write (FromKernel, LogNotice, "Initialising USB");
 		bOK = m_USBHCI.Initialize ();
 	}
@@ -112,16 +128,6 @@ boolean CKernel::Initialize (void)
 	{
 		m_Logger.Write (FromKernel, LogNotice, "Initialising SD card");
 		bOK = m_EMMC.Initialize ();
-	}
-
-	if (bOK)
-	{
-		m_Logger.Write (FromKernel, LogNotice, "Initialising video");
-		bOK = m_Display.Initialize ();
-		if (!bOK)
-		{
-			m_Logger.Write (FromKernel, LogPanic, "Display init failed");
-		}
 	}
 
 	if (bOK)
@@ -144,6 +150,9 @@ TShutdownMode CKernel::Run (void)
 		m_Logger.Write (FromKernel, LogPanic, "SD card mount failed");
 		return ShutdownHalt;
 	}
+
+	// Replace the embedded logo with SD:/splash.raw if the user supplied one.
+	splash_apply_override (&m_Storage, &m_Canvas, &m_Display);
 
 	// Load user settings and apply them before the core reads variables.
 	m_SettingsStore.Load (&m_Settings);
