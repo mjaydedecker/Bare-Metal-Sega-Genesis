@@ -48,6 +48,7 @@ OBJS = src/main.o \
        src/menu/sram.o \
        src/menu/settings_screen.o \
        src/menu/controls_screen.o \
+       src/menu/hotkey_screen.o \
        src/menu/video_mode_screen.o \
        src/settings/settings.o \
        src/settings/settings_store.o \

@@ -19,6 +19,7 @@ AudioDriver *g_audio = 0;
 Gamepad *g_gamepad = 0;
 const ButtonMap *g_map0 = 0;
 const ButtonMap *g_map1 = 0;
+unsigned g_hotkey_hold_mask = GP_SELECT;
 
 void video_refresh_cb(const void *data, unsigned width, unsigned height,
                       size_t pitch)
@@ -70,7 +71,7 @@ int16_t input_state_cb(unsigned port, unsigned device, unsigned index,
         return 0;
     }
     unsigned buttons = g_gamepad->Buttons(port);
-    if (port == 0 && (buttons & GP_SELECT))   // player-1 hotkey mode: mask input
+    if (port == 0 && (buttons & g_hotkey_hold_mask))   // player-1 hotkey mode: mask
     {
         return 0;
     }

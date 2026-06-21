@@ -52,7 +52,8 @@ CKernel::CKernel (void)
 	m_SettingsStore (&m_Storage),
 	m_VideoModeScreen (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore, &m_Display),
 	m_ControlsScreen (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore),
-	m_SettingsScreen (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore, &m_Display, &m_Audio, &m_ControlsScreen, &m_VideoModeScreen, &m_Overlay),
+	m_HotkeyScreen (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore),
+	m_SettingsScreen (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore, &m_Display, &m_Audio, &m_ControlsScreen, &m_VideoModeScreen, &m_Overlay, &m_HotkeyScreen),
 	m_PauseMenu (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_SaveState, &m_SettingsScreen),
 	m_pROMBuffer (0),
 	m_nROMSize (0)
@@ -155,6 +156,7 @@ TShutdownMode CKernel::Run (void)
 	g_region_value = region_core_value (m_Settings.region);
 	g_map0 = &m_Settings.map1;
 	g_map1 = &m_Settings.map2;
+	g_hotkey_hold_mask = hotkey_hold_mask (m_Settings.hotkeys);
 	if (m_Settings.video_mode != VideoMode::Native)
 	{
 		unsigned vmW, vmH;
@@ -306,7 +308,7 @@ TShutdownMode CKernel::Run (void)
 			unsigned     p1now     = m_Gamepad.Buttons (0);
 			unsigned     p1pressed = p1now & ~prevP1;
 			prevP1 = p1now;
-			InGameAction act = decode_hotkey (p1now, p1pressed);
+			InGameAction act = decode_hotkey (p1now, p1pressed, m_Settings.hotkeys);
 			switch (act)
 			{
 			case InGameAction::QuickSave:

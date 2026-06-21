@@ -27,6 +27,8 @@ static bool truthy(const char *v)
     return ieq(v, "on") || ieq(v, "true") || ieq(v, "1") || ieq(v, "yes");
 }
 
+static bool parse_hotkey(const char *val, HotkeyBinding *out);   // defined below
+
 Settings parse_settings(const char *text)
 {
     Settings s;                       // defaults
@@ -129,6 +131,12 @@ Settings parse_settings(const char *text)
             s.vsync = truthy(val);
         else if (ieq(key, "debug_overlay"))
             s.debug_overlay = truthy(val);
+        else if (ieq(key, "hotkey_quicksave")) parse_hotkey(val, &s.hotkeys.b[HK_QUICKSAVE]);
+        else if (ieq(key, "hotkey_quickload")) parse_hotkey(val, &s.hotkeys.b[HK_QUICKLOAD]);
+        else if (ieq(key, "hotkey_volup"))     parse_hotkey(val, &s.hotkeys.b[HK_VOLUP]);
+        else if (ieq(key, "hotkey_voldown"))   parse_hotkey(val, &s.hotkeys.b[HK_VOLDOWN]);
+        else if (ieq(key, "hotkey_togglehud")) parse_hotkey(val, &s.hotkeys.b[HK_TOGGLEHUD]);
+        else if (ieq(key, "hotkey_mute"))      parse_hotkey(val, &s.hotkeys.b[HK_MUTE]);
         // unknown keys: ignored
     }
     return s;
@@ -215,6 +223,30 @@ static int pad_button_from_token(const char *t)
     if (ieq(t, "start"))  return (int) PadButton::Start;
     if (ieq(t, "select")) return (int) PadButton::Select;
     return -1;
+}
+
+// Parse "hold+trigger" (e.g. "select+x") into out. Returns false (caller keeps
+// the default) on a bad token, a hold outside {L,R,Start,Select}, or hold==trigger.
+static bool parse_hotkey(const char *val, HotkeyBinding *out)
+{
+    char a[16], b[16];
+    int  i = 0;
+    const char *p = val;
+    while (*p && *p != '+' && i < 15) a[i++] = *p++;
+    a[i] = '\0';
+    if (*p != '+') return false;
+    p++;
+    int j = 0;
+    while (*p && j < 15) b[j++] = *p++;
+    b[j] = '\0';
+
+    int h = pad_button_from_token(a);
+    int t = pad_button_from_token(b);
+    if (h < 0 || t < 0 || h == t) return false;
+    if (h < (int) PadButton::L) return false;   // safe holds: L,R,Start,Select
+    out->hold    = (PadButton) h;
+    out->trigger = (PadButton) t;
+    return true;
 }
 
 ButtonMap parse_button_map(const char *val)
@@ -318,5 +350,18 @@ void serialize_settings(const Settings &s, char *out, size_t out_size)
     appendz(out, out_size, s.vsync ? "on" : "off");
     appendz(out, out_size, "\ndebug_overlay=");
     appendz(out, out_size, s.debug_overlay ? "on" : "off");
+
+    static const char *const HK_KEY[HK_COUNT] = {
+        "hotkey_quicksave", "hotkey_quickload", "hotkey_volup",
+        "hotkey_voldown", "hotkey_togglehud", "hotkey_mute" };
+    for (int i = 0; i < HK_COUNT; i++)
+    {
+        appendz(out, out_size, "\n");
+        appendz(out, out_size, HK_KEY[i]);
+        appendz(out, out_size, "=");
+        appendz(out, out_size, pad_button_token(s.hotkeys.b[i].hold));
+        appendz(out, out_size, "+");
+        appendz(out, out_size, pad_button_token(s.hotkeys.b[i].trigger));
+    }
     appendz(out, out_size, "\n");
 }

@@ -3,21 +3,29 @@
 //
 // Bare Metal Sega Genesis
 // Pure decoder: maps a (held, pressed) GP_* bitmask pair to an in-game action
-// for the fixed Select+button hotkey scheme. No Circle dependency.
+// using the user's hotkey bindings. No Circle dependency.
 //
 
 #ifndef _input_hotkey_h
 #define _input_hotkey_h
+
+#include "../settings/settings.h"   // HotkeyBindings, HK_*, MenuHotkey
 
 enum class InGameAction
 {
     None, QuickSave, QuickLoad, VolUp, VolDown, ToggleHud, Mute
 };
 
-// held    = current GP_* bitmask this frame.
-// pressed = newly-pressed edge bits this frame.
-// Returns the mapped action when Select is held and the action button is freshly
-// pressed; otherwise None.
-InGameAction decode_hotkey(unsigned held, unsigned pressed);
+// Returns the bound action when its hold is in `held` and its trigger is freshly
+// in `pressed`; ties resolve by HK_ index order (lower wins). Else None.
+InGameAction decode_hotkey(unsigned held, unsigned pressed,
+                           const HotkeyBindings &hk);
+
+// OR of pad_bit() of every binding's hold button (for input suppression).
+unsigned hotkey_hold_mask(const HotkeyBindings &hk);
+
+// Bit i set if binding i's combo duplicates another binding's, or equals the
+// given menu-hotkey preset mask.
+unsigned hotkey_conflicts(const HotkeyBindings &hk, MenuHotkey menu);
 
 #endif
