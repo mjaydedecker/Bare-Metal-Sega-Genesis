@@ -18,6 +18,7 @@
 /test/test_save_path
 /test/test_settings
 /test/test_audio_util
+/test/test_pad_reconcile
 
 # Editor
 *.swp
