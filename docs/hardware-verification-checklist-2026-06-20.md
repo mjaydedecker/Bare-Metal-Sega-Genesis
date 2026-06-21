@@ -199,6 +199,25 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 
 ---
 
+## N. In-game hotkeys + toasts
+
+- [ ] **N1 — Quick-save/load.** In-game: `Select+X` shows `Quick-saved`; `Select+Y`
+  shows `Quick-loaded` and restores the state. On a fresh game `Select+Y` (empty
+  slot 1) shows `No quick save`.
+- [ ] **N2 — Volume.** `Select+Up`/`Select+Down` change volume live; toast shows
+  `Volume NN`; the level persists across reboot.
+- [ ] **N3 — HUD + mute.** `Select+A` toggles the diagnostics HUD (toast `HUD on`/
+  `HUD off`, no ghost when turned off); `Select+B` toggles mute (`Muted`/
+  `Unmuted`). Both persist across reboot.
+- [ ] **N4 — Suppression.** While Select is held, the game receives no player-1
+  input; releasing Select restores normal play. Player 2 is unaffected.
+- [ ] **N5 — Toast lifetime.** Each toast appears bottom-center and disappears
+  after ~2 s with no leftover pixels over the game.
+- [ ] **N6 — No menu collision.** The configured `menu_hotkey` still opens the
+  pause menu and does not trigger an in-game action.
+
+---
+
 ## Results summary
 
 | Group | Pass | Notes |
@@ -216,6 +235,7 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 | K. Tear-free (vsync) | | |
 | L. Aspect scaling | | |
 | M. Diagnostics HUD | | |
+| N. Hotkeys + toasts | | |
 
 Anything that fails: note the exact symptom and which ROM, and we'll debug it
 systematically (root cause first).
