@@ -10,6 +10,14 @@
 
 static const char FromKernel[] = "kernel";
 
+// Short label for the active scale mode, for the HUD.
+static const char *scale_name (ScaleMode m)
+{
+	return m == ScaleMode::Stretch ? "stretch"
+	     : m == ScaleMode::Aspect  ? "aspect"
+	                               : "integer";
+}
+
 CKernel::CKernel (void)
 :	m_CPUThrottle (CPUSpeedMaximum),
 	m_Screen (m_Options.GetWidth (), m_Options.GetHeight ()),
@@ -128,6 +136,7 @@ TShutdownMode CKernel::Run (void)
 	g_widescreen = m_Settings.widescreen;
 	m_Audio.SetVolume (m_Settings.volume);
 	m_Audio.SetMute (m_Settings.mute);
+	m_Overlay.SetEnabled (m_Settings.debug_overlay);
 	g_region_value = region_core_value (m_Settings.region);
 	g_map0 = &m_Settings.map1;
 	g_map1 = &m_Settings.map2;
@@ -240,6 +249,9 @@ TShutdownMode CKernel::Run (void)
 
 		// --- Play ---
 		u64      next      = CTimer::GetClockTicks64 ();
+		unsigned fpsMeasured = (unsigned) fps;          // seed with nominal
+		unsigned fpsFrames   = 0;
+		u64      fpsWindow   = next;                    // 1 s window start (us)
 		unsigned frame     = 0;
 		unsigned logCtr    = 0;
 		boolean  ledOn     = FALSE;
@@ -276,6 +288,30 @@ TShutdownMode CKernel::Run (void)
 
 			retro_run ();
 			m_Sram.Tick ();              // periodic dirty-checked SRAM auto-save
+
+			// Measured FPS: count frames, recompute every ~1 s (ticks are us).
+			fpsFrames++;
+			u64 fpsNow = CTimer::GetClockTicks64 ();
+			if (fpsNow - fpsWindow >= 1000000ULL)
+			{
+				fpsMeasured = fpsFrames;
+				fpsFrames   = 0;
+				fpsWindow   = fpsNow;
+			}
+
+			if (m_Overlay.Enabled ())
+			{
+				HudStats st;
+				st.fps       = fpsMeasured;
+				st.underruns = audioOK ? m_Audio.Underruns ()   : 0;
+				st.overruns  = audioOK ? m_Audio.Overruns ()    : 0;
+				st.queued    = audioOK ? m_Audio.QueuedFrames () : 0;
+				st.target    = target;
+				st.rom       = romPath;
+				st.mode      = video_mode_file_value (m_Settings.video_mode);
+				st.scale     = scale_name (m_Settings.scale_mode);
+				m_Overlay.Draw (st);
+			}
 
 			next += period_us;
 			u64 t = CTimer::GetClockTicks64 ();
