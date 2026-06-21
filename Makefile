@@ -51,6 +51,14 @@ OBJS = src/main.o \
        src/settings/settings_store.o \
        src/ui/text_canvas.o
 
+# Auto-generated header-dependency files (one .d per object, emitted by the
+# compiler's -MMD). Without this, the `-include $(DEPS)` below expands to
+# nothing and header changes never trigger a recompile — which silently
+# produces object files compiled against different struct layouts (e.g. a
+# growing Settings struct), corrupting memory at runtime. Keep DEPS in sync
+# with OBJS.
+DEPS = $(OBJS:.o=.d)
+
 # Extra include path so src/kernel.cpp and src/libretro/*.cpp can find
 # libretro.h without polluting the genesis-core compile flags.
 EXTRAINCLUDE = \
