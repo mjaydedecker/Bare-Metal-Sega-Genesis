@@ -70,7 +70,9 @@ struct Settings
     ButtonMap  map2;        // Player 2 button map
     VideoMode  video_mode;  // HDMI output mode
     AudioOutput audio_output;  // hdmi | analog (3.5mm jack)
-    bool       vsync;          // tear-free page flip (default on)
+    bool       vsync;          // tear-free page flip (default OFF: on a Pi 2 the
+                               // vblank wait cliffs frames near budget -> ~52fps
+                               // + audio underruns; toggle on for faster boards)
     bool       debug_overlay;  // on-screen diagnostics HUD (default off)
     AudioLatency audio_latency; // audio buffering depth: low | medium | high
     HotkeyBindings hotkeys;    // in-game action hotkey bindings
@@ -79,7 +81,7 @@ struct Settings
     :   scale_mode(ScaleMode::Integer), widescreen(false),
         volume(100), mute(false), region(Region::Auto),
         menu_hotkey(MenuHotkey::StartSelect), video_mode(VideoMode::Native),
-        audio_output(AudioOutput::HDMI), vsync(true), debug_overlay(false),
+        audio_output(AudioOutput::HDMI), vsync(false), debug_overlay(false),
         audio_latency(AudioLatency::Medium)
     {
         auto_launch_rom[0] = '\0';
