@@ -218,6 +218,24 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 
 ---
 
+## O. Hotkey remapping
+
+- [ ] **O1 — Remap works.** Settings → `Hotkeys...`; change an action's key (and/or
+  hold). The new combo performs the action in-game; the old combo no longer does.
+- [ ] **O2 — Persisted.** The `hotkey_*` keys appear in `SD:/settings.txt` and the
+  remap survives reboot.
+- [ ] **O3 — Conflict flag.** Set two actions to the same combo: both rows show a
+  red `!`; the higher-priority action (earlier in the list) still works.
+- [ ] **O4 — Suppression follows hold.** Change an action's hold to L; while L is
+  held, player-1 input is masked from the game. Select-held still masks if any
+  action uses Select.
+- [ ] **O5 — Defaults.** With a fresh `settings.txt`: Quick-save=Select+X,
+  load=Select+Y, HUD=Select+A, mute=Select+B, vol+=Select+L, vol-=Select+R.
+- [ ] **O6 — No menu collision.** The configured `menu_hotkey` still opens the
+  pause menu.
+
+---
+
 ## Results summary
 
 | Group | Pass | Notes |
@@ -236,6 +254,7 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 | L. Aspect scaling | | |
 | M. Diagnostics HUD | | |
 | N. Hotkeys + toasts | | |
+| O. Hotkey remapping | | |
 
 Anything that fails: note the exact symptom and which ROM, and we'll debug it
 systematically (root cause first).
