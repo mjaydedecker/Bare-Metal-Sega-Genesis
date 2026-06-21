@@ -128,6 +128,27 @@ int main(void)
     serialize_settings(cs, cbuf, sizeof cbuf);
     assert(parse_settings(cbuf).map1.b[0] == PadButton::A);
 
+    // Video mode dims.
+    {
+        unsigned w = 9, h = 9;
+        video_mode_dims(VideoMode::Native, w, h); assert(w == 0 && h == 0);
+        video_mode_dims(VideoMode::P1080, w, h);  assert(w == 1920 && h == 1080);
+        video_mode_dims(VideoMode::P720, w, h);   assert(w == 1280 && h == 720);
+        video_mode_dims(VideoMode::P480, w, h);   assert(w == 720 && h == 480);
+    }
+    // Video mode defaults + parse + file value + round-trip.
+    assert(d.video_mode == VideoMode::Native);
+    assert(parse_settings("video_mode=720p\n").video_mode == VideoMode::P720);
+    assert(parse_settings("video_mode=1080p\n").video_mode == VideoMode::P1080);
+    assert(parse_settings("video_mode=480p\n").video_mode == VideoMode::P480);
+    assert(parse_settings("video_mode=bogus\n").video_mode == VideoMode::Native);
+    assert(strcmp(video_mode_file_value(VideoMode::P720), "720p") == 0);
+    assert(strcmp(video_mode_file_value(VideoMode::Native), "native") == 0);
+    Settings vms; vms.video_mode = VideoMode::P480;
+    char vmbuf[512];
+    serialize_settings(vms, vmbuf, sizeof vmbuf);
+    assert(parse_settings(vmbuf).video_mode == VideoMode::P480);
+
     printf("All settings tests passed\n");
     return 0;
 }

@@ -28,6 +28,12 @@ public:
 
     boolean Initialize(void);
 
+    // Re-create the framebuffer at a new HDMI mode (w=h=0 => firmware native).
+    // On success swaps to the new mode and returns TRUE; on failure keeps the
+    // current mode and returns FALSE. NOTE: success does not prove the TV
+    // accepts the signal — callers must confirm-or-revert.
+    boolean SetMode(unsigned w, unsigned h);
+
     // Select integer (sharp, letterboxed) vs stretch (aspect-fill) scaling.
     // Takes effect on the next Blit.
     void SetScaleMode(ScaleMode mode) { m_ScaleMode = mode; }

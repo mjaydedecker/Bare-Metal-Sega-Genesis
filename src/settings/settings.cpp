@@ -114,6 +114,13 @@ Settings parse_settings(const char *text)
             s.map1 = parse_button_map(val);
         else if (ieq(key, "controller_2_map"))
             s.map2 = parse_button_map(val);
+        else if (ieq(key, "video_mode"))
+        {
+            if      (ieq(val, "1080p")) s.video_mode = VideoMode::P1080;
+            else if (ieq(val, "720p"))  s.video_mode = VideoMode::P720;
+            else if (ieq(val, "480p"))  s.video_mode = VideoMode::P480;
+            else                        s.video_mode = VideoMode::Native;
+        }
         // unknown keys: ignored
     }
     return s;
@@ -242,6 +249,28 @@ static void append_map(char *out, size_t out_size, const ButtonMap &m)
     }
 }
 
+void video_mode_dims(VideoMode m, unsigned &w, unsigned &h)
+{
+    switch (m)
+    {
+    case VideoMode::P1080: w = 1920; h = 1080; break;
+    case VideoMode::P720:  w = 1280; h = 720;  break;
+    case VideoMode::P480:  w = 720;  h = 480;  break;
+    default:               w = 0;    h = 0;    break;   // Native
+    }
+}
+
+const char *video_mode_file_value(VideoMode m)
+{
+    switch (m)
+    {
+    case VideoMode::P1080: return "1080p";
+    case VideoMode::P720:  return "720p";
+    case VideoMode::P480:  return "480p";
+    default:               return "native";
+    }
+}
+
 void serialize_settings(const Settings &s, char *out, size_t out_size)
 {
     if (out == 0 || out_size == 0) return;
@@ -266,5 +295,7 @@ void serialize_settings(const Settings &s, char *out, size_t out_size)
     append_map(out, out_size, s.map1);
     appendz(out, out_size, "\ncontroller_2_map=");
     append_map(out, out_size, s.map2);
+    appendz(out, out_size, "\nvideo_mode=");
+    appendz(out, out_size, video_mode_file_value(s.video_mode));
     appendz(out, out_size, "\n");
 }
