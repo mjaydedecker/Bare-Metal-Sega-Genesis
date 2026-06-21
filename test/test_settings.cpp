@@ -44,6 +44,14 @@ int main(void)
     serialize_settings(aspSrc, aspBuf, sizeof aspBuf);
     assert(parse_settings(aspBuf).scale_mode == ScaleMode::Aspect);
 
+    // debug_overlay parses, defaults false, round-trips.
+    assert(parse_settings("").debug_overlay == false);
+    assert(parse_settings("debug_overlay=on\n").debug_overlay == true);
+    Settings dbg; dbg.debug_overlay = true;
+    char dbgBuf[512];
+    serialize_settings(dbg, dbgBuf, sizeof dbgBuf);
+    assert(parse_settings(dbgBuf).debug_overlay == true);
+
     // Defaults for the new audio fields.
     assert(d.volume == 100);
     assert(d.mute == false);
