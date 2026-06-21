@@ -1,7 +1,7 @@
 # Controller Hotplug-Removal Handling — Design
 
 **Date:** 2026-06-20
-**Status:** approved design, pending implementation plan
+**Status:** IMPLEMENTED — pure `pad_reconcile` helper + host test (2e58bc8), wired into `Gamepad::Poll()` (03ed646); `test_pad_reconcile` passes. Pending hardware verification only.
 **Related:** [[project-two-controllers]] (deferred item: "a yanked pad's last bitmask may
 stick until reboot"); `src/input/gamepad.{h,cpp}`; M7 input.
 
