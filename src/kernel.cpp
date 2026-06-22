@@ -117,7 +117,7 @@ boolean CKernel::Initialize (void)
 		else
 		{
 			// Branded splash up ASAP, masking the USB/SD init that follows.
-			splash_show_embedded (&m_Canvas, &m_Display);
+			splash_show_text (&m_GlyphCanvas, &m_Display);
 		}
 	}
 

@@ -24,11 +24,14 @@ unsigned splash_scale(unsigned fbW, unsigned fbH, unsigned imgW, unsigned imgH);
 
 // Circle-side draws (splash_draw.cpp). Forward-declared dependencies.
 class TextCanvas;
+class GlyphCanvas;
 class Display;
 class Storage;
 
 // Clear to black and blit the EMBEDDED logo centered, integer-scaled.
 void splash_show_embedded(TextCanvas *canvas, Display *display);
+// Typographic boot splash (design v1.0.0): centered wordmark via GlyphCanvas.
+void splash_show_text(GlyphCanvas *canvas, Display *display);
 // If SD:/splash.raw parses as a valid SGSP image, clear + blit it instead.
 void splash_apply_override(Storage *storage, TextCanvas *canvas, Display *display);
 
