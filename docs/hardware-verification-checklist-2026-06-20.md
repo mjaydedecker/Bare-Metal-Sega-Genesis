@@ -274,6 +274,18 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 
 ---
 
+## R. Pad type (3/6-button)
+
+- [ ] **R1 — Switch to 3-button.** Pause → Settings → **Pad Type** = 3-button,
+  reload the game (browser relaunch or power-cycle). **Expect:** the game now sees
+  a 3-button pad; X/Y/Z/Mode no longer register. A title that misbehaved with a
+  6-button pad now plays correctly.
+- [ ] **R2 — Back to 6-button.** Set Pad Type = 6-button, reload. **Expect:** the
+  X/Y/Z/Mode buttons work again.
+- [ ] **R3 — Persisted.** Confirm `pad_type` in `SD:/settings.txt`; survives reboot.
+
+---
+
 ## Results summary
 
 | Group | Pass | Notes |
@@ -295,6 +307,7 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 | O. Hotkey remapping | | |
 | P. Audio latency | | |
 | Q. Boot splash | | |
+| R. Pad type | | |
 
 Anything that fails: note the exact symptom and which ROM, and we'll debug it
 systematically (root cause first).
