@@ -66,7 +66,7 @@ void VideoModeScreen::Render(VideoMode sel)
     int H = (int) m_pCanvas->Height();
     int fy = H - FOOT_H + 4;
     int hx = hint_lr(m_pCanvas, PAD, fy, "SELECT");
-    hx = hint_button(m_pCanvas, hx, fy, 'A', theme::SELECTION, "APPLY");
+    hx = hint_start(m_pCanvas, hx, fy, "APPLY");
     hint_button(m_pCanvas, hx, fy, 'B', theme::TEXT_DIM, "BACK");
     scanlines(m_pCanvas);
 }

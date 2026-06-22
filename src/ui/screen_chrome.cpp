@@ -80,4 +80,15 @@ int hint_button(GlyphCanvas *c, int x, int y, char btn, u16 fill, const char *la
     return x + 24 + c->TextWidth(&g_font_ps2p8, 1, label) + 30;
 }
 
+int hint_start(GlyphCanvas *c, int x, int y, const char *label) {
+    int sw = c->TextWidth(&g_font_ps2p8, 1, "START");
+    int pillW = sw + 12;
+    c->FillRect(x, y, pillW, 16, theme::SELECTION);
+    c->Text(&g_font_ps2p8, 1, x + 6, y + 4, "START", theme::WHITE,
+            theme::SELECTION, false);
+    c->Text(&g_font_ps2p8, 1, x + pillW + 8, y + 4, label, theme::TEXT_DIM,
+            theme::BG, true);
+    return x + pillW + 8 + c->TextWidth(&g_font_ps2p8, 1, label) + 30;
+}
+
 }  // namespace chrome

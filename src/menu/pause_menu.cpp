@@ -68,7 +68,7 @@ void PauseMenu::Render(int selected)
 
     int fy = py + panelH - 28;
     int hx = hint_dpad(m_pCanvas, px + 20, fy - 4, "MOVE");
-    hint_button(m_pCanvas, hx, fy - 4, 'A', theme::SELECTION, "SELECT");
+    hint_start(m_pCanvas, hx, fy - 4, "SELECT");
     m_pCanvas->Scanlines(0, 0, W, H, 60);
 }
 
@@ -147,8 +147,8 @@ int PauseMenu::PickSlot(bool forLoad)
             }
 
             int fy = py + panelH - 28;
-            int hx = chrome::hint_button(m_pCanvas, px + 20, fy - 4, 'A',
-                                         theme::SELECTION, forLoad ? "LOAD" : "SAVE");
+            int hx = chrome::hint_start(m_pCanvas, px + 20, fy - 4,
+                                        forLoad ? "LOAD" : "SAVE");
             chrome::hint_button(m_pCanvas, hx, fy - 4, 'B', theme::TEXT_DIM, "CANCEL");
             m_pCanvas->Scanlines(0, 0, W, H, 60);
             redraw = false;

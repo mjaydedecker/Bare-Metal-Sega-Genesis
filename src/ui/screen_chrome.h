@@ -30,6 +30,8 @@ namespace chrome {
     int hint_dpad  (GlyphCanvas *c, int x, int y, const char *label);
     int hint_lr    (GlyphCanvas *c, int x, int y, const char *label);
     int hint_button(GlyphCanvas *c, int x, int y, char btn, u16 fill, const char *label);
+    // START pill + label (menus confirm with START, not a single-letter button).
+    int hint_start (GlyphCanvas *c, int x, int y, const char *label);
 }
 
 #endif
