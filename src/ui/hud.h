@@ -46,8 +46,4 @@ struct HudCell
 // LAT). Returns the number written.
 unsigned hud_build(const HudStats &s, HudCell cells[], unsigned max);
 
-// Legacy flat-line formatter (removed once Overlay no longer uses it).
-unsigned hud_format(const HudStats &s, char lines[][HUD_COLS + 1],
-                    unsigned max_lines);
-
 #endif

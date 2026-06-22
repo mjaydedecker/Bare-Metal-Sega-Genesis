@@ -51,7 +51,7 @@ CKernel::CKernel (void)
 	m_Sram (&m_Storage),
 	m_Canvas (&m_Display),
 	m_GlyphCanvas (&m_Display),
-	m_Overlay (&m_Canvas),
+	m_Overlay (&m_GlyphCanvas),
 	m_RomMenu (&m_GlyphCanvas, &m_Gamepad, &m_Storage, &m_USBHCI),
 	m_Settings (),
 	m_SettingsStore (&m_Storage),
@@ -339,15 +339,21 @@ TShutdownMode CKernel::Run (void)
 			switch (act)
 			{
 			case InGameAction::QuickSave:
-				m_Overlay.ShowToast (m_SaveState.Save (1) ? "Quick-saved"
-				                                          : "Save failed");
+			{
+				bool ok = m_SaveState.Save (1);
+				m_Overlay.ShowToast (ok ? "Quick-saved" : "Save failed",
+				                     ok ? TOAST_SUCCESS : TOAST_FAIL);
 				break;
+			}
 			case InGameAction::QuickLoad:
 				if (!m_SaveState.Occupied (1))
-					m_Overlay.ShowToast ("No quick save");
+					m_Overlay.ShowToast ("No quick save", TOAST_FAIL);
 				else
-					m_Overlay.ShowToast (m_SaveState.Load (1) ? "Quick-loaded"
-					                                          : "Load failed");
+				{
+					bool ok = m_SaveState.Load (1);
+					m_Overlay.ShowToast (ok ? "Quick-loaded" : "Load failed",
+					                     ok ? TOAST_SUCCESS : TOAST_FAIL);
+				}
 				break;
 			case InGameAction::VolUp:
 			case InGameAction::VolDown:
@@ -361,21 +367,22 @@ TShutdownMode CKernel::Run (void)
 				m_SettingsStore.Save (m_Settings);
 				char t[12];
 				vol_toast (t, m_Settings.volume);
-				m_Overlay.ShowToast (t);
+				m_Overlay.ShowToast (t, TOAST_INFO);
 				break;
 			}
 			case InGameAction::ToggleHud:
 				m_Settings.debug_overlay = !m_Settings.debug_overlay;
 				m_Overlay.SetEnabled (m_Settings.debug_overlay);
 				m_SettingsStore.Save (m_Settings);
-				m_Overlay.ShowToast (m_Settings.debug_overlay ? "HUD on" : "HUD off");
+				m_Overlay.ShowToast (m_Settings.debug_overlay ? "HUD on" : "HUD off",
+				                     TOAST_INFO);
 				if (!m_Settings.debug_overlay) m_Display.ForceRepaint ();
 				break;
 			case InGameAction::Mute:
 				m_Settings.mute = !m_Settings.mute;
 				m_Audio.SetMute (m_Settings.mute);
 				m_SettingsStore.Save (m_Settings);
-				m_Overlay.ShowToast (m_Settings.mute ? "Muted" : "Unmuted");
+				m_Overlay.ShowToast (m_Settings.mute ? "Muted" : "Unmuted", TOAST_INFO);
 				break;
 			case InGameAction::None:
 				break;
@@ -410,6 +417,9 @@ TShutdownMode CKernel::Run (void)
 				st.rom       = romPath;
 				st.mode      = video_mode_file_value (m_Settings.video_mode);
 				st.scale     = scale_name (m_Settings.scale_mode);
+				st.vsync      = m_Settings.vsync;
+				st.widescreen = m_Settings.widescreen;
+				st.latency    = audio_latency_file_value (m_Settings.audio_latency);
 				m_Overlay.Draw (st);
 			}
 
