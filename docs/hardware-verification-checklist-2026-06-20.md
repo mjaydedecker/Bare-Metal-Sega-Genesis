@@ -336,6 +336,26 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 - [ ] **U7 — Hotkeys.** Themed rows; a conflicting binding shows red value + `!`.
 - [ ] **U8 — Calibration.** Themed "Press <BTN>" prompt + Saved message; mapping saves.
 
+## V. HUD / Overlay redesign (feat/hud-redesign)
+
+- [ ] **V1 — Panel look.** Enable Debug Overlay (settings) — HUD shows as a
+  translucent panel with scanlines, top-left, ~6 rows; gameplay faintly visible
+  behind it (not an opaque black box).
+- [ ] **V2 — FPS health color.** FPS reads green at ~60; force a slowdown and
+  confirm amber (~50s) then red (<50).
+- [ ] **V3 — Audio health color.** Force an audio underrun (heavy scene) — UR/OR
+  turn red; otherwise green.
+- [ ] **V4 — New state rows.** VSYNC on/off, WIDE on/off, LAT low/medium/high
+  present and matching the current settings.
+- [ ] **V5 — Toast success/fail.** Quick-save shows a green pill ("Quick-saved");
+  quick-load with no save shows a red pill ("No quick save").
+- [ ] **V6 — Toast info.** Volume / HUD-toggle / mute toasts show as neutral
+  (cyan) pills, bottom-center, fading after ~2 s.
+- [ ] **V7 — No regression.** No FPS/pacing regression with HUD on vs off
+  (read the FPS row).
+- [ ] **V8 — Clean toggle-off.** Toggling HUD off cleanly removes the panel
+  (ForceRepaint), no ghost pixels.
+
 ---
 
 ## Results summary
@@ -363,6 +383,7 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 | S. Controller calib | partial | S1 pass; S2–S4 not yet run |
 | T. ROM browser redesign | | T1–T7 pending (UI redesign pilot) |
 | U. UI redesign rollout | | U1–U8 pending (splash/pause/slots/settings/video/controls/hotkeys/calib) |
+| V. HUD redesign | | V1–V8 pending (panel/health colors/new rows/toast pills) |
 
 Anything that fails: note the exact symptom and which ROM, and we'll debug it
 systematically (root cause first).
