@@ -98,7 +98,11 @@ bool RomMenu::Run(char *outPath, unsigned outSize)
     MenuState s = { m_count, 0, 0, visible };
     Render(s);
 
-    unsigned prev = 0;
+    // Seed prev with the buttons currently held so a still-held confirm (e.g. the
+    // Start used to pick "Return to Browser" in the pause menu) isn't seen as a
+    // fresh press and doesn't instantly open the first directory. Matches every
+    // other menu screen.
+    unsigned prev = m_pGamepad->MenuButtons();
     for (;;)
     {
         m_pUSBHCI->UpdatePlugAndPlay();
