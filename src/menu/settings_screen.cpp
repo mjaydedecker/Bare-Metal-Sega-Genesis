@@ -12,8 +12,9 @@
 #include <string.h>   // strcmp, strncpy for the auto-launch row
 #include "controls_screen.h"
 #include "video_mode_screen.h"
+#include "calibration_screen.h"
 
-#define NUM_ROWS 15
+#define NUM_ROWS 16
 
 // RGB565 colours (match the pause menu palette).
 static const u16 BOX   = 0x0008;
@@ -26,11 +27,12 @@ SettingsScreen::SettingsScreen(TextCanvas *pCanvas, Gamepad *pGamepad,
                                SettingsStore *pStore, Display *pDisplay,
                                AudioDriver *pAudio, ControlsScreen *pControls,
                                VideoModeScreen *pVideoMode, Overlay *pOverlay,
-                               HotkeyScreen *pHotkey)
+                               HotkeyScreen *pHotkey, CalibrationScreen *pCalibration)
 :   m_pCanvas(pCanvas), m_pGamepad(pGamepad), m_pUSBHCI(pUSBHCI),
     m_pSettings(pSettings), m_pStore(pStore), m_pDisplay(pDisplay),
     m_pAudio(pAudio), m_pRomPath(0), m_pControls(pControls),
-    m_pVideoMode(pVideoMode), m_pOverlay(pOverlay), m_pHotkey(pHotkey)
+    m_pVideoMode(pVideoMode), m_pOverlay(pOverlay), m_pHotkey(pHotkey),
+    m_pCalibration(pCalibration)
 {
 }
 
@@ -108,11 +110,11 @@ void SettingsScreen::Render(int selected)
                                      "Vsync:", "Debug Overlay:",
                                      "Audio Latency:", "Pad Type:",
                                      "Controls...", "Video Mode...",
-                                     "Hotkeys..." };
+                                     "Hotkeys...", "Calibrate..." };
     const char *values[NUM_ROWS] = { scaleVal, wideVal, volVal, muteVal,
                                      regionVal, autoVal, hotkeyVal, audioVal,
                                      vsyncVal, dbgVal, latVal, padVal,
-                                     "", "", "" };
+                                     "", "", "", "" };
 
     for (int i = 0; i < NUM_ROWS; i++)
     {
@@ -268,6 +270,12 @@ void SettingsScreen::Run(void)
             else if (selected == 14)                  // Hotkeys...
             {
                 m_pHotkey->Run();
+                prev = m_pGamepad->MenuButtons();
+                Render(selected);
+            }
+            else if (selected == 15)                  // Calibrate Controller...
+            {
+                m_pCalibration->Run();
                 prev = m_pGamepad->MenuButtons();
                 Render(selected);
             }

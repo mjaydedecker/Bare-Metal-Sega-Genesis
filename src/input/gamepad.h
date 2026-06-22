@@ -13,6 +13,7 @@
 #include <circle/devicenameservice.h>
 #include <circle/usb/usbgamepad.h>
 #include <circle/types.h>
+#include "controller_map.h"
 
 class Gamepad
 {
@@ -34,9 +35,22 @@ public:
 
     boolean IsPresent(unsigned port = 0) const;
 
+    // Raw (pre-calibration) HID button word for a port — for the calibration screen.
+    unsigned RawButtons(unsigned port = 0) const;
+    // USB identifiers of the pad on a port (0 if absent).
+    unsigned VendorId(unsigned port = 0) const;
+    unsigned ProductId(unsigned port = 0) const;
+
+    // Point the decoder at the loaded per-controller calibrations.
+    void SetCalibrations(const ControllerCal *arr, unsigned count);
+    // Re-pick a port's active calibration from its cached VID/PID (after a save).
+    void ReacquireCal(unsigned port);
+
 private:
     CDeviceNameService *m_pNameService;
     CUSBGamePadDevice  *m_pDevice[MAX_PADS];
+    const ControllerCal *m_pCal;
+    unsigned             m_nCal;
 };
 
 #endif

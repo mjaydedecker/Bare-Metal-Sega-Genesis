@@ -39,6 +39,8 @@ OBJS = src/main.o \
        src/input/joypad_map.o \
        src/input/gamepad.o \
        src/input/pad_reconcile.o \
+       src/input/controller_map.o \
+       src/input/controller_store.o \
        src/input/hotkey.o \
        src/storage/storage.o \
        src/menu/rom_filter.o \
@@ -53,6 +55,7 @@ OBJS = src/main.o \
        src/menu/controls_screen.o \
        src/menu/hotkey_screen.o \
        src/menu/video_mode_screen.o \
+       src/menu/calibration_screen.o \
        src/settings/settings.o \
        src/settings/settings_store.o \
        src/ui/text_canvas.o \

@@ -37,8 +37,10 @@
 #include "menu/controls_screen.h"
 #include "menu/hotkey_screen.h"
 #include "menu/video_mode_screen.h"
+#include "menu/calibration_screen.h"
 #include "menu/pause_menu.h"
 #include "input/gamepad.h"
+#include "input/controller_store.h"
 #include <libretro.h>
 
 enum TShutdownMode
@@ -87,6 +89,8 @@ private:
 	VideoModeScreen    m_VideoModeScreen; // HDMI mode picker
 	ControlsScreen     m_ControlsScreen; // button-remapping sub-screen
 	HotkeyScreen       m_HotkeyScreen;   // in-game hotkey remap sub-screen
+	ControllerStore    m_ControllerStore; // per-VID/PID calibrations (SD)
+	CalibrationScreen  m_CalibrationScreen; // press-each-button calibration
 	SettingsScreen     m_SettingsScreen; // in-emulation Settings screen
 	PauseMenu          m_PauseMenu;  // in-emulation overlay menu
 
