@@ -2,13 +2,18 @@
 // src/menu/pause_menu.cpp
 //
 // Bare Metal Sega Genesis
-// See pause_menu.h.
+// See pause_menu.h. Rendered with GlyphCanvas in the v1.0.0 design: a glowing
+// panel over the dimmed (not wiped) live game frame.
 //
 
 #include "pause_menu.h"
 #include "settings_screen.h"
 #include "menu_state.h"             // menu_next_enabled
 #include "../input/joypad_map.h"    // GP_UP, GP_DOWN, GP_START, GP_B
+#include "../ui/theme.h"
+#include "../ui/screen_chrome.h"
+#include "../ui/fonts/font_ps2p8.h"
+#include "../ui/fonts/font_vt323_22.h"
 #include <circle/timer.h>
 
 #define NUM_ENTRIES 6
@@ -21,14 +26,7 @@ static const char *const LABELS[NUM_ENTRIES] =
 };
 static const bool ENABLED[NUM_ENTRIES] = { true, true, true, true, true, true };
 
-// RGB565 colours.
-static const u16 BOX   = 0x0008;
-static const u16 WHITE = 0xFFFF;
-static const u16 GREY  = 0x8410;
-static const u16 SELFG = 0x0000;
-static const u16 SELBG = 0x07FF;
-
-PauseMenu::PauseMenu(TextCanvas *pCanvas, Gamepad *pGamepad, CUSBHCIDevice *pUSBHCI,
+PauseMenu::PauseMenu(GlyphCanvas *pCanvas, Gamepad *pGamepad, CUSBHCIDevice *pUSBHCI,
                      SaveState *pSaveState, SettingsScreen *pSettingsScreen)
 :   m_pCanvas(pCanvas), m_pGamepad(pGamepad), m_pUSBHCI(pUSBHCI),
     m_pSaveState(pSaveState), m_pSettingsScreen(pSettingsScreen)
@@ -37,38 +35,53 @@ PauseMenu::PauseMenu(TextCanvas *pCanvas, Gamepad *pGamepad, CUSBHCIDevice *pUSB
 
 void PauseMenu::Render(int selected)
 {
-    int cw = (int) m_pCanvas->CharW();
-    int ch = (int) m_pCanvas->CharH();
-    int boxX = cw * 3;
-    int boxY = ch * 2;
-    int boxW = cw * 26;
-    int boxH = ch * (NUM_ENTRIES + 3);
+    using namespace chrome;
+    int W = (int) m_pCanvas->Width();
+    int H = (int) m_pCanvas->Height();
 
-    m_pCanvas->Clear(0x0000);   // wipe any larger menu drawn before this one
-    m_pCanvas->FillRect(boxX, boxY, boxW, boxH, BOX);
-    m_pCanvas->DrawText(boxX + cw, boxY + ch, "PAUSED", WHITE, BOX);
+    // Dim the live game frame behind the panel (don't wipe to black).
+    m_pCanvas->BlendRect(0, 0, W, H, theme::BG, 200);
+
+    int panelW = 460;
+    int panelH = NUM_ENTRIES * ROW_H + 120;
+    int px = W / 2 - panelW / 2;
+    int py = H / 2 - panelH / 2;
+    m_pCanvas->FillRect(px, py, panelW, panelH, theme::BG);
+    m_pCanvas->FillRect(px, py, panelW, 3, theme::SELECTION);          // top accent
+    m_pCanvas->FillRect(px, py + panelH - 3, panelW, 3, theme::SELECTION);
+
+    const char *title = "|| PAUSED";
+    int tw = m_pCanvas->TextWidth(&g_font_ps2p8, 2, title);
+    m_pCanvas->Text(&g_font_ps2p8, 2, W / 2 - tw / 2, py + 20, title,
+                    theme::WHITE, theme::BG, true);
 
     for (int i = 0; i < NUM_ENTRIES; i++)
     {
-        int ty = boxY + ch * (i + 3);
+        int ty = py + 64 + i * ROW_H;
         bool sel = (i == selected);
-        u16 fg = sel ? SELFG : (ENABLED[i] ? WHITE : GREY);
-        u16 bg = sel ? SELBG : BOX;
-        if (sel)
-        {
-            m_pCanvas->FillRect(boxX + cw, ty, boxW - cw * 2, ch, SELBG);
-        }
-        m_pCanvas->DrawText(boxX + cw,     ty, sel ? ">" : " ", fg, bg);
-        m_pCanvas->DrawText(boxX + cw * 3, ty, LABELS[i],       fg, bg);
+        if (sel) m_pCanvas->FillRect(px + 16, ty - 2, panelW - 32, ROW_H,
+                                     theme::SELECTION);
+        if (sel) m_pCanvas->IconPlay(px + 22, ty + 4, 16, theme::WHITE);
+        m_pCanvas->Text(&g_font_vt323_22, 1, px + 48, ty, LABELS[i],
+                        sel ? theme::WHITE : theme::TEXT, theme::BG, true);
     }
+
+    int fy = py + panelH - 28;
+    int hx = hint_dpad(m_pCanvas, px + 20, fy - 4, "MOVE");
+    hint_button(m_pCanvas, hx, fy - 4, 'A', theme::SELECTION, "SELECT");
+    m_pCanvas->Scanlines(0, 0, W, H, 60);
 }
 
 void PauseMenu::Message(const char *text)
 {
-    int cw = (int) m_pCanvas->CharW();
-    int ch = (int) m_pCanvas->CharH();
-    m_pCanvas->FillRect(cw * 3, ch * 2, cw * 26, ch * 3, BOX);
-    m_pCanvas->DrawText(cw * 4, ch * 3, text, WHITE, BOX);
+    int W = (int) m_pCanvas->Width();
+    int H = (int) m_pCanvas->Height();
+    int bw = 460, bh = 70;
+    int bx = W / 2 - bw / 2, by = H / 2 - bh / 2;
+    m_pCanvas->FillRect(bx, by, bw, bh, theme::BG);
+    m_pCanvas->FillRect(bx, by, bw, 3, theme::SELECTION);
+    m_pCanvas->Text(&g_font_vt323_22, 1, bx + 24, by + 24, text,
+                    theme::TEXT, theme::BG, true);
     CTimer::SimpleMsDelay(1200);
 }
 
@@ -89,32 +102,55 @@ int PauseMenu::PickSlot(bool forLoad)
         for (int i = 0; i < NUM_SLOTS; i++) if (occupied[i]) { sel = i; break; }
     }
 
-    int cw = (int) m_pCanvas->CharW();
-    int ch = (int) m_pCanvas->CharH();
-
     bool     redraw = true;
     unsigned prev   = m_pGamepad->MenuButtons();
     for (;;)
     {
         if (redraw)
         {
-            m_pCanvas->FillRect(cw * 3, ch * 2, cw * 26, ch * (NUM_SLOTS + 5), BOX);
-            m_pCanvas->DrawText(cw * 4, ch * 3, forLoad ? "Load State" : "Save State",
-                                WHITE, BOX);
+            int W = (int) m_pCanvas->Width();
+            int H = (int) m_pCanvas->Height();
+            m_pCanvas->BlendRect(0, 0, W, H, theme::BG, 200);
+
+            int panelW = 460, panelH = NUM_SLOTS * 44 + 120;
+            int px = W / 2 - panelW / 2, py = H / 2 - panelH / 2;
+            m_pCanvas->FillRect(px, py, panelW, panelH, theme::BG);
+            m_pCanvas->FillRect(px, py, panelW, 3, theme::SELECTION);
+
+            const char *ttl = forLoad ? "LOAD STATE" : "SAVE STATE";
+            int tw = m_pCanvas->TextWidth(&g_font_ps2p8, 2, ttl);
+            m_pCanvas->Text(&g_font_ps2p8, 2, W / 2 - tw / 2, py + 18, ttl,
+                            theme::WHITE, theme::BG, true);
+
             for (int i = 0; i < NUM_SLOTS; i++)
             {
-                int ty = ch * (i + 5);
+                int ty = py + 64 + i * 44;
                 bool cur = (i == sel) && selable[i];
-                u16 fg = cur ? SELFG : (selable[i] ? WHITE : GREY);
-                u16 bg = cur ? SELBG : BOX;
-                if (cur) m_pCanvas->FillRect(cw * 4, ty, cw * 24, ch, SELBG);
-                char digit[2] = { (char) ('1' + i), '\0' };
-                m_pCanvas->DrawText(cw * 5,  ty, "Slot", fg, bg);
-                m_pCanvas->DrawText(cw * 10, ty, digit,  fg, bg);
-                m_pCanvas->DrawText(cw * 13, ty, occupied[i] ? "Used" : "Empty", fg, bg);
+                if (cur) m_pCanvas->FillRect(px + 16, ty - 2, panelW - 32, 38,
+                                             theme::SELECTION);
+                if (cur) m_pCanvas->IconPlay(px + 22, ty + 6, 16, theme::WHITE);
+
+                char label[8] = { 'S','l','o','t',' ', (char)('1'+i), '\0' };
+                u16 lc = cur ? theme::WHITE : (selable[i] ? theme::TEXT : theme::TEXT_DIM);
+                m_pCanvas->Text(&g_font_vt323_22, 1, px + 48, ty, label,
+                                lc, theme::BG, true);
+
+                // USED / EMPTY badge, right-aligned.
+                const char *badge = occupied[i] ? "USED" : "EMPTY";
+                u16 bf = occupied[i] ? theme::ACTIVE : theme::TEXT_DIM;
+                int bw = m_pCanvas->TextWidth(&g_font_ps2p8, 1, badge);
+                if (occupied[i])
+                    m_pCanvas->FillRect(px + panelW - 40 - bw - 12, ty + 2,
+                                        bw + 16, 22, theme::ACTIVE);
+                m_pCanvas->Text(&g_font_ps2p8, 1, px + panelW - 40 - bw - 4, ty + 6,
+                                badge, occupied[i] ? theme::BG : bf, theme::BG, true);
             }
-            m_pCanvas->DrawText(cw * 4, ch * (NUM_SLOTS + 6),
-                                "Start: select   B: cancel", WHITE, BOX);
+
+            int fy = py + panelH - 28;
+            int hx = chrome::hint_button(m_pCanvas, px + 20, fy - 4, 'A',
+                                         theme::SELECTION, forLoad ? "LOAD" : "SAVE");
+            chrome::hint_button(m_pCanvas, hx, fy - 4, 'B', theme::TEXT_DIM, "CANCEL");
+            m_pCanvas->Scanlines(0, 0, W, H, 60);
             redraw = false;
         }
 

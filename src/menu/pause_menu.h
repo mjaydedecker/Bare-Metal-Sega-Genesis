@@ -9,7 +9,7 @@
 #define _menu_pause_menu_h
 
 #include <circle/usb/usbhcidevice.h>
-#include "../ui/text_canvas.h"
+#include "../ui/glyph_canvas.h"
 #include "../input/gamepad.h"
 #include "save_state.h"
 
@@ -20,7 +20,7 @@ enum class MenuAction { Resume, Reset, ReturnToBrowser };
 class PauseMenu
 {
 public:
-    PauseMenu(TextCanvas *pCanvas, Gamepad *pGamepad, CUSBHCIDevice *pUSBHCI,
+    PauseMenu(GlyphCanvas *pCanvas, Gamepad *pGamepad, CUSBHCIDevice *pUSBHCI,
               SaveState *pSaveState, SettingsScreen *pSettingsScreen);
     MenuAction Run(void);     // draws over the last frame; returns on confirm
 
@@ -29,7 +29,7 @@ private:
     int  PickSlot(bool forLoad);   // returns slot 1..4, or 0 to cancel
     void Message(const char *text);
 
-    TextCanvas    *m_pCanvas;
+    GlyphCanvas   *m_pCanvas;
     Gamepad       *m_pGamepad;
     CUSBHCIDevice *m_pUSBHCI;
     SaveState     *m_pSaveState;
