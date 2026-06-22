@@ -320,6 +320,24 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 
 ---
 
+## U. UI redesign rollout (remaining screens)
+
+- [ ] **U1 — Splash.** Boot shows the typographic splash (BARE·METAL / GENESIS /
+  PRESS START / platform footer) on the themed background with scanlines.
+- [ ] **U2 — Pause menu.** Start+Select in-game dims the live frame (not black) and
+  shows the glowing PAUSED panel with ▶ marker + MOVE/SELECT hints.
+- [ ] **U3 — Save-state slots.** Save/Load State shows the slot panel with green
+  USED badges / dim EMPTY, and saving/loading still works.
+- [ ] **U4 — Settings.** Themed rows with amber ◄ ► on the 12 adjustable rows and a
+  ▸ chevron on the 4 sub-screen rows; changing values still applies/persists.
+- [ ] **U5 — Video mode.** Mode chip strip (Native/1080p/720p/480p); applying shows
+  the amber KEEP THIS MODE? box with countdown + draining progress bar; revert works.
+- [ ] **U6 — Controls.** Player selector + 8 button rows with arrows; remap persists.
+- [ ] **U7 — Hotkeys.** Themed rows; a conflicting binding shows red value + `!`.
+- [ ] **U8 — Calibration.** Themed "Press <BTN>" prompt + Saved message; mapping saves.
+
+---
+
 ## Results summary
 
 | Group | Pass | Notes |
@@ -344,6 +362,7 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 | R. Pad type | | |
 | S. Controller calib | partial | S1 pass; S2–S4 not yet run |
 | T. ROM browser redesign | | T1–T7 pending (UI redesign pilot) |
+| U. UI redesign rollout | | U1–U8 pending (splash/pause/slots/settings/video/controls/hotkeys/calib) |
 
 Anything that fails: note the exact symptom and which ROM, and we'll debug it
 systematically (root cause first).
