@@ -11,7 +11,7 @@
 #define _menu_settings_screen_h
 
 #include <circle/usb/usbhcidevice.h>
-#include "../ui/text_canvas.h"
+#include "../ui/glyph_canvas.h"
 #include "../input/gamepad.h"
 #include "../settings/settings.h"
 #include "../settings/settings_store.h"
@@ -27,7 +27,7 @@ class CalibrationScreen;
 class SettingsScreen
 {
 public:
-    SettingsScreen(TextCanvas *pCanvas, Gamepad *pGamepad, CUSBHCIDevice *pUSBHCI,
+    SettingsScreen(GlyphCanvas *pCanvas, Gamepad *pGamepad, CUSBHCIDevice *pUSBHCI,
                    Settings *pSettings, SettingsStore *pStore, Display *pDisplay,
                    AudioDriver *pAudio, ControlsScreen *pControls,
                    VideoModeScreen *pVideoMode, Overlay *pOverlay,
@@ -41,7 +41,7 @@ private:
     void Render(int selected);
     void Apply(void);   // push current settings to Display + env globals
 
-    TextCanvas    *m_pCanvas;
+    GlyphCanvas   *m_pCanvas;
     Gamepad       *m_pGamepad;
     CUSBHCIDevice *m_pUSBHCI;
     Settings      *m_pSettings;
