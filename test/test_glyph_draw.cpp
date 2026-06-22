@@ -43,6 +43,19 @@ int main(void) {
     assert(fb[2 * W + 0] != 0xFFFF);          // row 2 darkened
     assert(fb[2 * W + 0] != 0x0000);          // but not fully black
 
+    // stipple_rect: write-only 50% checkerboard, every 3rd local row skipped.
+    reset();
+    gd_stipple_rect(fb, W, W, H, 0, 0, 8, 6, 0xABCD);
+    assert(fb[0 * W + 0] == 0xABCD);          // (0,0) even -> color
+    assert(fb[0 * W + 1] == 0x0000);          // (1,0) odd  -> untouched (game shows)
+    assert(fb[1 * W + 1] == 0xABCD);          // (1,1) even -> color
+    assert(fb[1 * W + 0] == 0x0000);          // (0,1) odd  -> untouched
+    assert(fb[2 * W + 0] == 0x0000);          // local row 2 = scanline gap, untouched
+    assert(fb[2 * W + 2] == 0x0000);
+    assert(fb[3 * W + 1] == 0xABCD);          // row 3 resumes checkerboard
+    assert(fb[0 * W + 8] == 0x0000);          // outside width, untouched
+    gd_stipple_rect(fb, W, W, H, -3, -3, 6, 6, 0x2222);   // negative origin clips, no crash
+
     // text width = chars * width * scale
     assert(gd_text_width(&kFont, 1, "!!") == 6);
     assert(gd_text_width(&kFont, 2, "!")  == 6);

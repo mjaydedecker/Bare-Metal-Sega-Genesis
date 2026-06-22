@@ -66,9 +66,10 @@ void Overlay::Draw(const HudStats &s)
     int panelW = HUD_PAD * 2 + HUD_COLW * 2;
     int panelH = HUD_PAD * 2 + kRows * HUD_LH;
 
-    // Translucent panel + scanlines (full fixed-size repaint each frame).
-    m_pCanvas->BlendRect(HUD_X, HUD_Y, panelW, panelH, theme::BG, 190);
-    m_pCanvas->Scanlines(HUD_X, HUD_Y, panelW, panelH, 60);
+    // Pseudo-translucent panel via write-only stipple (no framebuffer reads —
+    // blend/scanline read-modify-write stalls the Pi's write-combining FB and
+    // cost ~8 fps + audio distortion with the HUD on). Full repaint each frame.
+    m_pCanvas->StippleRect(HUD_X, HUD_Y, panelW, panelH, theme::BG);
 
     for (unsigned i = 0; i < n; i++)
     {
@@ -109,9 +110,8 @@ void Overlay::DrawToast(void)
     int x = (W - boxW) / 2; if (x < 0) x = 0;
     int y = H - boxH - 36;  // near bottom (HUD is top-left)
 
-    // Translucent pill (full repaint each frame).
-    m_pCanvas->BlendRect(x, y, boxW, boxH, theme::BG, 200);
-    m_pCanvas->Scanlines(x, y, boxW, boxH, 60);
+    // Pseudo-translucent pill via write-only stipple (no framebuffer reads).
+    m_pCanvas->StippleRect(x, y, boxW, boxH, theme::BG);
     m_pCanvas->Text(f, 1, x + padX, y + padY, m_Toast,
                     toast_color(m_ToastKind), 0, true);
 }

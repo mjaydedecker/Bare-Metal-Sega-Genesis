@@ -46,6 +46,17 @@ void gd_scanlines(uint16_t *buf, unsigned pitchPx, int fbw, int fbh,
     }
 }
 
+void gd_stipple_rect(uint16_t *buf, unsigned pitchPx, int fbw, int fbh,
+                     int x, int y, int w, int h, uint16_t color) {
+    for (int yy = y; yy < y + h; yy++) {
+        if ((yy - y) % 3 == 2) continue;        // scanline gap row (write nothing)
+        for (int xx = x; xx < x + w; xx++) {
+            if (((xx + yy) & 1) != 0) continue;  // 50% checkerboard (write-only)
+            put(buf, pitchPx, fbw, fbh, xx, yy, color);
+        }
+    }
+}
+
 int gd_text_width(const Font *f, int scale, const char *s) {
     if (f == 0 || s == 0) return 0;
     return (int) strlen(s) * (int) f->width * scale;

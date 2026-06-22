@@ -23,6 +23,7 @@ public:
     void FillRect(int x, int y, int w, int h, u16 color);
     void BlendRect(int x, int y, int w, int h, u16 color, u8 alpha);
     void Scanlines(int x, int y, int w, int h, u8 strength);
+    void StippleRect(int x, int y, int w, int h, u16 color);
 
     int  Text(const Font *f, int scale, int x, int y, const char *s,
               u16 fg, u16 bg, bool transparent);

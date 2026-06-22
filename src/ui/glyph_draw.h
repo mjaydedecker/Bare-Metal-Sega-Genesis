@@ -17,6 +17,13 @@ void gd_blend_rect(uint16_t *buf, unsigned pitchPx, int fbw, int fbh,
 void gd_scanlines (uint16_t *buf, unsigned pitchPx, int fbw, int fbh,
                    int x, int y, int w, int h, uint8_t strength);
 
+// Write-only pseudo-transparent fill: writes `color` on a 50% checkerboard and
+// leaves every 3rd row (local row % 3 == 2) untouched as a scanline gap. Never
+// READS the framebuffer (unlike blend_rect/scanlines), so it is cheap over the
+// Pi's write-combining framebuffer where reads stall. Used for HUD/toast panels.
+void gd_stipple_rect(uint16_t *buf, unsigned pitchPx, int fbw, int fbh,
+                     int x, int y, int w, int h, uint16_t color);
+
 int  gd_text_width(const Font *f, int scale, const char *s);
 
 // Draws s with integer scale (>=1). When transparent, off pixels are left

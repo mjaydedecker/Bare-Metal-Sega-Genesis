@@ -35,6 +35,12 @@ void GlyphCanvas::Scanlines(int x, int y, int w, int h, u8 strength) {
                  x, y, w, h, strength);
 }
 
+void GlyphCanvas::StippleRect(int x, int y, int w, int h, u16 color) {
+    gd_stipple_rect(m_pDisplay->Buffer(), m_pDisplay->Pitch() / 2,
+                    (int) m_pDisplay->Width(), (int) m_pDisplay->Height(),
+                    x, y, w, h, color);
+}
+
 int GlyphCanvas::Text(const Font *f, int scale, int x, int y, const char *s,
                       u16 fg, u16 bg, bool transparent) {
     return gd_draw_text(m_pDisplay->Buffer(), m_pDisplay->Pitch() / 2,
