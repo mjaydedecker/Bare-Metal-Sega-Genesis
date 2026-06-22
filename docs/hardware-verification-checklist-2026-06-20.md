@@ -299,6 +299,27 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 
 ---
 
+## T. ROM browser redesign (Claude Design v1.0.0 pilot)
+
+- [ ] **T1 — New look renders.** Boot with ROMs present. **Expect:** ROM browser
+  in the new theme — dark `#0a0b10` background, "ROM BROWSER" title (Press Start
+  2P), cyan `SD:/roms` path + green P1 dot, a 2px divider, CRT scanlines.
+- [ ] **T2 — Rows.** Folders show as cyan `[ Name ]`; ROM files show body text
+  with a dimmed extension (e.g. `Sonic` bright, `.md` dim).
+- [ ] **T3 — Selection.** The selected row has a solid red accent bar with a
+  white ▶ play marker; moving Up/Down repaints it correctly.
+- [ ] **T4 — Scrollbar.** With more ROMs than fit, the right-edge thumb sizes and
+  moves with the selection; with few ROMs it fills the track.
+- [ ] **T5 — Footer.** Bottom hint bar shows ✛ NAVIGATE and Ⓐ LAUNCH (left) and
+  `N ROMS  M FOLDERS` count (right), both legible.
+- [ ] **T6 — Empty state.** Remove all ROMs/boot empty. **Expect:** centered
+  cartridge glyph, "NO ROMS FOUND", the `.md / .bin / .gen` hint, amber
+  "WAITING FOR MEDIA" footer.
+- [ ] **T7 — Launch unaffected.** Selecting a ROM and pressing Start launches it
+  exactly as before (render-only change).
+
+---
+
 ## Results summary
 
 | Group | Pass | Notes |
@@ -322,6 +343,7 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 | Q. Boot splash | partial | Q1, Q3 pass; Q2 (SD override) not yet run |
 | R. Pad type | | |
 | S. Controller calib | partial | S1 pass; S2–S4 not yet run |
+| T. ROM browser redesign | | T1–T7 pending (UI redesign pilot) |
 
 Anything that fails: note the exact symptom and which ROM, and we'll debug it
 systematically (root cause first).

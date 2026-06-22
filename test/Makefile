@@ -6,8 +6,14 @@ LIBRETRO_INC = ../libs/genesis-plus-gx-wide/libretro/libretro-common/include
 
 .PHONY: run clean
 
-run: test_blit test_joypad test_rom_filter test_menu_state test_menu_path test_save_path test_settings test_audio_util test_pad_reconcile test_hud test_hotkey test_splash test_controller_map
+run: test_blit test_pixel_ops test_glyph_draw test_icons test_theme test_fonts test_rom_layout test_joypad test_rom_filter test_menu_state test_menu_path test_save_path test_settings test_audio_util test_pad_reconcile test_hud test_hotkey test_splash test_controller_map
 	./test_blit
+	./test_pixel_ops
+	./test_glyph_draw
+	./test_icons
+	./test_theme
+	./test_fonts
+	./test_rom_layout
 	./test_joypad
 	./test_rom_filter
 	./test_menu_state
@@ -23,6 +29,24 @@ run: test_blit test_joypad test_rom_filter test_menu_state test_menu_path test_s
 
 test_blit: test_blit.cpp ../src/video/blit.cpp ../src/video/blit.h
 	$(CXX) $(CXXFLAGS) -o $@ test_blit.cpp ../src/video/blit.cpp
+
+test_pixel_ops: test_pixel_ops.cpp ../src/ui/pixel_ops.cpp ../src/ui/pixel_ops.h
+	$(CXX) $(CXXFLAGS) -o $@ test_pixel_ops.cpp ../src/ui/pixel_ops.cpp
+
+test_glyph_draw: test_glyph_draw.cpp ../src/ui/glyph_draw.cpp ../src/ui/glyph_draw.h ../src/ui/font.h ../src/ui/pixel_ops.cpp ../src/ui/pixel_ops.h
+	$(CXX) $(CXXFLAGS) -o $@ test_glyph_draw.cpp ../src/ui/glyph_draw.cpp ../src/ui/pixel_ops.cpp
+
+test_icons: test_icons.cpp ../src/ui/icons.cpp ../src/ui/icons.h ../src/ui/glyph_draw.cpp ../src/ui/pixel_ops.cpp
+	$(CXX) $(CXXFLAGS) -o $@ test_icons.cpp ../src/ui/icons.cpp ../src/ui/glyph_draw.cpp ../src/ui/pixel_ops.cpp
+
+test_theme: test_theme.cpp ../src/ui/theme.h
+	$(CXX) $(CXXFLAGS) -o $@ test_theme.cpp
+
+test_fonts: test_fonts.cpp ../src/ui/fonts/font_ps2p8.cpp ../src/ui/fonts/font_vt323_16.cpp ../src/ui/fonts/font_vt323_22.cpp ../src/ui/glyph_draw.cpp ../src/ui/pixel_ops.cpp
+	$(CXX) $(CXXFLAGS) -o $@ test_fonts.cpp ../src/ui/fonts/font_ps2p8.cpp ../src/ui/fonts/font_vt323_16.cpp ../src/ui/fonts/font_vt323_22.cpp ../src/ui/glyph_draw.cpp ../src/ui/pixel_ops.cpp
+
+test_rom_layout: test_rom_layout.cpp ../src/menu/rom_layout.cpp ../src/menu/rom_layout.h
+	$(CXX) $(CXXFLAGS) -o $@ test_rom_layout.cpp ../src/menu/rom_layout.cpp
 
 test_joypad: test_joypad.cpp ../src/input/joypad_map.cpp ../src/input/joypad_map.h
 	$(CXX) $(CXXFLAGS) -I$(LIBRETRO_INC) -o $@ test_joypad.cpp ../src/input/joypad_map.cpp
@@ -61,4 +85,4 @@ test_controller_map: test_controller_map.cpp ../src/input/controller_map.cpp ../
 	$(CXX) $(CXXFLAGS) -I$(LIBRETRO_INC) -o $@ test_controller_map.cpp ../src/input/controller_map.cpp ../src/input/joypad_map.cpp
 
 clean:
-	rm -f test_blit test_joypad test_rom_filter test_menu_state test_menu_path test_save_path test_settings test_audio_util test_pad_reconcile test_hud test_hotkey test_splash test_controller_map
+	rm -f test_blit test_pixel_ops test_glyph_draw test_icons test_theme test_fonts test_rom_layout test_joypad test_rom_filter test_menu_state test_menu_path test_save_path test_settings test_audio_util test_pad_reconcile test_hud test_hotkey test_splash test_controller_map

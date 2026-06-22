@@ -60,7 +60,15 @@ OBJS = src/main.o \
        src/settings/settings_store.o \
        src/ui/text_canvas.o \
        src/ui/hud.o \
-       src/ui/overlay.o
+       src/ui/overlay.o \
+       src/ui/pixel_ops.o \
+       src/ui/glyph_draw.o \
+       src/ui/icons.o \
+       src/ui/glyph_canvas.o \
+       src/ui/fonts/font_ps2p8.o \
+       src/ui/fonts/font_vt323_16.o \
+       src/ui/fonts/font_vt323_22.o \
+       src/menu/rom_layout.o
 
 # Auto-generated header-dependency files (one .d per object, emitted by the
 # compiler's -MMD). Without this, the `-include $(DEPS)` below expands to
