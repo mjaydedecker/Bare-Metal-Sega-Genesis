@@ -13,7 +13,7 @@
 #include "controls_screen.h"
 #include "video_mode_screen.h"
 
-#define NUM_ROWS 14
+#define NUM_ROWS 15
 
 // RGB565 colours (match the pause menu palette).
 static const u16 BOX   = 0x0008;
@@ -99,17 +99,20 @@ void SettingsScreen::Render(int selected)
         m_pSettings->audio_latency == AudioLatency::Low  ? "< Low >"  :
         m_pSettings->audio_latency == AudioLatency::High ? "< High >" :
                                                            "< Medium >";
+    const char *padVal = m_pSettings->pad_type == PadType::ThreeButton
+                             ? "< 3-button >" : "< 6-button >";
     const char *labels[NUM_ROWS] = { "Video Scale:", "Widescreen:",
                                      "Volume:", "Mute:",
                                      "Region:", "Auto-launch:",
                                      "Menu Hotkey:", "Audio out:",
                                      "Vsync:", "Debug Overlay:",
-                                     "Audio Latency:",
+                                     "Audio Latency:", "Pad Type:",
                                      "Controls...", "Video Mode...",
                                      "Hotkeys..." };
     const char *values[NUM_ROWS] = { scaleVal, wideVal, volVal, muteVal,
                                      regionVal, autoVal, hotkeyVal, audioVal,
-                                     vsyncVal, dbgVal, latVal, "", "", "" };
+                                     vsyncVal, dbgVal, latVal, padVal,
+                                     "", "", "" };
 
     for (int i = 0; i < NUM_ROWS; i++)
     {
@@ -124,7 +127,7 @@ void SettingsScreen::Render(int selected)
     }
 
     m_pCanvas->DrawText(boxX + cw, boxY + ch * (NUM_ROWS + 3),
-                        "Widescreen: reset.  Region: reload.  Audio: reboot.",
+                        "Widescreen: reset.  Region/Pad: reload.  Audio: reboot.",
                         WHITE, BOX);
     m_pCanvas->DrawText(boxX + cw, boxY + ch * (NUM_ROWS + 4),
                         "Auto-launch boots this game.  B: back", WHITE, BOX);
@@ -237,6 +240,11 @@ void SettingsScreen::Run(void)
                 m_pSettings->audio_latency = (AudioLatency) l;
                 break;
             }
+            case 11:  // Pad Type (toggle 3/6-button; applies on ROM reload)
+                m_pSettings->pad_type =
+                    m_pSettings->pad_type == PadType::SixButton
+                        ? PadType::ThreeButton : PadType::SixButton;
+                break;
             }
 
             Apply();
@@ -245,19 +253,19 @@ void SettingsScreen::Run(void)
         }
         if (pressed & GP_START)
         {
-            if (selected == 11)                       // Controls...
+            if (selected == 12)                       // Controls...
             {
                 m_pControls->Run();
                 prev = m_pGamepad->MenuButtons();
                 Render(selected);
             }
-            else if (selected == 12)                  // Video Mode...
+            else if (selected == 13)                  // Video Mode...
             {
                 m_pVideoMode->Run();
                 prev = m_pGamepad->MenuButtons();
                 Render(selected);
             }
-            else if (selected == 13)                  // Hotkeys...
+            else if (selected == 14)                  // Hotkeys...
             {
                 m_pHotkey->Run();
                 prev = m_pGamepad->MenuButtons();

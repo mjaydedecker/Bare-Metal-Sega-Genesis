@@ -113,6 +113,9 @@ Settings parse_settings(const char *text)
             else if (ieq(val, "l+r"))     s.menu_hotkey = MenuHotkey::LR;
             else                          s.menu_hotkey = MenuHotkey::StartSelect;
         }
+        else if (ieq(key, "pad_type"))
+            s.pad_type = ieq(val, "3button") ? PadType::ThreeButton
+                                              : PadType::SixButton;
         else if (ieq(key, "controller_1_map"))
             s.map1 = parse_button_map(val);
         else if (ieq(key, "controller_2_map"))
@@ -203,6 +206,11 @@ const char *menu_hotkey_file_value(MenuHotkey h)
     case MenuHotkey::LR:     return "l+r";
     default:                 return "start+select";
     }
+}
+
+const char *pad_type_file_value(PadType p)
+{
+    return p == PadType::ThreeButton ? "3button" : "6button";
 }
 
 const char *pad_button_token(PadButton p)
@@ -372,6 +380,8 @@ void serialize_settings(const Settings &s, char *out, size_t out_size)
     appendz(out, out_size, s.auto_launch_rom);
     appendz(out, out_size, "\nmenu_hotkey=");
     appendz(out, out_size, menu_hotkey_file_value(s.menu_hotkey));
+    appendz(out, out_size, "\npad_type=");
+    appendz(out, out_size, pad_type_file_value(s.pad_type));
     appendz(out, out_size, "\ncontroller_1_map=");
     append_map(out, out_size, s.map1);
     appendz(out, out_size, "\ncontroller_2_map=");

@@ -18,6 +18,7 @@ enum class PadButton { A, B, X, Y, L, R, Start, Select };
 enum class VideoMode { Native, P1080, P720, P480 };
 enum class AudioOutput { HDMI, Analog, I2S };
 enum class AudioLatency { Low, Medium, High };
+enum class PadType { ThreeButton, SixButton };
 
 // Physical pad button driving each Genesis button, indexed
 // 0=A,1=B,2=C,3=X,4=Y,5=Z,6=Start,7=Mode. Default ctor reproduces the
@@ -75,6 +76,7 @@ struct Settings
                                // + audio underruns; toggle on for faster boards)
     bool       debug_overlay;  // on-screen diagnostics HUD (default off)
     AudioLatency audio_latency; // audio buffering depth: low | medium | high
+    PadType    pad_type;       // emulated Genesis pad: 3-button or 6-button
     HotkeyBindings hotkeys;    // in-game action hotkey bindings
 
     Settings(void)
@@ -82,7 +84,7 @@ struct Settings
         volume(100), mute(false), region(Region::Auto),
         menu_hotkey(MenuHotkey::StartSelect), video_mode(VideoMode::Native),
         audio_output(AudioOutput::HDMI), vsync(false), debug_overlay(false),
-        audio_latency(AudioLatency::Medium)
+        audio_latency(AudioLatency::Medium), pad_type(PadType::SixButton)
     {
         auto_launch_rom[0] = '\0';
     }
@@ -129,5 +131,8 @@ const char *audio_latency_file_value(AudioLatency l);
 // Target buffered-audio depth as a video-frame multiplier (Low=1, Medium=2,
 // High=3); the kernel computes target = audio_latency_frames(l) * framesPerVideo.
 unsigned audio_latency_frames(AudioLatency l);
+
+// PadType as written to the settings file ("3button" | "6button").
+const char *pad_type_file_value(PadType p);
 
 #endif

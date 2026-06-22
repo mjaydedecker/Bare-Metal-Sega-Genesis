@@ -190,6 +190,7 @@ TShutdownMode CKernel::Run (void)
 	g_gamepad = &m_Gamepad;
 
 	#define RETRO_DEVICE_MDPAD_6B RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_JOYPAD, 1)
+	#define RETRO_DEVICE_MDPAD_3B RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_JOYPAD, 0)
 
 	boolean audioInited = FALSE;
 	boolean firstBoot   = TRUE;
@@ -264,8 +265,10 @@ TShutdownMode CKernel::Run (void)
 		}
 		boolean audioOK = audioInited;
 
-		retro_set_controller_port_device (0, RETRO_DEVICE_MDPAD_6B);
-		retro_set_controller_port_device (1, RETRO_DEVICE_MDPAD_6B);
+		unsigned padDev = (m_Settings.pad_type == PadType::ThreeButton)
+		                  ? RETRO_DEVICE_MDPAD_3B : RETRO_DEVICE_MDPAD_6B;
+		retro_set_controller_port_device (0, padDev);
+		retro_set_controller_port_device (1, padDev);
 
 		m_SaveState.SetGame (romPath);   // save/load target for this game
 		m_Sram.SetGame (romPath);

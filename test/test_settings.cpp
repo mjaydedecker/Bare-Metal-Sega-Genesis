@@ -242,6 +242,22 @@ int main(void)
     serialize_settings(als, albuf, sizeof albuf);
     assert(parse_settings(albuf).audio_latency == AudioLatency::High);
 
+    // Pad type: default SixButton; parse each keyword; invalid -> SixButton.
+    assert(d.pad_type == PadType::SixButton);
+    assert(parse_settings("pad_type=3button\n").pad_type == PadType::ThreeButton);
+    assert(parse_settings("pad_type=6button\n").pad_type == PadType::SixButton);
+    assert(parse_settings("pad_type=bogus\n").pad_type    == PadType::SixButton);
+
+    // File-value mapping.
+    assert(strcmp(pad_type_file_value(PadType::ThreeButton), "3button") == 0);
+    assert(strcmp(pad_type_file_value(PadType::SixButton),   "6button") == 0);
+
+    // Round-trip.
+    Settings pts; pts.pad_type = PadType::ThreeButton;
+    char ptbuf[512];
+    serialize_settings(pts, ptbuf, sizeof ptbuf);
+    assert(parse_settings(ptbuf).pad_type == PadType::ThreeButton);
+
     printf("All settings tests passed\n");
     return 0;
 }
