@@ -286,6 +286,19 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 
 ---
 
+## S. Controller calibration (auto-mapping)
+
+- [ ] **S1 — Calibrate a non-8BitDo pad.** Plug a different USB pad as P1 (buttons
+  wrong/dead). Settings → **Calibrate Controller...** → press each prompted button.
+  **Expect:** after the 8th, "Saved"; in-game all 8 buttons now work correctly.
+- [ ] **S2 — Persisted.** `SD:/controllers.txt` has a `vid:pid=...` line; power-cycle
+  and the pad works without re-calibrating.
+- [ ] **S3 — Skip / cancel.** D-pad **Down** skips a button (leaves it dead);
+  D-pad **Left** cancels the screen with no change saved.
+- [ ] **S4 — Fallback intact.** An 8BitDo (uncalibrated) still works out of the box.
+
+---
+
 ## Results summary
 
 | Group | Pass | Notes |
@@ -308,6 +321,7 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 | P. Audio latency | | |
 | Q. Boot splash | | |
 | R. Pad type | | |
+| S. Controller calib | | |
 
 Anything that fails: note the exact symptom and which ROM, and we'll debug it
 systematically (root cause first).
