@@ -53,7 +53,7 @@ CKernel::CKernel (void)
 	m_Settings (),
 	m_SettingsStore (&m_Storage),
 	m_VideoModeScreen (&m_GlyphCanvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore, &m_Display),
-	m_ControlsScreen (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore),
+	m_ControlsScreen (&m_GlyphCanvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore),
 	m_HotkeyScreen (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore),
 	m_ControllerStore (),
 	m_CalibrationScreen (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_ControllerStore, &m_Storage),

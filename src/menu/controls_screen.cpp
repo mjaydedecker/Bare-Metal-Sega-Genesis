@@ -7,15 +7,12 @@
 
 #include "controls_screen.h"
 #include "../input/joypad_map.h"   // GP_* via header (GP_UP etc. for nav)
+#include "../ui/theme.h"
+#include "../ui/screen_chrome.h"
 #include <circle/timer.h>
 
 #define NUM_BTN  8                 // Genesis action buttons
 #define NUM_ROWS (NUM_BTN + 1)     // + the Player selector row
-
-static const u16 BOX   = 0x0008;
-static const u16 WHITE = 0xFFFF;
-static const u16 SELFG = 0x0000;
-static const u16 SELBG = 0x07FF;
 
 static const char *const GEN_LABEL[NUM_BTN] =
     { "A", "B", "C", "X", "Y", "Z", "Start", "Mode" };
@@ -36,7 +33,7 @@ static const char *phys_label(PadButton p)
     return "?";
 }
 
-ControlsScreen::ControlsScreen(TextCanvas *pCanvas, Gamepad *pGamepad,
+ControlsScreen::ControlsScreen(GlyphCanvas *pCanvas, Gamepad *pGamepad,
                                CUSBHCIDevice *pUSBHCI, Settings *pSettings,
                                SettingsStore *pStore)
 :   m_pCanvas(pCanvas), m_pGamepad(pGamepad), m_pUSBHCI(pUSBHCI),
@@ -46,48 +43,29 @@ ControlsScreen::ControlsScreen(TextCanvas *pCanvas, Gamepad *pGamepad,
 
 void ControlsScreen::Render(int player, int selected)
 {
-    int cw = (int) m_pCanvas->CharW();
-    int ch = (int) m_pCanvas->CharH();
-    int boxX = cw * 3, boxY = ch * 2;
-    int boxW = cw * 34, boxH = ch * (NUM_ROWS + 4);
-
+    using namespace chrome;
     const ButtonMap &map = (player == 0) ? m_pSettings->map1 : m_pSettings->map2;
 
-    m_pCanvas->Clear(0x0000);   // wipe any larger menu drawn before this one
-    m_pCanvas->FillRect(boxX, boxY, boxW, boxH, BOX);
-    m_pCanvas->DrawText(boxX + cw, boxY + ch, "CONTROLS", WHITE, BOX);
+    m_pCanvas->Clear(theme::BG);
+    header(m_pCanvas, "CONTROLS", player == 0 ? "Player 1" : "Player 2",
+           theme::VALUE);
 
-    for (int i = 0; i < NUM_ROWS; i++)
+    // Row 0: player selector (adjustable). Rows 1..8: button maps (adjustable).
+    value_row(m_pCanvas, 0, selected == 0, "Player",
+              player == 0 ? "1" : "2", theme::VALUE, true);
+    for (int b = 0; b < NUM_BTN; b++)
     {
-        int  ty  = boxY + ch * (i + 3);
-        bool sel = (i == selected);
-        u16  fg  = sel ? SELFG : WHITE;
-        u16  bg  = sel ? SELBG : BOX;
-        if (sel) m_pCanvas->FillRect(boxX + cw, ty, boxW - cw * 2, ch, SELBG);
-        m_pCanvas->DrawText(boxX + cw, ty, sel ? ">" : " ", fg, bg);
-
-        if (i == 0)
-        {
-            m_pCanvas->DrawText(boxX + cw * 3,  ty, "Player", fg, bg);
-            m_pCanvas->DrawText(boxX + cw * 13, ty, player == 0 ? "< 1 >" : "< 2 >",
-                                fg, bg);
-        }
-        else
-        {
-            int btn = i - 1;
-            char val[12];
-            val[0] = '<'; val[1] = ' ';
-            const char *pl = phys_label(map.b[btn]);
-            int k = 2;
-            for (int j = 0; pl[j] && k < 9; j++) val[k++] = pl[j];
-            val[k++] = ' '; val[k++] = '>'; val[k] = '\0';
-            m_pCanvas->DrawText(boxX + cw * 3,  ty, GEN_LABEL[btn], fg, bg);
-            m_pCanvas->DrawText(boxX + cw * 13, ty, val, fg, bg);
-        }
+        value_row(m_pCanvas, b + 1, selected == b + 1, GEN_LABEL[b],
+                  phys_label(map.b[b]), theme::VALUE, true);
     }
 
-    m_pCanvas->DrawText(boxX + cw, boxY + ch * (NUM_ROWS + 3),
-                        "Left/Right: change   B: back", WHITE, BOX);
+    footer_divider(m_pCanvas);
+    int H = (int) m_pCanvas->Height();
+    int fy = H - FOOT_H + 4;
+    int hx = hint_dpad(m_pCanvas, PAD, fy, "NAVIGATE");
+    hx = hint_lr(m_pCanvas, hx, fy, "REMAP");
+    hint_button(m_pCanvas, hx, fy, 'B', theme::TEXT_DIM, "BACK");
+    scanlines(m_pCanvas);
 }
 
 void ControlsScreen::Run(void)
