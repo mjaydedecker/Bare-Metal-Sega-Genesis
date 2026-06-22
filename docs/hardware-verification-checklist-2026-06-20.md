@@ -17,17 +17,17 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 ## A. Controller hotplug-removal
 *(just merged — `Poll()` reconcile loop)*
 
-- [ ] **A1 — No ghost input on unplug.** Start a game, hold a D-pad direction so
+- [x] **A1 — No ghost input on unplug.** Start a game, hold a D-pad direction so
   the character keeps moving, and **unplug the pad mid-press**.
   **Expect:** on-screen motion stops within ~a frame. No stuck/repeating input.
-- [ ] **A2 — Re-plug restores same port.** Plug the same pad back into the same hub/port.
+- [x] **A2 — Re-plug restores same port.** Plug the same pad back into the same hub/port.
   **Expect:** it controls the game again, as **Player 1** (same port it had).
-- [ ] **A3 — P2 unplug doesn't disturb P1.** With both pads active in a 2-player
+- [x] **A3 — P2 unplug doesn't disturb P1.** With both pads active in a 2-player
   game (or both able to move a cursor), unplug **P2**.
   **Expect:** P1 keeps working normally; only P2 goes neutral.
-- [ ] **A4 — P1 unplug doesn't disturb P2.** Re-plug P2, then unplug **P1**.
+- [x] **A4 — P1 unplug doesn't disturb P2.** Re-plug P2, then unplug **P1**.
   **Expect:** P2 keeps working; P1 goes neutral.
-- [ ] **A5 — Menu still works after a cycle.** After an unplug/re-plug cycle,
+- [x] **A5 — Menu still works after a cycle.** After an unplug/re-plug cycle,
   press **Start+Select** on either pad.
   **Expect:** pause menu opens (proves the handler re-registered).
 
@@ -35,20 +35,20 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 
 ## B. Two controllers (P1 / P2)
 
-- [ ] **B1 — Independent players.** In a 2-player game, confirm each pad drives its
+- [x] **B1 — Independent players.** In a 2-player game, confirm each pad drives its
   own player simultaneously (move both at once).
   **Expect:** no cross-talk, no doubled inputs.
-- [ ] **B2 — Either pad opens the menu.** Press the pause hotkey on **P1**, close,
+- [x] **B2 — Either pad opens the menu.** Press the pause hotkey on **P1**, close,
   then on **P2**.
   **Expect:** both open the pause menu (`MenuButtons()` ORs both pads).
-- [ ] **B3 — One-pad fallback.** Boot with only **one** pad connected.
+- [x] **B3 — One-pad fallback.** Boot with only **one** pad connected.
   **Expect:** P1 works normally; no hang waiting for P2.
 
 ---
 
 ## C. Per-player remapping (Controls screen)
 
-- [ ] **C1 — Open Controls.** Pause → **Settings** → **Controls...** (open with **Start**).
+- [x] **C1 — Open Controls.** Pause → **Settings** → **Controls...** (open with **Start**).
   **Expect:** P1/P2 selector + 8 cycle rows (a,b,x,y,l,r,start,select).
 - [ ] **C2 — Remap P1.** Change one P1 button (e.g. swap A and B), back out, resume.
   **Expect:** in-game, that button now does the remapped action.
@@ -61,12 +61,12 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 
 ## D. Audio settings (volume + mute)
 
-- [ ] **D1 — Volume scales.** Pause → Settings → set **volume** to a low value
+- [x] **D1 — Volume scales.** Pause → Settings → set **volume** to a low value
   (e.g. 20), resume.
   **Expect:** audibly quieter, not just on/off.
-- [ ] **D2 — Volume 100.** Set back to 100.
+- [x] **D2 — Volume 100.** Set back to 100.
   **Expect:** full level returns.
-- [ ] **D3 — Mute = silence (not skip).** Toggle **mute on**.
+- [x] **D3 — Mute = silence (not skip).** Toggle **mute on**.
   **Expect:** complete silence, and the game keeps running at normal speed/pitch
   (mute writes silence at the same rate — no slowdown or pitch change). Unmute → audio returns.
 - [ ] **D4 — Persisted.** Confirm `volume`/`mute` in `SD:/settings.txt` after a change.
@@ -89,11 +89,11 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 
 ## F. Region switch (NTSC / PAL)
 
-- [ ] **F1 — Set PAL.** Pause → Settings → **region** = PAL. Region applies on ROM
+- [x] **F1 — Set PAL.** Pause → Settings → **region** = PAL. Region applies on ROM
   reload, so reload the ROM (browser → relaunch, or power-cycle).
   **Expect:** game runs in PAL (50 Hz — typically slightly slower / different
   border timing on region-sensitive titles).
-- [ ] **F2 — Back to NTSC/auto.** Set region = NTSC (or auto), reload.
+- [x] **F2 — Back to NTSC/auto.** Set region = NTSC (or auto), reload.
   **Expect:** 60 Hz behavior returns.
 - [ ] **F3 — Persisted.** Confirm `region` in `SD:/settings.txt`.
 
@@ -125,7 +125,7 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 ## I. HDMI mode picker — AUTO-REVERT only
 *(apply+confirm already verified — only the safety countdown remains)*
 
-- [ ] **I1 — Auto-revert on no input.** Settings → **Video Mode...** → pick a
+- [x] **I1 — Auto-revert on no input.** Settings → **Video Mode...** → pick a
   *different* mode → it applies and shows the "Keep this mode? A=keep" ~15s
   countdown. **Do nothing** — do not press A.
   **Expect:** after ~15s it reverts to the previous mode on its own (no black
@@ -193,17 +193,17 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 
 ## M. Diagnostics HUD (debug_overlay)
 
-- [ ] **M1 — Toggle.** Pause → Settings → **Debug Overlay** = On, resume.
+- [x] **M1 — Toggle.** Pause → Settings → **Debug Overlay** = On, resume.
   **Expect:** a small text box (top-left) shows FPS, U/O, AQ, ROM, mode/scale.
-- [ ] **M2 — Live values.** FPS reads ~60 on a game that keeps up; the U/O and
+- [x] **M2 — Live values.** FPS reads ~60 on a game that keeps up; the U/O and
   AQ numbers update over time and match the ~5 s `audio underruns/overruns` log.
-- [ ] **M3 — Context correct.** ROM name and `mode  scale` line match the loaded
+- [x] **M3 — Context correct.** ROM name and `mode  scale` line match the loaded
   game and current settings (e.g. `1080p  aspect`).
-- [ ] **M4 — Clean off.** Set Debug Overlay = Off; **Expect:** the HUD disappears
+- [x] **M4 — Clean off.** Set Debug Overlay = Off; **Expect:** the HUD disappears
   with no ghost text left in the letterbox bars or over the game.
-- [ ] **M5 — No regression.** With the HUD on, confirm FPS and the underrun count
+- [x] **M5 — No regression.** With the HUD on, confirm FPS and the underrun count
   do not worsen versus HUD off.
-- [ ] **M6 — Persisted.** Confirm `debug_overlay=on` in `SD:/settings.txt`;
+- [x] **M6 — Persisted.** Confirm `debug_overlay=on` in `SD:/settings.txt`;
   survives reboot (HUD shows from boot).
 
 ---
@@ -261,14 +261,14 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 
 ## Q. Boot splash screen
 
-- [ ] **Q1 — Embedded logo on boot.** Power on. **Expect:** the placeholder logo
+- [x] **Q1 — Embedded logo on boot.** Power on. **Expect:** the placeholder logo
   (three colored bars on a dark field) appears early and stays through the USB/SD
   wait, then the ROM browser replaces it. No corruption or hang.
 - [ ] **Q2 — SD override.** Make `splash.raw` with
   `python3 tools/mksplash.py --placeholder --raw splash.raw` (or from a PNG),
   copy it to the SD root, reboot. **Expect:** after the card mounts, that image
   replaces the embedded logo for the rest of boot.
-- [ ] **Q3 — Bad/absent override is harmless.** Remove or truncate
+- [x] **Q3 — Bad/absent override is harmless.** Remove or truncate
   `SD:/splash.raw`, reboot. **Expect:** the embedded logo shows for the whole
   boot; no hang.
 
@@ -288,7 +288,7 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 
 ## S. Controller calibration (auto-mapping)
 
-- [ ] **S1 — Calibrate a non-8BitDo pad.** Plug a different USB pad as P1 (buttons
+- [x] **S1 — Calibrate a non-8BitDo pad.** Plug a different USB pad as P1 (buttons
   wrong/dead). Settings → **Calibrate Controller...** → press each prompted button.
   **Expect:** after the 8th, "Saved"; in-game all 8 buttons now work correctly.
 - [ ] **S2 — Persisted.** `SD:/controllers.txt` has a `vid:pid=...` line; power-cycle
@@ -303,25 +303,25 @@ Mark each box ✅ pass / ❌ fail (note what you saw).
 
 | Group | Pass | Notes |
 |-------|------|-------|
-| A. Hotplug-removal | | |
-| B. Two controllers | | |
-| C. Remapping | | |
-| D. Audio settings | | |
+| A. Hotplug-removal | ✅ | A1–A5 pass |
+| B. Two controllers | ✅ | B1–B3 pass |
+| C. Remapping | partial | C1 pass; C2–C4 not yet run |
+| D. Audio settings | partial | D1–D3 pass; D4 (persist) not yet run |
 | E. SRAM saves | | |
-| F. Region switch | | |
+| F. Region switch | partial | F1–F2 pass; F3 (persist) not yet run |
 | G. auto_launch_rom | | |
 | H. menu_hotkey | | |
-| I. Mode auto-revert | | |
+| I. Mode auto-revert | partial | I1 pass; I2 (not-persisted) not yet run |
 | J. Analog audio | | |
 | K. Tear-free (vsync) | | |
 | L. Aspect scaling | | |
-| M. Diagnostics HUD | | |
+| M. Diagnostics HUD | ✅ | M1–M6 pass |
 | N. Hotkeys + toasts | | |
 | O. Hotkey remapping | | |
 | P. Audio latency | | |
-| Q. Boot splash | | |
+| Q. Boot splash | partial | Q1, Q3 pass; Q2 (SD override) not yet run |
 | R. Pad type | | |
-| S. Controller calib | | |
+| S. Controller calib | partial | S1 pass; S2–S4 not yet run |
 
 Anything that fails: note the exact symptom and which ROM, and we'll debug it
 systematically (root cause first).
