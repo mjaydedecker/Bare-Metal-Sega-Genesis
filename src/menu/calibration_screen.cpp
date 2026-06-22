@@ -7,14 +7,15 @@
 
 #include "calibration_screen.h"
 #include "../input/joypad_map.h"   // GP_DOWN, GP_LEFT
+#include "../ui/theme.h"
+#include "../ui/screen_chrome.h"
+#include "../ui/fonts/font_ps2p8.h"
+#include "../ui/fonts/font_vt323_22.h"
 #include <circle/timer.h>
-
-static const u16 BOX   = 0x0008;
-static const u16 WHITE = 0xFFFF;
 
 static const char *const NAMES[8] = { "A", "B", "X", "Y", "L", "R", "Start", "Select" };
 
-CalibrationScreen::CalibrationScreen(TextCanvas *pCanvas, Gamepad *pGamepad,
+CalibrationScreen::CalibrationScreen(GlyphCanvas *pCanvas, Gamepad *pGamepad,
                                      CUSBHCIDevice *pUSBHCI, ControllerStore *pStore,
                                      Storage *pStorage)
 :   m_pCanvas(pCanvas), m_pGamepad(pGamepad), m_pUSBHCI(pUSBHCI),
@@ -32,36 +33,42 @@ static void hex4(char *out, unsigned v)
 
 void CalibrationScreen::Prompt(unsigned vid, unsigned pid, int idx)
 {
-    int cw = (int) m_pCanvas->CharW();
-    int ch = (int) m_pCanvas->CharH();
-    m_pCanvas->Clear(0x0000);
-    m_pCanvas->FillRect(cw * 3, ch * 2, cw * 34, ch * 8, BOX);
-    m_pCanvas->DrawText(cw * 4, ch * 3, "CALIBRATE CONTROLLER", WHITE, BOX);
+    using namespace chrome;
+    int W = (int) m_pCanvas->Width();
+    m_pCanvas->Clear(theme::BG);
 
     char vp[12]; char vh[5], ph[5];
     hex4(vh, vid); hex4(ph, pid);
-    int k = 0;
-    for (int j = 0; vh[j]; j++) vp[k++] = vh[j];
-    vp[k++] = ':';
-    for (int j = 0; ph[j]; j++) vp[k++] = ph[j];
-    vp[k] = '\0';
-    m_pCanvas->DrawText(cw * 4, ch * 4, vp, WHITE, BOX);
+    int k = 0; for (int j = 0; vh[j]; j++) vp[k++] = vh[j];
+    vp[k++] = ':'; for (int j = 0; ph[j]; j++) vp[k++] = ph[j]; vp[k] = '\0';
+    header(m_pCanvas, "CALIBRATE", vp, theme::VALUE);
 
     char line[24] = "Press ";
-    int n = 6;
-    for (int j = 0; NAMES[idx][j] && n < 22; j++) line[n++] = NAMES[idx][j];
+    int n = 6; for (int j = 0; NAMES[idx][j] && n < 22; j++) line[n++] = NAMES[idx][j];
     line[n] = '\0';
-    m_pCanvas->DrawText(cw * 4, ch * 6, line, WHITE, BOX);
-    m_pCanvas->DrawText(cw * 4, ch * 8, "Down: skip   Left: cancel", WHITE, BOX);
+    int tw = m_pCanvas->TextWidth(&g_font_ps2p8, 3, line);
+    m_pCanvas->Text(&g_font_ps2p8, 3, W / 2 - tw / 2, 260, line,
+                    theme::WHITE, theme::BG, true);
+
+    footer_divider(m_pCanvas);
+    int H = (int) m_pCanvas->Height();
+    int fy = H - FOOT_H + 4;
+    m_pCanvas->Text(&g_font_ps2p8, 1, PAD, fy + 4, "DOWN: SKIP",
+                    theme::TEXT_DIM, theme::BG, true);
+    m_pCanvas->Text(&g_font_ps2p8, 1, PAD + 260, fy + 4, "LEFT: CANCEL",
+                    theme::TEXT_DIM, theme::BG, true);
+    scanlines(m_pCanvas);
 }
 
 void CalibrationScreen::Message(const char *text)
 {
-    int cw = (int) m_pCanvas->CharW();
-    int ch = (int) m_pCanvas->CharH();
-    m_pCanvas->Clear(0x0000);
-    m_pCanvas->FillRect(cw * 3, ch * 2, cw * 34, ch * 3, BOX);
-    m_pCanvas->DrawText(cw * 4, ch * 3, text, WHITE, BOX);
+    int W = (int) m_pCanvas->Width();
+    int H = (int) m_pCanvas->Height();
+    m_pCanvas->Clear(theme::BG);
+    int tw = m_pCanvas->TextWidth(&g_font_ps2p8, 2, text);
+    m_pCanvas->Text(&g_font_ps2p8, 2, W / 2 - tw / 2, H / 2 - 10, text,
+                    theme::WHITE, theme::BG, true);
+    m_pCanvas->Scanlines(0, 0, W, H, 60);
 }
 
 void CalibrationScreen::Run(void)

@@ -13,16 +13,12 @@
 #include "controls_screen.h"
 #include "video_mode_screen.h"
 #include "calibration_screen.h"
+#include "../ui/theme.h"
+#include "../ui/screen_chrome.h"
 
 #define NUM_ROWS 16
 
-// RGB565 colours (match the pause menu palette).
-static const u16 BOX   = 0x0008;
-static const u16 WHITE = 0xFFFF;
-static const u16 SELFG = 0x0000;
-static const u16 SELBG = 0x07FF;
-
-SettingsScreen::SettingsScreen(TextCanvas *pCanvas, Gamepad *pGamepad,
+SettingsScreen::SettingsScreen(GlyphCanvas *pCanvas, Gamepad *pGamepad,
                                CUSBHCIDevice *pUSBHCI, Settings *pSettings,
                                SettingsStore *pStore, Display *pDisplay,
                                AudioDriver *pAudio, ControlsScreen *pControls,
@@ -51,88 +47,74 @@ void SettingsScreen::Apply(void)
 // Format a 0-100 volume as "< NNN >" into out (>= 8 bytes).
 static void fmt_volume(char *out, unsigned v)
 {
-    char rev[4];
-    int  n = 0;
+    char rev[4]; int n = 0;
     if (v == 0) rev[n++] = '0';
     else while (v) { rev[n++] = (char) ('0' + v % 10); v /= 10; }
-    int i = 0;
-    out[i++] = '<'; out[i++] = ' ';
-    while (n) out[i++] = rev[--n];
-    out[i++] = ' '; out[i++] = '>'; out[i] = '\0';
+    int i = 0; while (n) out[i++] = rev[--n]; out[i] = '\0';
 }
 
 void SettingsScreen::Render(int selected)
 {
-    int cw = (int) m_pCanvas->CharW();
-    int ch = (int) m_pCanvas->CharH();
-    int boxX = cw * 3, boxY = ch * 2;
-    int boxW = cw * 38, boxH = ch * (NUM_ROWS + 5);
-
-    m_pCanvas->Clear(0x0000);   // wipe any larger menu drawn before this one
-    m_pCanvas->FillRect(boxX, boxY, boxW, boxH, BOX);
-    m_pCanvas->DrawText(boxX + cw, boxY + ch, "SETTINGS", WHITE, BOX);
-
+    using namespace chrome;
     char volVal[8];
     fmt_volume(volVal, m_pSettings->volume);
     const char *scaleVal =
-        m_pSettings->scale_mode == ScaleMode::Stretch ? "< Stretch >" :
-        m_pSettings->scale_mode == ScaleMode::Aspect  ? "< Aspect >"  :
-                                                        "< Integer >";
-    const char *wideVal  = m_pSettings->widescreen ? "< On >" : "< Off >";
-    const char *muteVal  = m_pSettings->mute ? "< On >" : "< Off >";
+        m_pSettings->scale_mode == ScaleMode::Stretch ? "Stretch" :
+        m_pSettings->scale_mode == ScaleMode::Aspect  ? "Aspect"  : "Integer";
+    const char *wideVal  = m_pSettings->widescreen ? "On" : "Off";
+    const char *muteVal  = m_pSettings->mute ? "On" : "Off";
     const char *regionVal =
-        m_pSettings->region == Region::NTSC ? "< NTSC >" :
-        m_pSettings->region == Region::PAL  ? "< PAL >"  : "< Auto >";
+        m_pSettings->region == Region::NTSC ? "NTSC" :
+        m_pSettings->region == Region::PAL  ? "PAL"  : "Auto";
     bool autoOn = m_pRomPath != 0 &&
                   strcmp(m_pSettings->auto_launch_rom, m_pRomPath) == 0;
-    const char *autoVal = autoOn ? "< On >" : "< Off >";
+    const char *autoVal = autoOn ? "On" : "Off";
     const char *hotkeyVal =
-        m_pSettings->menu_hotkey == MenuHotkey::StartA ? "< Start+A >" :
-        m_pSettings->menu_hotkey == MenuHotkey::StartB ? "< Start+B >" :
-        m_pSettings->menu_hotkey == MenuHotkey::LR     ? "< L+R >"     :
-                                                         "< Start+Select >";
+        m_pSettings->menu_hotkey == MenuHotkey::StartA ? "Start+A" :
+        m_pSettings->menu_hotkey == MenuHotkey::StartB ? "Start+B" :
+        m_pSettings->menu_hotkey == MenuHotkey::LR     ? "L+R"     : "Start+Select";
     const char *audioVal =
-        m_pSettings->audio_output == AudioOutput::Analog ? "< Analog >"  :
-        m_pSettings->audio_output == AudioOutput::I2S    ? "< I2S DAC >" :
-                                                           "< HDMI >";
-    const char *vsyncVal = m_pSettings->vsync ? "< On >" : "< Off >";
-    const char *dbgVal   = m_pSettings->debug_overlay ? "< On >" : "< Off >";
+        m_pSettings->audio_output == AudioOutput::Analog ? "Analog"  :
+        m_pSettings->audio_output == AudioOutput::I2S    ? "I2S DAC" : "HDMI";
+    const char *vsyncVal = m_pSettings->vsync ? "On" : "Off";
+    const char *dbgVal   = m_pSettings->debug_overlay ? "On" : "Off";
     const char *latVal =
-        m_pSettings->audio_latency == AudioLatency::Low  ? "< Low >"  :
-        m_pSettings->audio_latency == AudioLatency::High ? "< High >" :
-                                                           "< Medium >";
+        m_pSettings->audio_latency == AudioLatency::Low  ? "Low"  :
+        m_pSettings->audio_latency == AudioLatency::High ? "High" : "Medium";
     const char *padVal = m_pSettings->pad_type == PadType::ThreeButton
-                             ? "< 3-button >" : "< 6-button >";
-    const char *labels[NUM_ROWS] = { "Video Scale:", "Widescreen:",
-                                     "Volume:", "Mute:",
-                                     "Region:", "Auto-launch:",
-                                     "Menu Hotkey:", "Audio out:",
-                                     "Vsync:", "Debug Overlay:",
-                                     "Audio Latency:", "Pad Type:",
-                                     "Controls...", "Video Mode...",
-                                     "Hotkeys...", "Calibrate..." };
+                             ? "3-button" : "6-button";
+
+    const char *labels[NUM_ROWS] = { "Video Scale", "Widescreen", "Volume",
+        "Mute", "Region", "Auto-Launch ROM", "Menu Hotkey", "Audio Out",
+        "Vsync", "Debug Overlay", "Audio Latency", "Pad Type",
+        "Controls", "Video Mode", "Hotkeys", "Calibrate Controller" };
     const char *values[NUM_ROWS] = { scaleVal, wideVal, volVal, muteVal,
-                                     regionVal, autoVal, hotkeyVal, audioVal,
-                                     vsyncVal, dbgVal, latVal, padVal,
-                                     "", "", "", "" };
+        regionVal, autoVal, hotkeyVal, audioVal, vsyncVal, dbgVal, latVal,
+        padVal, "", "", "", "" };
+
+    m_pCanvas->Clear(theme::BG);
+    header(m_pCanvas, "SETTINGS", "SD:/settings.txt", theme::VALUE);
 
     for (int i = 0; i < NUM_ROWS; i++)
     {
-        int  ty  = boxY + ch * (i + 3);
         bool sel = (i == selected);
-        u16  fg  = sel ? SELFG : WHITE;
-        u16  bg  = sel ? SELBG : BOX;
-        if (sel) m_pCanvas->FillRect(boxX + cw, ty, boxW - cw * 2, ch, SELBG);
-        m_pCanvas->DrawText(boxX + cw,      ty, sel ? ">" : " ", fg, bg);
-        m_pCanvas->DrawText(boxX + cw * 3,  ty, labels[i],       fg, bg);
-        m_pCanvas->DrawText(boxX + cw * 17, ty, values[i],       fg, bg);
+        if (i < 12) {
+            value_row(m_pCanvas, i, sel, labels[i], values[i], theme::VALUE, true);
+        } else {
+            int y = value_row(m_pCanvas, i, sel, labels[i], "", theme::VALUE, false);
+            int W = (int) m_pCanvas->Width();
+            m_pCanvas->IconTri(W - PAD - 14, y + 5, 12, 0,
+                               sel ? theme::WHITE : theme::TEXT_DIM);   // chevron
+        }
     }
 
-    m_pCanvas->DrawText(boxX + cw, boxY + ch * (NUM_ROWS + 3),
-                        "Widescreen: reset.  Region/Pad: reload.  Audio: reboot.",
-                        WHITE, BOX);
-    m_pCanvas->DrawText(boxX + cw, boxY + ch * (NUM_ROWS + 4),
-                        "Auto-launch boots this game.  B: back", WHITE, BOX);
+    footer_divider(m_pCanvas);
+    int H = (int) m_pCanvas->Height();
+    int fy = H - FOOT_H + 4;
+    int hx = hint_dpad(m_pCanvas, PAD, fy, "NAVIGATE");
+    hx = hint_lr(m_pCanvas, hx, fy, "CHANGE");
+    hint_button(m_pCanvas, hx, fy, 'B', theme::TEXT_DIM, "BACK");
+    scanlines(m_pCanvas);
 }
 
 void SettingsScreen::Run(void)

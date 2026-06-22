@@ -151,8 +151,14 @@ void RomMenu::Render(const MenuState &s)
     m_pCanvas->Text(&g_font_ps2p8, 1, PAD + 24, fy + 4, "NAVIGATE",
                     theme::TEXT_DIM, theme::BG, true);
     int bx = PAD + 24 + m_pCanvas->TextWidth(&g_font_ps2p8, 1, "NAVIGATE") + 30;
-    m_pCanvas->IconButton(bx, fy, 16, 'A', theme::SELECTION, theme::WHITE, &g_font_ps2p8);
-    m_pCanvas->Text(&g_font_ps2p8, 1, bx + 24, fy + 4, "LAUNCH",
+    // "START" launches the highlighted ROM (see Run() below), so render a START
+    // pill rather than a single-letter button.
+    int sw    = m_pCanvas->TextWidth(&g_font_ps2p8, 1, "START");
+    int pillW = sw + 10;
+    m_pCanvas->FillRect(bx, fy, pillW, 16, theme::SELECTION);
+    m_pCanvas->Text(&g_font_ps2p8, 1, bx + 5, fy + 4, "START",
+                    theme::WHITE, theme::SELECTION, true);
+    m_pCanvas->Text(&g_font_ps2p8, 1, bx + pillW + 8, fy + 4, "LAUNCH",
                     theme::TEXT_DIM, theme::BG, true);
 
     // Count, right-aligned: "N ROMS  M FOLDERS".

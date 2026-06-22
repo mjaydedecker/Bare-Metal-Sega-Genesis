@@ -2,19 +2,18 @@
 // src/menu/video_mode_screen.cpp
 //
 // Bare Metal Sega Genesis
-// See video_mode_screen.h.
+// See video_mode_screen.h. Rendered with GlyphCanvas in the v1.0.0 design.
 //
 
 #include "video_mode_screen.h"
 #include "../input/joypad_map.h"   // GP_LEFT/RIGHT/A/B/START
+#include "../ui/theme.h"
+#include "../ui/screen_chrome.h"
+#include "../ui/fonts/font_ps2p8.h"
+#include "../ui/fonts/font_vt323_22.h"
 #include <circle/timer.h>
 
 #define NUM_MODES 4
-
-static const u16 BOX   = 0x0008;
-static const u16 WHITE = 0xFFFF;
-static const u16 SELFG = 0x0000;
-static const u16 SELBG = 0x07FF;
 
 static const char *mode_label(VideoMode m)
 {
@@ -27,7 +26,7 @@ static const char *mode_label(VideoMode m)
     }
 }
 
-VideoModeScreen::VideoModeScreen(TextCanvas *pCanvas, Gamepad *pGamepad,
+VideoModeScreen::VideoModeScreen(GlyphCanvas *pCanvas, Gamepad *pGamepad,
                                  CUSBHCIDevice *pUSBHCI, Settings *pSettings,
                                  SettingsStore *pStore, Display *pDisplay)
 :   m_pCanvas(pCanvas), m_pGamepad(pGamepad), m_pUSBHCI(pUSBHCI),
@@ -37,40 +36,72 @@ VideoModeScreen::VideoModeScreen(TextCanvas *pCanvas, Gamepad *pGamepad,
 
 void VideoModeScreen::Render(VideoMode sel)
 {
-    int cw = (int) m_pCanvas->CharW();
-    int ch = (int) m_pCanvas->CharH();
-    int boxX = cw * 3, boxY = ch * 2, boxW = cw * 34, boxH = ch * 6;
+    using namespace chrome;
+    m_pCanvas->Clear(theme::BG);
+    header(m_pCanvas, "VIDEO MODE", "HDMI OUTPUT", theme::VALUE);
 
-    m_pCanvas->Clear(0x0000);   // wipe any larger menu drawn before this one
-    m_pCanvas->FillRect(boxX, boxY, boxW, boxH, BOX);
-    m_pCanvas->DrawText(boxX + cw, boxY + ch, "VIDEO MODE", WHITE, BOX);
+    const VideoMode modes[NUM_MODES] = { VideoMode::Native, VideoMode::P1080,
+                                         VideoMode::P720, VideoMode::P480 };
+    int x = PAD;
+    int y = LIST_TOP;
+    for (int i = 0; i < NUM_MODES; i++)
+    {
+        const char *lbl = mode_label(modes[i]);
+        int tw = m_pCanvas->TextWidth(&g_font_vt323_22, 1, lbl);
+        int chipW = tw + 28;
+        bool on = (modes[i] == sel);
+        if (on) m_pCanvas->FillRect(x, y, chipW, 30, theme::SELECTION);
+        else    { m_pCanvas->FillRect(x, y, chipW, 1, theme::TEXT_DIM);
+                  m_pCanvas->FillRect(x, y + 29, chipW, 1, theme::TEXT_DIM); }
+        m_pCanvas->Text(&g_font_vt323_22, 1, x + 14, y + 4, lbl,
+                        on ? theme::WHITE : theme::TEXT_MUTED, theme::BG, true);
+        x += chipW + 12;
+    }
 
-    char val[16];
-    int i = 0; val[i++] = '<'; val[i++] = ' ';
-    const char *lbl = mode_label(sel);
-    for (int j = 0; lbl[j] && i < 13; j++) val[i++] = lbl[j];
-    val[i++] = ' '; val[i++] = '>'; val[i] = '\0';
-    m_pCanvas->FillRect(boxX + cw, boxY + ch * 3, boxW - cw * 2, ch, SELBG);
-    m_pCanvas->DrawText(boxX + cw * 2, boxY + ch * 3, val, SELFG, SELBG);
+    m_pCanvas->Text(&g_font_vt323_22, 1, PAD, y + 50,
+                    "Only a confirmed mode is saved; an unsupported signal auto-reverts.",
+                    theme::TEXT_DIM, theme::BG, true);
 
-    m_pCanvas->DrawText(boxX + cw, boxY + ch * 5,
-                        "Start: apply   B: back", WHITE, BOX);
+    footer_divider(m_pCanvas);
+    int H = (int) m_pCanvas->Height();
+    int fy = H - FOOT_H + 4;
+    int hx = hint_lr(m_pCanvas, PAD, fy, "SELECT");
+    hx = hint_start(m_pCanvas, hx, fy, "APPLY");
+    hint_button(m_pCanvas, hx, fy, 'B', theme::TEXT_DIM, "BACK");
+    scanlines(m_pCanvas);
 }
 
 boolean VideoModeScreen::Confirm(void)
 {
-    int cw = (int) m_pCanvas->CharW();
-    int ch = (int) m_pCanvas->CharH();
+    using namespace chrome;
+    int W = (int) m_pCanvas->Width();
+    int H = (int) m_pCanvas->Height();
     unsigned prev = m_pGamepad->MenuButtons();
 
     for (int sec = 15; sec > 0; sec--)
     {
-        m_pCanvas->FillRect(cw * 3, ch * 2, cw * 34, ch * 4, BOX);
-        m_pCanvas->DrawText(cw * 4, ch * 3, "Keep this mode?", WHITE, BOX);
-        char line[40] = "A: keep    Reverting in 00";
-        line[24] = (char) ('0' + (sec / 10));
-        line[25] = (char) ('0' + (sec % 10));
-        m_pCanvas->DrawText(cw * 4, ch * 4, line, WHITE, BOX);
+        int bw = 560, bh = 200;
+        int bx = W / 2 - bw / 2, by = H / 2 - bh / 2;
+        m_pCanvas->FillRect(bx, by, bw, bh, theme::BG);
+        m_pCanvas->FillRect(bx, by, bw, 3, theme::ADJUST);
+        m_pCanvas->Text(&g_font_ps2p8, 2, bx + 24, by + 22, "KEEP THIS MODE?",
+                        theme::ADJUST, theme::BG, true);
+
+        char line[40] = "Reverting in 00";
+        line[13] = (char) ('0' + (sec / 10));
+        line[14] = (char) ('0' + (sec % 10));
+        m_pCanvas->Text(&g_font_vt323_22, 1, bx + 24, by + 70, line,
+                        theme::WHITE, theme::BG, true);
+
+        int hx = hint_button(m_pCanvas, bx + 24, by + 110, 'A', theme::ACTIVE, "KEEP");
+        hint_button(m_pCanvas, hx, by + 110, 'B', theme::TEXT_DIM, "REVERT");
+
+        // progress bar (drains with sec)
+        int barW = bw - 48;
+        m_pCanvas->FillRect(bx + 24, by + 150, barW, 8, theme::TEXT_DIM);
+        m_pCanvas->FillRect(bx + 24, by + 150, barW * sec / 15, 8, theme::ADJUST);
+
+        m_pCanvas->Scanlines(0, 0, W, H, 60);
 
         for (int t = 0; t < 62; t++)   // ~1 s of 16 ms polls
         {
@@ -95,11 +126,13 @@ void VideoModeScreen::Apply(VideoMode want)
 
     if (!m_pDisplay->SetMode(w, h))
     {
-        // Couldn't even allocate the mode; stay on the current one.
-        int cw = (int) m_pCanvas->CharW();
-        int ch = (int) m_pCanvas->CharH();
-        m_pCanvas->FillRect(cw * 3, ch * 2, cw * 34, ch * 3, BOX);
-        m_pCanvas->DrawText(cw * 4, ch * 3, "Mode unavailable.", WHITE, BOX);
+        int W = (int) m_pCanvas->Width();
+        int H = (int) m_pCanvas->Height();
+        int bw = 460, bh = 70, bx = W/2-bw/2, by = H/2-bh/2;
+        m_pCanvas->FillRect(bx, by, bw, bh, theme::BG);
+        m_pCanvas->FillRect(bx, by, bw, 3, theme::SELECTION);
+        m_pCanvas->Text(&g_font_vt323_22, 1, bx + 24, by + 24,
+                        "Mode unavailable.", theme::TEXT, theme::BG, true);
         CTimer::SimpleMsDelay(1200);
         return;
     }

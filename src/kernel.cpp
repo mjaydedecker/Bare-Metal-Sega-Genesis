@@ -9,6 +9,9 @@
 #include "input/hotkey.h"       // decode_hotkey, InGameAction
 #include "audio/audio_util.h"   // classify_queue, AQ_* for metrics
 #include "video/splash.h"       // splash_show_embedded, splash_apply_override
+#include "ui/theme.h"
+#include "ui/fonts/font_ps2p8.h"
+#include "ui/fonts/font_vt323_22.h"
 
 static const char FromKernel[] = "kernel";
 
@@ -52,13 +55,13 @@ CKernel::CKernel (void)
 	m_RomMenu (&m_GlyphCanvas, &m_Gamepad, &m_Storage, &m_USBHCI),
 	m_Settings (),
 	m_SettingsStore (&m_Storage),
-	m_VideoModeScreen (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore, &m_Display),
-	m_ControlsScreen (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore),
-	m_HotkeyScreen (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore),
+	m_VideoModeScreen (&m_GlyphCanvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore, &m_Display),
+	m_ControlsScreen (&m_GlyphCanvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore),
+	m_HotkeyScreen (&m_GlyphCanvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore),
 	m_ControllerStore (),
-	m_CalibrationScreen (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_ControllerStore, &m_Storage),
-	m_SettingsScreen (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore, &m_Display, &m_Audio, &m_ControlsScreen, &m_VideoModeScreen, &m_Overlay, &m_HotkeyScreen, &m_CalibrationScreen),
-	m_PauseMenu (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_SaveState, &m_SettingsScreen),
+	m_CalibrationScreen (&m_GlyphCanvas, &m_Gamepad, &m_USBHCI, &m_ControllerStore, &m_Storage),
+	m_SettingsScreen (&m_GlyphCanvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore, &m_Display, &m_Audio, &m_ControlsScreen, &m_VideoModeScreen, &m_Overlay, &m_HotkeyScreen, &m_CalibrationScreen),
+	m_PauseMenu (&m_GlyphCanvas, &m_Gamepad, &m_USBHCI, &m_SaveState, &m_SettingsScreen),
 	m_pROMBuffer (0),
 	m_nROMSize (0)
 {
@@ -117,7 +120,7 @@ boolean CKernel::Initialize (void)
 		else
 		{
 			// Branded splash up ASAP, masking the USB/SD init that follows.
-			splash_show_embedded (&m_Canvas, &m_Display);
+			splash_show_text (&m_GlyphCanvas, &m_Display);
 		}
 	}
 
@@ -226,10 +229,13 @@ TShutdownMode CKernel::Run (void)
 
 		if (!m_Storage.ReadFile (romPath, &m_pROMBuffer, &m_nROMSize))
 		{
-			m_Canvas.Clear (0x0000);
-			m_Canvas.DrawText (40, 40, "Failed to read ROM.", 0xF800, 0x0000);
-			m_Canvas.DrawText (40, 40 + (int) m_Canvas.CharH (),
-				"Returning to browser...", 0xFFFF, 0x0000);
+			m_GlyphCanvas.Clear (theme::BG);
+			m_GlyphCanvas.Text (&g_font_ps2p8, 2, 40, 40, "FAILED TO READ ROM",
+				0xF800, theme::BG, true);
+			m_GlyphCanvas.Text (&g_font_vt323_22, 1, 40, 80,
+				"Returning to browser...", theme::TEXT, theme::BG, true);
+			m_GlyphCanvas.Scanlines (0, 0, (int) m_GlyphCanvas.Width (),
+				(int) m_GlyphCanvas.Height (), 60);
 			CTimer::SimpleMsDelay (2000);
 			continue;
 		}
@@ -247,10 +253,13 @@ TShutdownMode CKernel::Run (void)
 		{
 			delete[] m_pROMBuffer;
 			m_pROMBuffer = 0;
-			m_Canvas.Clear (0x0000);
-			m_Canvas.DrawText (40, 40, "Failed to load ROM.", 0xF800, 0x0000);
-			m_Canvas.DrawText (40, 40 + (int) m_Canvas.CharH (),
-				"Returning to browser...", 0xFFFF, 0x0000);
+			m_GlyphCanvas.Clear (theme::BG);
+			m_GlyphCanvas.Text (&g_font_ps2p8, 2, 40, 40, "FAILED TO LOAD ROM",
+				0xF800, theme::BG, true);
+			m_GlyphCanvas.Text (&g_font_vt323_22, 1, 40, 80,
+				"Returning to browser...", theme::TEXT, theme::BG, true);
+			m_GlyphCanvas.Scanlines (0, 0, (int) m_GlyphCanvas.Width (),
+				(int) m_GlyphCanvas.Height (), 60);
 			CTimer::SimpleMsDelay (2000);
 			continue;
 		}

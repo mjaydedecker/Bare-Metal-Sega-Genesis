@@ -36,6 +36,18 @@ int main(void) {
     for (unsigned i = 0; i < W * H; i++) if (fb[i] == 0xFFFF) sawLetter = true;
     assert(sawLetter);
 
+    // left triangle: base at right edge, tip at left-middle
+    reset();
+    icon_tri(fb, W, W, H, 0, 0, 8, 1, 0x07E0);
+    assert(fb[4 * W + 7] == 0x07E0);          // right edge mid = base
+    assert(fb[0 * W + 0] == 0x0000);          // top-left empty (tapered)
+
+    // down triangle: base at top, tip at bottom-middle
+    reset();
+    icon_tri(fb, W, W, H, 0, 0, 8, 2, 0x07E0);
+    assert(fb[0 * W + 4] == 0x07E0);          // top-middle = base
+    assert(fb[7 * W + 0] == 0x0000);          // bottom-left empty
+
     printf("test_icons OK\n");
     return 0;
 }

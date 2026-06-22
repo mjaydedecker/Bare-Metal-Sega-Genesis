@@ -9,16 +9,14 @@
 #include "../input/joypad_map.h"          // GP_* for nav
 #include "../input/hotkey.h"              // hotkey_hold_mask, hotkey_conflicts
 #include "../libretro/callbacks.h"        // g_hotkey_hold_mask
+#include "../ui/theme.h"
+#include "../ui/screen_chrome.h"
+#include "../ui/fonts/font_ps2p8.h"
+#include "../ui/fonts/font_vt323_22.h"
 #include <circle/timer.h>
 
 #define NUM_ACT  HK_COUNT                 // 6 actions
 #define NUM_ROWS (HK_COUNT * 2)           // hold + key per action
-
-static const u16 BOX   = 0x0008;
-static const u16 WHITE = 0xFFFF;
-static const u16 RED   = 0xF800;
-static const u16 SELFG = 0x0000;
-static const u16 SELBG = 0x07FF;
 
 static const char *const ACT_LABEL[NUM_ACT] =
     { "Quick-save", "Quick-load", "Vol +", "Vol -", "HUD", "Mute" };
@@ -39,7 +37,7 @@ static const char *phys_label(PadButton p)
     return "?";
 }
 
-HotkeyScreen::HotkeyScreen(TextCanvas *pCanvas, Gamepad *pGamepad,
+HotkeyScreen::HotkeyScreen(GlyphCanvas *pCanvas, Gamepad *pGamepad,
                            CUSBHCIDevice *pUSBHCI, Settings *pSettings,
                            SettingsStore *pStore)
 :   m_pCanvas(pCanvas), m_pGamepad(pGamepad), m_pUSBHCI(pUSBHCI),
@@ -49,54 +47,46 @@ HotkeyScreen::HotkeyScreen(TextCanvas *pCanvas, Gamepad *pGamepad,
 
 void HotkeyScreen::Render(int selected)
 {
-    int cw = (int) m_pCanvas->CharW();
-    int ch = (int) m_pCanvas->CharH();
-    int boxX = cw * 3, boxY = ch * 2;
-    int boxW = cw * 36, boxH = ch * (NUM_ROWS + 4);
-
+    using namespace chrome;
     unsigned conflicts =
         hotkey_conflicts(m_pSettings->hotkeys, m_pSettings->menu_hotkey);
 
-    m_pCanvas->Clear(0x0000);   // wipe any larger menu drawn before this one
-    m_pCanvas->FillRect(boxX, boxY, boxW, boxH, BOX);
-    m_pCanvas->DrawText(boxX + cw, boxY + ch, "HOTKEYS", WHITE, BOX);
+    m_pCanvas->Clear(theme::BG);
+    header(m_pCanvas, "HOTKEYS", "Select + button", theme::VALUE);
 
     for (int i = 0; i < NUM_ROWS; i++)
     {
         int  act   = i / 2;
         bool isKey = (i & 1);
-        int  ty    = boxY + ch * (i + 3);
         bool sel   = (i == selected);
         bool bad   = (conflicts >> act) & 1u;
-        u16  fg    = sel ? SELFG : (bad ? RED : WHITE);
-        u16  bg    = sel ? SELBG : BOX;
-        if (sel) m_pCanvas->FillRect(boxX + cw, ty, boxW - cw * 2, ch, SELBG);
-        m_pCanvas->DrawText(boxX + cw, ty, sel ? ">" : " ", fg, bg);
 
         const HotkeyBinding &b = m_pSettings->hotkeys.b[act];
-        char label[24];
-        int  k = 0;
+        char label[28]; int k = 0;
         const char *a = ACT_LABEL[act];
-        for (int j = 0; a[j] && k < 16; j++) label[k++] = a[j];
+        for (int j = 0; a[j] && k < 18; j++) label[k++] = a[j];
         label[k++] = ' ';
         const char *f = isKey ? "key" : "mod";
-        for (int j = 0; f[j] && k < 22; j++) label[k++] = f[j];
+        for (int j = 0; f[j]; j++) label[k++] = f[j];
         label[k] = '\0';
 
-        char val[12];
-        val[0] = '<'; val[1] = ' ';
-        const char *pl = phys_label(isKey ? b.trigger : b.hold);
-        k = 2;
-        for (int j = 0; pl[j] && k < 9; j++) val[k++] = pl[j];
-        val[k++] = ' '; val[k++] = '>'; val[k] = '\0';
-
-        m_pCanvas->DrawText(boxX + cw * 3,  ty, label, fg, bg);
-        m_pCanvas->DrawText(boxX + cw * 18, ty, val,   fg, bg);
-        if (bad) m_pCanvas->DrawText(boxX + cw * 25, ty, "!", fg, bg);
+        const char *val = phys_label(isKey ? b.trigger : b.hold);
+        int y = value_row(m_pCanvas, i, sel, label, val,
+                          bad ? theme::SELECTION : theme::VALUE, true);
+        if (bad) {
+            int W = (int) m_pCanvas->Width();
+            m_pCanvas->Text(&g_font_ps2p8, 1, W - PAD - 10, y + 4, "!",
+                            theme::SELECTION, theme::BG, true);
+        }
     }
 
-    m_pCanvas->DrawText(boxX + cw, boxY + ch * (NUM_ROWS + 3),
-                        "Left/Right: change   B: back", WHITE, BOX);
+    footer_divider(m_pCanvas);
+    int H = (int) m_pCanvas->Height();
+    int fy = H - FOOT_H + 4;
+    int hx = hint_dpad(m_pCanvas, PAD, fy, "NAVIGATE");
+    hx = hint_lr(m_pCanvas, hx, fy, "CHANGE");
+    hint_button(m_pCanvas, hx, fy, 'B', theme::TEXT_DIM, "BACK");
+    scanlines(m_pCanvas);
 }
 
 void HotkeyScreen::Run(void)
