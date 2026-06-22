@@ -10,7 +10,7 @@
 #define _menu_video_mode_screen_h
 
 #include <circle/usb/usbhcidevice.h>
-#include "../ui/text_canvas.h"
+#include "../ui/glyph_canvas.h"
 #include "../input/gamepad.h"
 #include "../settings/settings.h"
 #include "../settings/settings_store.h"
@@ -19,7 +19,7 @@
 class VideoModeScreen
 {
 public:
-    VideoModeScreen(TextCanvas *pCanvas, Gamepad *pGamepad, CUSBHCIDevice *pUSBHCI,
+    VideoModeScreen(GlyphCanvas *pCanvas, Gamepad *pGamepad, CUSBHCIDevice *pUSBHCI,
                     Settings *pSettings, SettingsStore *pStore, Display *pDisplay);
     void Run(void);   // returns when the user backs out (B)
 
@@ -28,7 +28,7 @@ private:
     void    Apply(VideoMode want);   // SetMode + confirm-or-revert + maybe save
     boolean Confirm(void);           // ~15s countdown; A=keep, B/timeout=revert
 
-    TextCanvas    *m_pCanvas;
+    GlyphCanvas   *m_pCanvas;
     Gamepad       *m_pGamepad;
     CUSBHCIDevice *m_pUSBHCI;
     Settings      *m_pSettings;

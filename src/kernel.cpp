@@ -52,7 +52,7 @@ CKernel::CKernel (void)
 	m_RomMenu (&m_GlyphCanvas, &m_Gamepad, &m_Storage, &m_USBHCI),
 	m_Settings (),
 	m_SettingsStore (&m_Storage),
-	m_VideoModeScreen (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore, &m_Display),
+	m_VideoModeScreen (&m_GlyphCanvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore, &m_Display),
 	m_ControlsScreen (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore),
 	m_HotkeyScreen (&m_Canvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore),
 	m_ControllerStore (),
