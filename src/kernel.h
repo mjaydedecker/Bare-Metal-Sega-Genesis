@@ -28,6 +28,7 @@
 #include "libretro/callbacks.h"
 #include "video/display.h"
 #include "ui/text_canvas.h"
+#include "ui/glyph_canvas.h"
 #include "ui/overlay.h"
 #include "menu/save_state.h"
 #include "menu/sram.h"
@@ -82,6 +83,7 @@ private:
 	SaveState          m_SaveState;  // save/load core state to SD slots
 	Sram               m_Sram;       // battery SRAM persistence
 	TextCanvas         m_Canvas;     // on-screen UI on the game framebuffer
+	GlyphCanvas        m_GlyphCanvas;// redesigned-screen renderer (pilot: ROM browser)
 	Overlay            m_Overlay;    // diagnostics HUD over the game frame
 	RomMenu            m_RomMenu;    // on-screen ROM browser
 	Settings           m_Settings;       // user settings (video, etc.)

@@ -10,7 +10,7 @@
 #define _menu_rom_menu_h
 
 #include <circle/usb/usbhcidevice.h>
-#include "../ui/text_canvas.h"
+#include "../ui/glyph_canvas.h"
 #include "../storage/storage.h"
 #include "../input/gamepad.h"
 #include "menu_state.h"
@@ -20,7 +20,7 @@
 class RomMenu
 {
 public:
-    RomMenu(TextCanvas *pCanvas, Gamepad *pGamepad,
+    RomMenu(GlyphCanvas *pCanvas, Gamepad *pGamepad,
             Storage *pStorage, CUSBHCIDevice *pUSBHCI);
 
     // Browse from SD:/roms. On launch, writes the selected ROM's full path
@@ -32,7 +32,7 @@ private:
     void Scan(void);
     void Render(const MenuState &s);
 
-    TextCanvas    *m_pCanvas;
+    GlyphCanvas   *m_pCanvas;
     Gamepad       *m_pGamepad;
     Storage       *m_pStorage;
     CUSBHCIDevice *m_pUSBHCI;
