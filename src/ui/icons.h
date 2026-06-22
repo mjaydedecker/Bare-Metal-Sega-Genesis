@@ -11,6 +11,9 @@
 
 void icon_play (uint16_t *buf, unsigned pitchPx, int fbw, int fbh,
                 int x, int y, int size, uint16_t color);
+// Filled triangle in a size x size box. dir: 0=right, 1=left, 2=down.
+void icon_tri  (uint16_t *buf, unsigned pitchPx, int fbw, int fbh,
+                int x, int y, int size, int dir, uint16_t color);
 void icon_cross(uint16_t *buf, unsigned pitchPx, int fbw, int fbh,
                 int x, int y, int size, uint16_t color);
 void icon_button(uint16_t *buf, unsigned pitchPx, int fbw, int fbh,

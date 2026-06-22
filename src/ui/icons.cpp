@@ -7,16 +7,29 @@
 #include "icons.h"
 #include "glyph_draw.h"
 
+void icon_tri(uint16_t *buf, unsigned pitchPx, int fbw, int fbh,
+              int x, int y, int size, int dir, uint16_t color) {
+    int mid = size / 2;
+    if (dir == 2) {                       // down: rows widen at top, taper down
+        for (int r = 0; r < size; r++) {
+            int w = size - r;
+            if (w < 1) w = 1;
+            int cx = x + (size - w) / 2;
+            gd_fill_rect(buf, pitchPx, fbw, fbh, cx, y + r, w, 1, color);
+        }
+        return;
+    }
+    for (int r = 0; r < size; r++) {      // right / left: width tapers to a point
+        int dist = (r < mid) ? r : (size - 1 - r);
+        int w = dist; if (w < 1) w = 1;
+        int rx = (dir == 1) ? (x + size - w) : x;   // left -> base at right edge
+        gd_fill_rect(buf, pitchPx, fbw, fbh, rx, y + r, w, 1, color);
+    }
+}
+
 void icon_play(uint16_t *buf, unsigned pitchPx, int fbw, int fbh,
                int x, int y, int size, uint16_t color) {
-    // Right-pointing triangle: width shrinks toward the tip as |row - mid| grows.
-    int mid = size / 2;
-    for (int r = 0; r < size; r++) {
-        int dist = (r < mid) ? r : (size - 1 - r);   // 0 at edges, max at center
-        int w = (dist * size) / size;                // taper width = dist
-        if (w < 1) w = 1;
-        gd_fill_rect(buf, pitchPx, fbw, fbh, x, y + r, w, 1, color);
-    }
+    icon_tri(buf, pitchPx, fbw, fbh, x, y, size, 0, color);
 }
 
 void icon_cross(uint16_t *buf, unsigned pitchPx, int fbw, int fbh,
