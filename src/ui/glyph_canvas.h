@@ -29,6 +29,7 @@ public:
     int  TextWidth(const Font *f, int scale, const char *s) const;
 
     void IconPlay (int x, int y, int size, u16 color);
+    void IconTri  (int x, int y, int size, int dir, u16 color);
     void IconCross(int x, int y, int size, u16 color);
     void IconButton(int x, int y, int d, char letter, u16 fill, u16 fg,
                     const Font *f);

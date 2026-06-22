@@ -52,6 +52,12 @@ void GlyphCanvas::IconPlay(int x, int y, int size, u16 color) {
               x, y, size, color);
 }
 
+void GlyphCanvas::IconTri(int x, int y, int size, int dir, u16 color) {
+    icon_tri(m_pDisplay->Buffer(), m_pDisplay->Pitch() / 2,
+             (int) m_pDisplay->Width(), (int) m_pDisplay->Height(),
+             x, y, size, dir, color);
+}
+
 void GlyphCanvas::IconCross(int x, int y, int size, u16 color) {
     icon_cross(m_pDisplay->Buffer(), m_pDisplay->Pitch() / 2,
                (int) m_pDisplay->Width(), (int) m_pDisplay->Height(),

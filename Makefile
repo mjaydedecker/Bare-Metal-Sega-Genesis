@@ -65,6 +65,7 @@ OBJS = src/main.o \
        src/ui/glyph_draw.o \
        src/ui/icons.o \
        src/ui/glyph_canvas.o \
+       src/ui/screen_chrome.o \
        src/ui/fonts/font_ps2p8.o \
        src/ui/fonts/font_vt323_16.o \
        src/ui/fonts/font_vt323_22.o \
