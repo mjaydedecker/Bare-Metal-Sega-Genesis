@@ -95,13 +95,26 @@ void SettingsScreen::Render(int selected)
     m_pCanvas->Clear(theme::BG);
     header(m_pCanvas, "SETTINGS", "SD:/settings.txt", theme::VALUE);
 
-    for (int i = 0; i < NUM_ROWS; i++)
+    // Window the list so it fits the framebuffer height (at 480p all 16 rows +
+    // footer would overflow ~480 px). Show the rows that fit and scroll the
+    // window so `selected` stays visible; row i draws at on-screen slot i-top.
+    int H = (int) m_pCanvas->Height();
+    int visible = (H - LIST_TOP - FOOT_H - 12) / ROW_H;
+    if (visible < 1)         visible = 1;
+    if (visible > NUM_ROWS)  visible = NUM_ROWS;
+    int top = 0;
+    if (selected >= visible)        top = selected - visible + 1;
+    if (top > NUM_ROWS - visible)   top = NUM_ROWS - visible;
+    if (top < 0)                    top = 0;
+
+    for (int i = top; i < top + visible; i++)
     {
+        int vi   = i - top;             // on-screen slot (0..visible-1)
         bool sel = (i == selected);
         if (i < 12) {
-            value_row(m_pCanvas, i, sel, labels[i], values[i], theme::VALUE, true);
+            value_row(m_pCanvas, vi, sel, labels[i], values[i], theme::VALUE, true);
         } else {
-            int y = value_row(m_pCanvas, i, sel, labels[i], "", theme::VALUE, false);
+            int y = value_row(m_pCanvas, vi, sel, labels[i], "", theme::VALUE, false);
             int W = (int) m_pCanvas->Width();
             m_pCanvas->IconTri(W - PAD - 14, y + 5, 12, 0,
                                sel ? theme::WHITE : theme::TEXT_DIM);   // chevron
@@ -109,7 +122,6 @@ void SettingsScreen::Render(int selected)
     }
 
     footer_divider(m_pCanvas);
-    int H = (int) m_pCanvas->Height();
     int fy = H - FOOT_H + 4;
     int hx = hint_dpad(m_pCanvas, PAD, fy, "NAVIGATE");
     hx = hint_lr(m_pCanvas, hx, fy, "CHANGE");
