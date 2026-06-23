@@ -61,9 +61,11 @@ void splash_show_text(GlyphCanvas *canvas, Display *display)
     canvas->IconButton(W / 2 + sw / 2 - 10, H / 2 + 34, 18, '6',
                        theme::ADJUST, theme::BG, &g_font_ps2p8);
 
-    const char *press = "PRESS START";
-    int pw = canvas->TextWidth(&g_font_ps2p8, 2, press);
-    canvas->Text(&g_font_ps2p8, 2, W / 2 - pw / 2, H - 180, press,
+    // Passive status, not a prompt: the splash auto-dismisses when the ROM
+    // browser renders over it; nothing polls START at this stage.
+    const char *wait = "PLEASE WAIT";
+    int ww = canvas->TextWidth(&g_font_ps2p8, 2, wait);
+    canvas->Text(&g_font_ps2p8, 2, W / 2 - ww / 2, H - 180, wait,
                  theme::WHITE, theme::BG, true);
 
     const char *foot = "RASPBERRY PI . CIRCLE . LIBRETRO / GENESIS PLUS GX";
