@@ -297,7 +297,6 @@ TShutdownMode CKernel::Run (void)
 		unsigned fpsFrames   = 0;
 		u64      fpsWindow   = next;                    // 1 s window start (us)
 		unsigned frame     = 0;
-		unsigned logCtr    = 0;
 		boolean  ledOn     = FALSE;
 		unsigned prevBtns  = 0;
 		unsigned prevP1    = 0;   // player-1 button state for in-game hotkeys
@@ -451,16 +450,10 @@ TShutdownMode CKernel::Run (void)
 				if (ledOn) m_ActLED.On (); else m_ActLED.Off ();
 			}
 
-			if (++logCtr >= 300)   // ~5 s at 60 fps
-			{
-				logCtr = 0;
-				if (audioOK)
-				{
-					m_Logger.Write (FromKernel, LogNotice,
-						"audio underruns=%u overruns=%u",
-						m_Audio.Underruns (), m_Audio.Overruns ());
-				}
-			}
+			// (No periodic on-screen logging here: kernel logs go to the screen
+			// device, which is not vsync-page-aware, so writing mid-game smeared
+			// console text into the letterbox margins. Audio underruns/overruns
+			// are already shown by the diagnostics HUD/overlay.)
 		}
 
 		// --- Unload and return to the browser ---
