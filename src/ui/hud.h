@@ -46,4 +46,10 @@ struct HudCell
 // LAT). Returns the number written.
 unsigned hud_build(const HudStats &s, HudCell cells[], unsigned max);
 
+// Integer render scale for the HUD, derived from the framebuffer height so the
+// HUD stays a roughly constant fraction of the screen across output modes
+// (native/480p/720p -> 1x, 1080p -> 2x, ...). Always >= 1.
+#define HUD_SCALE_BASE 540
+unsigned hud_scale(unsigned fb_height);
+
 #endif

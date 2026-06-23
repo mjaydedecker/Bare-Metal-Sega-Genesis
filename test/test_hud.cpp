@@ -78,6 +78,15 @@ int main(void)
     // Respects max.
     assert(hud_build(s, cells, 3) == 3);
 
+    // hud_scale: integer scale from framebuffer height, always >= 1.
+    assert(hud_scale(240)  == 1);
+    assert(hud_scale(480)  == 1);
+    assert(hud_scale(540)  == 1);
+    assert(hud_scale(720)  == 1);
+    assert(hud_scale(1080) == 2);
+    assert(hud_scale(1440) == 2);
+    assert(hud_scale(0)    == 1);   // guard: never zero
+
     printf("All hud tests passed\n");
     return 0;
 }

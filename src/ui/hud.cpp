@@ -126,3 +126,9 @@ unsigned hud_build(const HudStats &s, HudCell cells[], unsigned max)
 
     return k;
 }
+
+unsigned hud_scale(unsigned fb_height)
+{
+    unsigned s = fb_height / HUD_SCALE_BASE;
+    return s < 1 ? 1 : s;
+}

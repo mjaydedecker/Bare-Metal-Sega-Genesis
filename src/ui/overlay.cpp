@@ -7,14 +7,16 @@
 
 #include "overlay.h"
 #include "theme.h"
-#include "fonts/font_vt323_16.h"
+#include "fonts/font_vt323_22.h"
 
-// Panel/pill geometry (tuned on hardware if needed).
-#define HUD_PAD   8
-#define HUD_LH    18    // line height for VT323-16
-#define HUD_COLW  108   // column width (two columns -> ~216 px panel)
-#define HUD_X     8
-#define HUD_Y     8
+// Geometry is derived from the font + a resolution-based integer scale
+// (hud_scale), so the HUD stays a constant fraction of the screen and reads
+// clearly at 720p/1080p. Base units below are at scale 1.
+static const Font *kHudFont = &g_font_vt323_22;
+#define HUD_MARGIN  8     // panel offset from top-left corner (x scale)
+#define HUD_PAD     8     // inner padding (x scale)
+#define HUD_GAP     4     // extra px between text rows (x scale)
+#define HUD_COLCH   13    // column width in characters (two columns)
 
 // Two-column layout for the 9 cells from hud_build (in fixed order).
 struct Slot { int row; int col; };
@@ -62,24 +64,31 @@ void Overlay::Draw(const HudStats &s)
     HudCell cells[HUD_CELL_MAX];
     unsigned n = hud_build(s, cells, HUD_CELL_MAX);
 
-    const Font *f = &g_font_vt323_16;
-    int panelW = HUD_PAD * 2 + HUD_COLW * 2;
-    int panelH = HUD_PAD * 2 + kRows * HUD_LH;
+    const Font *f  = kHudFont;
+    int sc   = (int) hud_scale(m_pCanvas->Height());
+    int fw   = (int) f->width  * sc;
+    int lh   = ((int) f->height + HUD_GAP) * sc;
+    int pad  = HUD_PAD * sc;
+    int colW = HUD_COLCH * fw;
+    int ox   = HUD_MARGIN * sc;
+    int oy   = HUD_MARGIN * sc;
+    int panelW = pad * 2 + colW * 2;
+    int panelH = pad * 2 + kRows * lh;
 
     // Pseudo-translucent panel via write-only stipple (no framebuffer reads —
     // blend/scanline read-modify-write stalls the Pi's write-combining FB and
     // cost ~8 fps + audio distortion with the HUD on). Full repaint each frame.
-    m_pCanvas->StippleRect(HUD_X, HUD_Y, panelW, panelH, theme::BG);
+    m_pCanvas->StippleRect(ox, oy, panelW, panelH, theme::BG);
 
     for (unsigned i = 0; i < n; i++)
     {
-        int x = HUD_X + HUD_PAD + kLayout[i].col * HUD_COLW;
-        int y = HUD_Y + HUD_PAD + kLayout[i].row * HUD_LH;
+        int x = ox + pad + kLayout[i].col * colW;
+        int y = oy + pad + kLayout[i].row * lh;
         // label (muted) then value (health color), flowing left-to-right.
-        int vx = m_pCanvas->Text(f, 1, x, y, cells[i].label,
+        int vx = m_pCanvas->Text(f, sc, x, y, cells[i].label,
                                  theme::TEXT_MUTED, 0, true);
-        vx += f->width;  // one-char gap
-        m_pCanvas->Text(f, 1, vx, y, cells[i].value,
+        vx += fw;  // one-char gap
+        m_pCanvas->Text(f, sc, vx, y, cells[i].value,
                         health_color(cells[i].health), 0, true);
     }
 }
@@ -99,19 +108,20 @@ void Overlay::DrawToast(void)
     if (m_ToastFrames == 0) return;
     m_ToastFrames--;
 
-    const Font *f = &g_font_vt323_16;
-    int W = (int) m_pCanvas->Width();
-    int H = (int) m_pCanvas->Height();
+    const Font *f = kHudFont;
+    int W  = (int) m_pCanvas->Width();
+    int H  = (int) m_pCanvas->Height();
+    int sc = (int) hud_scale((unsigned) H);
 
-    int padX = 12, padY = 6;
-    int textW = m_pCanvas->TextWidth(f, 1, m_Toast);
+    int padX = 12 * sc, padY = 6 * sc;
+    int textW = m_pCanvas->TextWidth(f, sc, m_Toast);
     int boxW  = textW + 2 * padX;
-    int boxH  = (int) f->height + 2 * padY;
+    int boxH  = (int) f->height * sc + 2 * padY;
     int x = (W - boxW) / 2; if (x < 0) x = 0;
-    int y = H - boxH - 36;  // near bottom (HUD is top-left)
+    int y = H - boxH - 36 * sc;  // near bottom (HUD is top-left)
 
     // Pseudo-translucent pill via write-only stipple (no framebuffer reads).
     m_pCanvas->StippleRect(x, y, boxW, boxH, theme::BG);
-    m_pCanvas->Text(f, 1, x + padX, y + padY, m_Toast,
+    m_pCanvas->Text(f, sc, x + padX, y + padY, m_Toast,
                     toast_color(m_ToastKind), 0, true);
 }
