@@ -15,6 +15,7 @@
 #include "calibration_screen.h"
 #include "../ui/theme.h"
 #include "../ui/screen_chrome.h"
+#include "menu_state.h"
 
 #define NUM_ROWS 16
 
@@ -99,13 +100,9 @@ void SettingsScreen::Render(int selected)
     // footer would overflow ~480 px). Show the rows that fit and scroll the
     // window so `selected` stays visible; row i draws at on-screen slot i-top.
     int H = (int) m_pCanvas->Height();
-    int visible = (H - LIST_TOP - FOOT_H - 12) / ROW_H;
-    if (visible < 1)         visible = 1;
-    if (visible > NUM_ROWS)  visible = NUM_ROWS;
-    int top = 0;
-    if (selected >= visible)        top = selected - visible + 1;
-    if (top > NUM_ROWS - visible)   top = NUM_ROWS - visible;
-    if (top < 0)                    top = 0;
+    ListWindow win = list_window(H - LIST_TOP - FOOT_H - 12, ROW_H,
+                                 NUM_ROWS, selected);
+    int visible = win.visible, top = win.top;
 
     for (int i = top; i < top + visible; i++)
     {

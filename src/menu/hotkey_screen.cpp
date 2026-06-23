@@ -13,6 +13,7 @@
 #include "../ui/screen_chrome.h"
 #include "../ui/fonts/font_ps2p8.h"
 #include "../ui/fonts/font_vt323_22.h"
+#include "menu_state.h"
 #include <circle/timer.h>
 
 #define NUM_ACT  HK_COUNT                 // 6 actions
@@ -54,8 +55,15 @@ void HotkeyScreen::Render(int selected)
     m_pCanvas->Clear(theme::BG);
     header(m_pCanvas, "HOTKEYS", "Select + button", theme::VALUE);
 
-    for (int i = 0; i < NUM_ROWS; i++)
+    // Window the list so it fits short framebuffers (12 rows overflow ~480px
+    // at 480p). Draw the rows that fit, scrolled so `selected` stays visible.
+    int H = (int) m_pCanvas->Height();
+    ListWindow win = list_window(H - LIST_TOP - FOOT_H - 12, ROW_H,
+                                 NUM_ROWS, selected);
+
+    for (int i = win.top; i < win.top + win.visible; i++)
     {
+        int  vi    = i - win.top;     // on-screen slot
         int  act   = i / 2;
         bool isKey = (i & 1);
         bool sel   = (i == selected);
@@ -71,7 +79,7 @@ void HotkeyScreen::Render(int selected)
         label[k] = '\0';
 
         const char *val = phys_label(isKey ? b.trigger : b.hold);
-        int y = value_row(m_pCanvas, i, sel, label, val,
+        int y = value_row(m_pCanvas, vi, sel, label, val,
                           bad ? theme::SELECTION : theme::VALUE, true);
         if (bad) {
             int W = (int) m_pCanvas->Width();
@@ -81,7 +89,6 @@ void HotkeyScreen::Render(int selected)
     }
 
     footer_divider(m_pCanvas);
-    int H = (int) m_pCanvas->Height();
     int fy = H - FOOT_H + 4;
     int hx = hint_dpad(m_pCanvas, PAD, fy, "NAVIGATE");
     hx = hint_lr(m_pCanvas, hx, fy, "CHANGE");

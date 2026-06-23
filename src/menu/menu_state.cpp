@@ -29,6 +29,25 @@ void menu_move(MenuState *s, int delta)
     if (s->top > maxTop) s->top = maxTop;
 }
 
+ListWindow list_window(int avail_h, int row_h, int count, int selected)
+{
+    ListWindow w = { 0, 0 };
+    if (count < 1) return w;
+
+    int visible = (row_h > 0) ? avail_h / row_h : count;
+    if (visible < 1)      visible = 1;
+    if (visible > count)  visible = count;
+
+    int top = 0;
+    if (selected >= visible)        top = selected - visible + 1;
+    if (top > count - visible)      top = count - visible;
+    if (top < 0)                    top = 0;
+
+    w.visible = visible;
+    w.top     = top;
+    return w;
+}
+
 int menu_next_enabled(const bool *enabled, int count, int from, int dir)
 {
     if (count <= 0) return from;

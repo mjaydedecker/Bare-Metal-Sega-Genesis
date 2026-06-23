@@ -25,4 +25,14 @@ void menu_move(MenuState *s, int delta);
 // none at all), returns `from`.
 int menu_next_enabled(const bool *enabled, int count, int from, int dir);
 
+struct ListWindow { int visible; int top; };
+
+// Stateless scroll window for a fixed-length list: given the pixel height
+// available for rows (`avail_h`), the per-row height (`row_h`), the total
+// `count`, and the currently `selected` index, returns how many rows fit
+// (`visible`, clamped to [1,count]) and the first visible row index (`top`,
+// scrolled so `selected` stays on screen). Used by menu screens so long lists
+// don't overflow short framebuffers (e.g. 480p). Returns {0,0} for count < 1.
+ListWindow list_window(int avail_h, int row_h, int count, int selected);
+
 #endif
