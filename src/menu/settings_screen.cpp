@@ -19,6 +19,24 @@
 
 #define NUM_ROWS 16
 
+// Row identities in DISPLAY order (grouped Video / Audio / System / Input).
+// The labels/values arrays and the input handlers key off these names, so the
+// on-screen order can be changed here (and in the arrays) without touching the
+// switch logic. (SRow)i is the identity of the row at display index i.
+enum SRow {
+    SR_VIDEO_SCALE = 0, SR_WIDESCREEN, SR_VSYNC, SR_VIDEO_MODE,   // Video
+    SR_VOLUME, SR_MUTE, SR_AUDIO_OUT, SR_AUDIO_LATENCY,           // Audio
+    SR_REGION, SR_MENU_HOTKEY, SR_AUTO_LAUNCH, SR_DEBUG_OVERLAY,  // System
+    SR_PAD_TYPE, SR_CONTROLS, SR_HOTKEYS, SR_CALIBRATE            // Input
+};
+
+// Rows that open another screen (drawn with a ▸ chevron, opened with START).
+static bool is_subscreen(int row)
+{
+    return row == SR_VIDEO_MODE || row == SR_CONTROLS ||
+           row == SR_HOTKEYS    || row == SR_CALIBRATE;
+}
+
 SettingsScreen::SettingsScreen(GlyphCanvas *pCanvas, Gamepad *pGamepad,
                                CUSBHCIDevice *pUSBHCI, Settings *pSettings,
                                SettingsStore *pStore, Display *pDisplay,
@@ -85,13 +103,17 @@ void SettingsScreen::Render(int selected)
     const char *padVal = m_pSettings->pad_type == PadType::ThreeButton
                              ? "3-button" : "6-button";
 
-    const char *labels[NUM_ROWS] = { "Video Scale", "Widescreen", "Volume",
-        "Mute", "Region", "Auto-Launch ROM", "Menu Hotkey", "Audio Out",
-        "Vsync", "Debug Overlay", "Audio Latency", "Pad Type",
-        "Controls", "Video Mode", "Hotkeys", "Calibrate Controller" };
-    const char *values[NUM_ROWS] = { scaleVal, wideVal, volVal, muteVal,
-        regionVal, autoVal, hotkeyVal, audioVal, vsyncVal, dbgVal, latVal,
-        padVal, "", "", "", "" };
+    // DISPLAY order — must match enum SRow (Video / Audio / System / Input).
+    const char *labels[NUM_ROWS] = {
+        "Video Scale", "Widescreen", "Vsync", "Video Mode",            // Video
+        "Volume", "Mute", "Audio Out", "Audio Latency",                // Audio
+        "Region", "Menu Hotkey", "Auto-Launch ROM", "Debug Overlay",   // System
+        "Pad Type", "Controls", "Hotkeys", "Calibrate Controller" };   // Input
+    const char *values[NUM_ROWS] = {
+        scaleVal, wideVal, vsyncVal, "",
+        volVal, muteVal, audioVal, latVal,
+        regionVal, hotkeyVal, autoVal, dbgVal,
+        padVal, "", "", "" };
 
     m_pCanvas->Clear(theme::BG);
     header(m_pCanvas, "SETTINGS", "SD:/settings.txt", theme::VALUE);
@@ -108,7 +130,7 @@ void SettingsScreen::Render(int selected)
     {
         int vi   = i - top;             // on-screen slot (0..visible-1)
         bool sel = (i == selected);
-        if (i < 12) {
+        if (!is_subscreen(i)) {
             value_row(m_pCanvas, vi, sel, labels[i], values[i], theme::VALUE, true);
         } else {
             int y = value_row(m_pCanvas, vi, sel, labels[i], "", theme::VALUE, false);
@@ -155,19 +177,22 @@ void SettingsScreen::Run(void)
         if (pressed & GP_RIGHT) dir = +1;
         if (dir != 0)
         {
-            switch (selected)
+            switch ((SRow) selected)
             {
-            case 0:   // Video Scale: cycle Integer -> Stretch -> Aspect
+            case SR_VIDEO_SCALE:   // cycle Integer -> Stretch -> Aspect
             {
                 // dir is +1 (Right) or -1 (Left); wrap through the 3 modes.
                 int n = (int) m_pSettings->scale_mode + (dir > 0 ? 1 : 2);
                 m_pSettings->scale_mode = (ScaleMode) (n % 3);
                 break;
             }
-            case 1:   // Widescreen (toggle)
+            case SR_WIDESCREEN:
                 m_pSettings->widescreen = !m_pSettings->widescreen;
                 break;
-            case 2:   // Volume (+/- 10, clamped 0-100)
+            case SR_VSYNC:   // tear-free page flip (live)
+                m_pSettings->vsync = !m_pSettings->vsync;
+                break;
+            case SR_VOLUME:   // +/- 10, clamped 0-100
             {
                 int v = (int) m_pSettings->volume + dir * 10;
                 if (v < 0)   v = 0;
@@ -175,10 +200,26 @@ void SettingsScreen::Run(void)
                 m_pSettings->volume = (unsigned) v;
                 break;
             }
-            case 3:   // Mute (toggle)
+            case SR_MUTE:
                 m_pSettings->mute = !m_pSettings->mute;
                 break;
-            case 4:   // Region (cycle Auto -> NTSC -> PAL)
+            case SR_AUDIO_OUT:   // HDMI -> Analog -> I2S (applies on reboot)
+            {
+                int a = (int) m_pSettings->audio_output + dir;
+                if (a < 0) a = 2;
+                if (a > 2) a = 0;
+                m_pSettings->audio_output = (AudioOutput) a;
+                break;
+            }
+            case SR_AUDIO_LATENCY:   // Low -> Medium -> High (live)
+            {
+                int l = (int) m_pSettings->audio_latency + dir;
+                if (l < (int) AudioLatency::Low)  l = (int) AudioLatency::Low;
+                if (l > (int) AudioLatency::High) l = (int) AudioLatency::High;
+                m_pSettings->audio_latency = (AudioLatency) l;
+                break;
+            }
+            case SR_REGION:   // Auto -> NTSC -> PAL
             {
                 int r = (int) m_pSettings->region + dir;
                 if (r < 0) r = 2;
@@ -186,7 +227,15 @@ void SettingsScreen::Run(void)
                 m_pSettings->region = (Region) r;
                 break;
             }
-            case 5:   // Auto-launch this game (toggle)
+            case SR_MENU_HOTKEY:   // cycle the 4 presets
+            {
+                int h = (int) m_pSettings->menu_hotkey + dir;
+                if (h < 0) h = 3;
+                if (h > 3) h = 0;
+                m_pSettings->menu_hotkey = (MenuHotkey) h;
+                break;
+            }
+            case SR_AUTO_LAUNCH:   // toggle auto-launch this game
             {
                 bool on = m_pRomPath != 0 &&
                           strcmp(m_pSettings->auto_launch_rom, m_pRomPath) == 0;
@@ -203,40 +252,15 @@ void SettingsScreen::Run(void)
                 }
                 break;
             }
-            case 6:   // Menu Hotkey (cycle the 4 presets)
-            {
-                int h = (int) m_pSettings->menu_hotkey + dir;
-                if (h < 0) h = 3;
-                if (h > 3) h = 0;
-                m_pSettings->menu_hotkey = (MenuHotkey) h;
-                break;
-            }
-            case 7:   // Audio out (cycle HDMI -> Analog -> I2S; applies on reboot)
-            {
-                int a = (int) m_pSettings->audio_output + dir;
-                if (a < 0) a = 2;
-                if (a > 2) a = 0;
-                m_pSettings->audio_output = (AudioOutput) a;
-                break;
-            }
-            case 8:   // Vsync (toggle tear-free page flip; live)
-                m_pSettings->vsync = !m_pSettings->vsync;
-                break;
-            case 9:   // Debug Overlay (toggle diagnostics HUD; live)
+            case SR_DEBUG_OVERLAY:   // toggle diagnostics HUD (live)
                 m_pSettings->debug_overlay = !m_pSettings->debug_overlay;
                 break;
-            case 10:  // Audio Latency (cycle Low -> Medium -> High; live)
-            {
-                int l = (int) m_pSettings->audio_latency + dir;
-                if (l < (int) AudioLatency::Low)  l = (int) AudioLatency::Low;
-                if (l > (int) AudioLatency::High) l = (int) AudioLatency::High;
-                m_pSettings->audio_latency = (AudioLatency) l;
-                break;
-            }
-            case 11:  // Pad Type (toggle 3/6-button; applies on ROM reload)
+            case SR_PAD_TYPE:   // toggle 3/6-button (applies on ROM reload)
                 m_pSettings->pad_type =
                     m_pSettings->pad_type == PadType::SixButton
                         ? PadType::ThreeButton : PadType::SixButton;
+                break;
+            default:   // sub-screen rows have no left/right action
                 break;
             }
 
@@ -246,28 +270,17 @@ void SettingsScreen::Run(void)
         }
         if (pressed & GP_START)
         {
-            if (selected == 12)                       // Controls...
+            switch ((SRow) selected)
             {
-                m_pControls->Run();
-                prev = m_pGamepad->MenuButtons();
-                Render(selected);
+            case SR_VIDEO_MODE: m_pVideoMode->Run();   break;
+            case SR_CONTROLS:   m_pControls->Run();    break;
+            case SR_HOTKEYS:    m_pHotkey->Run();       break;
+            case SR_CALIBRATE:  m_pCalibration->Run();  break;
+            default: break;                            // value rows: START is a no-op
             }
-            else if (selected == 13)                  // Video Mode...
+            if (is_subscreen(selected))
             {
-                m_pVideoMode->Run();
-                prev = m_pGamepad->MenuButtons();
-                Render(selected);
-            }
-            else if (selected == 14)                  // Hotkeys...
-            {
-                m_pHotkey->Run();
-                prev = m_pGamepad->MenuButtons();
-                Render(selected);
-            }
-            else if (selected == 15)                  // Calibrate Controller...
-            {
-                m_pCalibration->Run();
-                prev = m_pGamepad->MenuButtons();
+                prev = m_pGamepad->MenuButtons();      // ignore buttons held on return
                 Render(selected);
             }
         }
