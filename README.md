@@ -25,6 +25,7 @@ libretro core to deliver instant-on, low-latency emulation.
 - **Video options** — integer, aspect-correct (4:3), or stretch scaling; selectable HDMI output mode; widescreen; optional tear-free vsync page-flipping.
 - **Audio options** — HDMI, 3.5 mm analog (PWM), or I2S DAC output; master volume, mute, and configurable latency.
 - **Two controllers** — Player 1 + 2 USB gamepads with hotplug, per-port remapping, and per-device auto-calibration.
+- **Real Sega controllers via GPIO** *(experimental)* — original 3- and 6-button DB9 Genesis/Mega Drive pads wired directly to the GPIO header, on both ports, coexisting with USB. Live 3/6-button auto-detection. Decode/sequencing logic is complete and host-tested, but **not yet verified on hardware** (see [Real Sega controllers](#real-sega-controllers-experimental)).
 - **In-game hotkeys & toasts** — quick save/load, volume, HUD toggle, and mute via remappable Select+button combos.
 - **Diagnostics HUD** — optional FPS / underrun / queue / ROM+mode overlay.
 - **Boot splash** — embedded logo shown during init, overridable from SD.
@@ -35,6 +36,8 @@ libretro core to deliver instant-on, low-latency emulation.
 - A **microSD card** (FAT32) for the kernel, ROMs, and saves.
 - HDMI display; USB gamepad(s).
 - Optional: 3.5 mm analog audio or a PCM5102 I2S DAC.
+- Optional *(experimental)*: original Sega DB9 controllers wired to the GPIO
+  header — see [Real Sega controllers](#real-sega-controllers-experimental).
 
 ## Building
 
@@ -93,6 +96,30 @@ Insert the card, connect HDMI and a USB controller, and power on.
 - Hold **Select + a button** for in-game hotkeys (quick save/load, volume, HUD,
   mute) — all remappable from the menus.
 
+## Real Sega controllers (experimental)
+
+Original Sega Genesis / Mega Drive DB9 controllers can be read directly off the
+Raspberry Pi GPIO header — no USB adapter — alongside the USB gamepads. Both
+ports and live 3-/6-button auto-detection are supported.
+
+> **Status:** firmware-complete and host-tested, but **not yet verified on real
+> hardware**. There is no finished adapter board yet; the physical HAT is a
+> separate project. Treat this as wiring-at-your-own-risk until checklist
+> [`docs/hardware-checklist-gpio-controllers.md`](docs/hardware-checklist-gpio-controllers.md)
+> has been run on a Pi 2.
+
+**Electrical contract (important):** a Genesis pad is an *active* device whose
+internal multiplexer drives the data lines to its supply rail. **Power the pad
+from 3.3 V (DB9 pin 5 → the Pi's 3.3 V rail), not 5 V.** At 3.3 V the data lines
+swing 0–3.3 V, which is safe for the Pi's GPIO, so the DB9 lines can be wired
+**directly with no level shifters, dividers, or shift registers**. Powering at
+5 V drives ~5 V into the non-5 V-tolerant GPIO and can damage the SoC.
+
+The exact GPIO pin assignment (per port: SELECT + six data lines) lives in
+[`src/input/sega_board.h`](src/input/sega_board.h) — the single source of truth
+the adapter is built to. Pads are polled once per frame, and a "GPIO P1/P2:
+3-/6-button" toast confirms detection on game load.
+
 ## Project layout
 
 ```
@@ -101,7 +128,7 @@ src/
   libretro/         glue to the Genesis-Plus-GX-Wide core (environment, callbacks)
   video/            framebuffer display, scaling/blit, boot splash
   audio/            audio driver (HDMI / PWM / I2S) and helpers
-  input/            USB gamepad handling, mapping, hotkeys, calibration
+  input/            USB + GPIO (real Sega DB9) gamepad handling, mapping, hotkeys, calibration
   storage/          SD card / FatFS access
   menu/             ROM browser, pause menu, save states, SRAM, settings screens
   settings/         persisted settings model + store
