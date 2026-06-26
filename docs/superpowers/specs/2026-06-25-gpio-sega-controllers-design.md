@@ -47,11 +47,62 @@ needed.
 
 ## Hardware interface
 
-Off-the-shelf DB9-to-GPIO HAT/adapter. The HAT handles 5V↔3.3V level shifting
-(real Genesis pads are 5V logic; the Pi GPIO is 3.3V and **not** 5V-tolerant) and
-shares ground. The firmware is kept agnostic to the exact board via a single
-pin-map abstraction, so a DIY harness could be substituted later by changing one
-constant.
+DB9 jacks wired **directly** to the Pi GPIO header — no level shifters, no
+voltage dividers, and no external shift registers/multiplexers. This is made
+safe by **powering the controller at 3.3V** (DB9 pin 5 → the Pi 3.3V rail)
+rather than 5V:
+
+- A Genesis pad is an *active* device — it contains its own 74HC157-class
+  multiplexer powered from pin 5, and that mux **actively drives** the data
+  lines to its VCC rail. Powered at 3.3V, the outputs swing 0–3.3V, which is
+  in-spec for the Pi's non-5V-tolerant GPIO. (Powered at 5V they'd drive ~5V
+  into the GPIO — the thing to avoid; that's the out-of-spec path some Pico
+  builds get away with only because the RP2040's input clamp diodes survive it.
+  The Pi SoC GPIO is less forgiving and soldered-down — do not replicate it.)
+- No shift registers are added: the Sega protocol is **parallel select** via the
+  single SELECT line (unlike NES/SNES serial 4021 shift registers). The mux is
+  already inside the pad; we just toggle SELECT and read 6 lines.
+- The 74HC157 runs fine at 3.3V VCC, and the Pi's 3.3V SELECT output clears its
+  logic-high threshold (0.7×3.3 ≈ 2.3V) comfortably.
+
+**Electrical contract for the HAT:** DB9 pin 5 = **+3.3V** (NOT 5V), pin 8 = GND,
+data/SELECT lines straight to the assigned GPIOs. Data inputs rely on the SoC
+**internal pull-ups** (`GPIOModeInputPullUp`); the pad pulls a line low when a
+button/direction is active.
+
+The physical board is **out of scope for this project** — it is being spun off as
+a **separate "proper HAT" hardware project** built to the pin assignment and
+electrical contract defined here. This project's firmware is kept agnostic to the
+board via a single `BoardPinMap` constant, so the HAT (or a bring-up jumper
+harness) can change without touching the driver.
+
+## GPIO pin assignment (Pi 2, 40-pin header, BCM numbering)
+
+Each port = 1 SELECT output + 6 data inputs. Data lines `D0..D5` map to DB9 pins
+**1, 2, 3, 4, 6, 9** (Up, Down, Left, Right, TL[B/A], TR[C/Start]); DB9 pin 7 =
+SELECT, pin 5 = +3.3V, pin 8 = GND.
+
+| Signal               | DB9 pin | Port 1 | Port 2 |
+|----------------------|---------|--------|--------|
+| SELECT (output)      | 7       | GPIO4  | GPIO11 |
+| D0 — Up              | 1       | GPIO5  | GPIO12 |
+| D1 — Down            | 2       | GPIO6  | GPIO13 |
+| D2 — Left            | 3       | GPIO7  | GPIO16 |
+| D3 — Right           | 4       | GPIO8  | GPIO17 |
+| D4 — TL (B / A)      | 6       | GPIO9  | GPIO22 |
+| D5 — TR (C / Start)  | 9       | GPIO10 | GPIO23 |
+
+**Reserved / deliberately avoided:**
+- **GPIO18–21** — Circle I2S DAC (PCM_CLK/FS/DIN/DOUT); live `audio_output=i2s`
+  option, must stay clear.
+- **GPIO14/15** — UART (Circle serial init).
+- **GPIO2/3** — I2C, kept free for the deferred I2C-config DAC work.
+- **GPIO0/1** — HAT ID EEPROM (ID_SD/ID_SC), reserved for the separate HAT.
+- **GPIO24/25/26/27** — left spare (status LED, multitap, future use).
+
+This table is the authoritative interface the separate HAT project builds to.
+Individual pin choices within the available set are not load-bearing for the
+firmware (they live in `BoardPinMap`); the *reservations* above are.
 
 ## Protocol
 
@@ -68,12 +119,13 @@ Support 3- and 6-button pads together, with live detection:
 
 ## Milestones
 
-### M0 — HAT pin-map & board abstraction
-Pick/obtain the DB9 HAT and document its GPIO assignment (6 data + 1 SELECT per
-port × 2 ports = 14 lines). Capture it as a single `BoardPinMap` struct/header so
-a DIY harness can swap in later. Confirm the HAT handles level shifting and
-common ground.
-**Deliverable:** documented pin map + `BoardPinMap` constant.
+### M0 — Pin map & board abstraction
+Encode the GPIO pin assignment above (14 lines: 6 data + 1 SELECT per port × 2)
+as a single `BoardPinMap` struct/header — the one place that knows physical pins,
+so the HAT or a bring-up jumper harness can change without touching the driver.
+The physical board itself is **out of scope** (separate HAT project, built to the
+electrical contract + pin table in this spec).
+**Deliverable:** `BoardPinMap` constant matching the pin-assignment table.
 
 ### M1 — Pure protocol decoder (host-tested, TDD)
 New pure module `sega_pad.{h,cpp}` (no Circle deps), mirroring the `joypad_map`
@@ -136,6 +188,8 @@ Add as the next hardware-checklist letter.
 
 ## Out of scope
 
-- DIY discrete-wiring bring-up (the pin-map abstraction leaves the door open).
+- **The physical HAT/PCB** — a separate hardware project built to the pin
+  assignment + electrical contract in this spec. Bench bring-up may use a jumper
+  harness against the same `BoardPinMap`.
 - Multitap / more than two ports.
 - Non-Sega DB9 pads beyond detecting and ignoring the Atari/SMS signature.
