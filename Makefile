@@ -42,6 +42,7 @@ OBJS = src/main.o \
        src/input/controller_map.o \
        src/input/controller_store.o \
        src/input/hotkey.o \
+       src/input/sega_board.o \
        src/storage/storage.o \
        src/menu/rom_filter.o \
        src/menu/menu_state.o \
