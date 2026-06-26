@@ -6,7 +6,7 @@ LIBRETRO_INC = ../libs/genesis-plus-gx-wide/libretro/libretro-common/include
 
 .PHONY: run clean
 
-run: test_blit test_pixel_ops test_glyph_draw test_icons test_theme test_fonts test_rom_layout test_joypad test_rom_filter test_menu_state test_menu_path test_save_path test_settings test_audio_util test_pad_reconcile test_hud test_hotkey test_splash test_controller_map test_sega_board test_sega_pad test_input_merge test_sega_sequence
+run: test_blit test_pixel_ops test_glyph_draw test_icons test_theme test_fonts test_rom_layout test_joypad test_rom_filter test_menu_state test_menu_path test_save_path test_settings test_audio_util test_pad_reconcile test_hud test_hotkey test_splash test_controller_map test_sega_board test_sega_pad test_input_merge test_sega_sequence test_pad_device
 	./test_blit
 	./test_pixel_ops
 	./test_glyph_draw
@@ -30,6 +30,7 @@ run: test_blit test_pixel_ops test_glyph_draw test_icons test_theme test_fonts t
 	./test_sega_pad
 	./test_input_merge
 	./test_sega_sequence
+	./test_pad_device
 
 test_blit: test_blit.cpp ../src/video/blit.cpp ../src/video/blit.h
 	$(CXX) $(CXXFLAGS) -o $@ test_blit.cpp ../src/video/blit.cpp
@@ -100,5 +101,8 @@ test_input_merge: test_input_merge.cpp ../src/input/input_merge.h
 test_sega_sequence: test_sega_sequence.cpp ../src/input/sega_sequence.cpp ../src/input/sega_sequence.h ../src/input/sega_pad.cpp ../src/input/sega_pad.h
 	$(CXX) $(CXXFLAGS) -I$(LIBRETRO_INC) -o $@ test_sega_sequence.cpp ../src/input/sega_sequence.cpp ../src/input/sega_pad.cpp
 
+test_pad_device: test_pad_device.cpp ../src/input/pad_device.cpp ../src/input/pad_device.h ../src/input/sega_pad.h ../src/settings/settings.h
+	$(CXX) $(CXXFLAGS) -I$(LIBRETRO_INC) -o $@ test_pad_device.cpp ../src/input/pad_device.cpp
+
 clean:
-	rm -f test_blit test_pixel_ops test_glyph_draw test_icons test_theme test_fonts test_rom_layout test_joypad test_rom_filter test_menu_state test_menu_path test_save_path test_settings test_audio_util test_pad_reconcile test_hud test_hotkey test_splash test_controller_map test_sega_board test_sega_pad test_input_merge test_sega_sequence
+	rm -f test_blit test_pixel_ops test_glyph_draw test_icons test_theme test_fonts test_rom_layout test_joypad test_rom_filter test_menu_state test_menu_path test_save_path test_settings test_audio_util test_pad_reconcile test_hud test_hotkey test_splash test_controller_map test_sega_board test_sega_pad test_input_merge test_sega_sequence test_pad_device
