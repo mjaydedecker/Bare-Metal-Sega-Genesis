@@ -304,10 +304,9 @@ TShutdownMode CKernel::Run (void)
 		}
 		boolean audioOK = audioInited;
 
-		unsigned padDev = (m_Settings.pad_type == PadType::ThreeButton)
-		                  ? RETRO_DEVICE_MDPAD_3B : RETRO_DEVICE_MDPAD_6B;
-		retro_set_controller_port_device (0, padDev);
-		retro_set_controller_port_device (1, padDev);
+		m_GpioPads.Poll ();   // fresh pad-type read before choosing port devices
+		retro_set_controller_port_device (0, PadDeviceFor (0));
+		retro_set_controller_port_device (1, PadDeviceFor (1));
 
 		m_SaveState.SetGame (romPath);   // save/load target for this game
 		m_Sram.SetGame (romPath);
