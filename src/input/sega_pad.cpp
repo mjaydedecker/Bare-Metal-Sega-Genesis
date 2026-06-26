@@ -41,6 +41,22 @@ SegaDecoded sega_decode(const SegaSample phases[SEGA_PHASES])
     if (pressed(lo.data, D_TL))    out.buttons |= GP_A;     // A
     if (pressed(lo.data, D_TR))    out.buttons |= GP_START; // Start
 
-    out.type = SegaPadType::ThreeButton;   // 6-button upgrade added in Task 3
+    // 6-button signature: the 3rd TH=low read (phase 5) forces U/D/L/R all low.
+    const SegaSample &sig = phases[5];
+    bool six = pressed(sig.data, D_UP) && pressed(sig.data, D_DOWN)
+            && pressed(sig.data, D_LEFT) && pressed(sig.data, D_RIGHT);
+    if (six)
+    {
+        out.type = SegaPadType::SixButton;
+        const SegaSample &ex = phases[6];   // 4th TH=high: Z,Y,X,Mode
+        if (pressed(ex.data, D_UP))    out.buttons |= GP_LB;     // Z
+        if (pressed(ex.data, D_DOWN))  out.buttons |= GP_Y;      // Y
+        if (pressed(ex.data, D_LEFT))  out.buttons |= GP_X;      // X
+        if (pressed(ex.data, D_RIGHT)) out.buttons |= GP_SELECT; // Mode
+    }
+    else
+    {
+        out.type = SegaPadType::ThreeButton;
+    }
     return out;
 }

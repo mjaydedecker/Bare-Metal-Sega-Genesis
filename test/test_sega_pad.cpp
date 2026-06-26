@@ -45,6 +45,24 @@ int main(void)
     press(atari[0], D_TL);    // some activity, but no L/R-forced-low signature
     assert(sega_decode(atari).type == SegaPadType::Unsupported);
 
+    // 6-button pad: phase 5 (3rd TH=low) forces U/D/L/R all low = signature;
+    // phase 6 (4th TH=high) exposes Z,Y,X,Mode on the U/D/L/R lines.
+    SegaSample six[SEGA_PHASES]; idle(six);
+    for (int i = 1; i < SEGA_PHASES; i += 2) { press(six[i], D_LEFT); press(six[i], D_RIGHT); }
+    press(six[5], D_UP); press(six[5], D_DOWN);   // complete the all-low signature
+    SegaDecoded d6 = sega_decode(six);
+    assert(d6.type == SegaPadType::SixButton);
+    assert(d6.buttons == 0);
+
+    // Press X (D_LEFT) and Mode (D_RIGHT) at the extras phase (6).
+    press(six[6], D_LEFT);    // X
+    press(six[6], D_RIGHT);   // Mode
+    d6 = sega_decode(six);
+    assert(d6.type == SegaPadType::SixButton);
+    assert(d6.buttons & GP_X);
+    assert(d6.buttons & GP_SELECT);   // Mode
+    assert(!(d6.buttons & GP_LB));    // Z not pressed
+
     printf("test_sega_pad: OK\n");
     return 0;
 }
