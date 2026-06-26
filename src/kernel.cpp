@@ -7,6 +7,7 @@
 #include "kernel.h"
 #include "input/joypad_map.h"   // GP_START, GP_SELECT bits for the menu hotkey
 #include "input/hotkey.h"       // decode_hotkey, InGameAction
+#include "input/input_merge.h"  // merge_buttons (USB + GPIO coexist)
 #include "audio/audio_util.h"   // classify_queue, AQ_* for metrics
 #include "video/splash.h"       // splash_show_embedded, splash_apply_override
 #include "ui/theme.h"
@@ -14,6 +15,11 @@
 #include "ui/fonts/font_vt323_22.h"
 
 static const char FromKernel[] = "kernel";
+
+// Genesis-Plus-GX controller device subclasses (3- and 6-button MD pad). At file
+// scope so both ROM-load and PadDeviceFor() can choose a per-port device.
+#define RETRO_DEVICE_MDPAD_6B RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_JOYPAD, 1)
+#define RETRO_DEVICE_MDPAD_3B RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_JOYPAD, 0)
 
 // Short label for the active scale mode, for the HUD.
 static const char *scale_name (ScaleMode m)
@@ -146,6 +152,23 @@ boolean CKernel::Initialize (void)
 	return bOK;
 }
 
+unsigned CKernel::MergedMenuButtons (void)
+{
+	return m_Gamepad.MenuButtons ()
+	     | m_GpioPads.Buttons (0)
+	     | m_GpioPads.Buttons (1);
+}
+
+unsigned CKernel::PadDeviceFor (unsigned port)
+{
+	SegaPadType t = m_GpioPads.PadTypeAt (port);
+	if (t == SegaPadType::SixButton)   return RETRO_DEVICE_MDPAD_6B;
+	if (t == SegaPadType::ThreeButton) return RETRO_DEVICE_MDPAD_3B;
+	// No GPIO pad on this port: honor the global setting (USB pads use this).
+	return (m_Settings.pad_type == PadType::ThreeButton)
+	     ? RETRO_DEVICE_MDPAD_3B : RETRO_DEVICE_MDPAD_6B;
+}
+
 TShutdownMode CKernel::Run (void)
 {
 	m_Logger.Write (FromKernel, LogNotice,
@@ -199,8 +222,8 @@ TShutdownMode CKernel::Run (void)
 	g_display = &m_Display;
 	g_gamepad = &m_Gamepad;
 
-	#define RETRO_DEVICE_MDPAD_6B RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_JOYPAD, 1)
-	#define RETRO_DEVICE_MDPAD_3B RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_JOYPAD, 0)
+	m_GpioPads.Init ();          // configure DB9 GPIO pins (per sega_board.h)
+	g_gpio_pads = &m_GpioPads;   // input_state_cb ORs these into the per-port mask
 
 	boolean audioInited = FALSE;
 	boolean firstBoot   = TRUE;
@@ -281,10 +304,27 @@ TShutdownMode CKernel::Run (void)
 		}
 		boolean audioOK = audioInited;
 
-		unsigned padDev = (m_Settings.pad_type == PadType::ThreeButton)
-		                  ? RETRO_DEVICE_MDPAD_3B : RETRO_DEVICE_MDPAD_6B;
-		retro_set_controller_port_device (0, padDev);
-		retro_set_controller_port_device (1, padDev);
+		m_GpioPads.Poll ();   // fresh pad-type read before choosing port devices
+		retro_set_controller_port_device (0, PadDeviceFor (0));
+		retro_set_controller_port_device (1, PadDeviceFor (1));
+
+		// Surface any detected GPIO pad so the user knows it's live.
+		for (unsigned p = 0; p < GpioPads::NUM_PORTS; ++p)
+		{
+			if (!m_GpioPads.IsPresent (p))
+				continue;
+			// "GPIO P0: N-button" — the '0' at index 6 is the port placeholder.
+			const char *kind =
+				(m_GpioPads.PadTypeAt (p) == SegaPadType::SixButton)
+				? "GPIO P0: 6-button" : "GPIO P0: 3-button";
+			char msg[20];
+			unsigned i = 0;
+			for (; kind[i] != '\0' && i < sizeof msg - 1; ++i)
+				msg[i] = kind[i];
+			msg[i] = '\0';
+			msg[6] = (char)('1' + p);   // patch port digit: P0 -> P1 / P2
+			m_Overlay.ShowToast (msg, TOAST_SUCCESS);
+		}
 
 		m_SaveState.SetGame (romPath);   // save/load target for this game
 		m_Sram.SetGame (romPath);
@@ -306,7 +346,8 @@ TShutdownMode CKernel::Run (void)
 		{
 			m_USBHCI.UpdatePlugAndPlay ();
 			m_Gamepad.Poll ();
-			unsigned now     = m_Gamepad.MenuButtons ();
+			m_GpioPads.Poll ();   // one SELECT burst/frame (respects 1.5ms reset)
+			unsigned now     = MergedMenuButtons ();
 			unsigned pressed = now & ~prevBtns;
 			prevBtns = now;
 
@@ -323,7 +364,7 @@ TShutdownMode CKernel::Run (void)
 				{
 					toBrowser = TRUE;
 				}
-				prevBtns = m_Gamepad.MenuButtons ();       // resync after the menu
+				prevBtns = MergedMenuButtons ();           // resync after the menu
 				next     = CTimer::GetClockTicks64 ();    // re-baseline pacing
 				if (toBrowser) break;
 				m_Display.ForceRepaint ();   // wipe the overlay from the letterbox bars
@@ -331,7 +372,8 @@ TShutdownMode CKernel::Run (void)
 			}
 
 			// In-game action hotkeys (player 1: Select + button), read live.
-			unsigned     p1now     = m_Gamepad.Buttons (0);
+			unsigned     p1now     = merge_buttons (m_Gamepad.Buttons (0),
+			                                        m_GpioPads.Buttons (0));
 			unsigned     p1pressed = p1now & ~prevP1;
 			prevP1 = p1now;
 			InGameAction act = decode_hotkey (p1now, p1pressed, m_Settings.hotkeys);
