@@ -8,6 +8,7 @@
 #include "input/joypad_map.h"   // GP_START, GP_SELECT bits for the menu hotkey
 #include "input/hotkey.h"       // decode_hotkey, InGameAction
 #include "input/input_merge.h"  // merge_buttons (USB + GPIO coexist)
+#include "input/pad_device.h"   // pad_use_6button (per-port MD pad type)
 #include "audio/audio_util.h"   // classify_queue, AQ_* for metrics
 #include "video/splash.h"       // splash_show_embedded, splash_apply_override
 #include "ui/theme.h"
@@ -161,12 +162,8 @@ unsigned CKernel::MergedMenuButtons (void)
 
 unsigned CKernel::PadDeviceFor (unsigned port)
 {
-	SegaPadType t = m_GpioPads.PadTypeAt (port);
-	if (t == SegaPadType::SixButton)   return RETRO_DEVICE_MDPAD_6B;
-	if (t == SegaPadType::ThreeButton) return RETRO_DEVICE_MDPAD_3B;
-	// No GPIO pad on this port: honor the global setting (USB pads use this).
-	return (m_Settings.pad_type == PadType::ThreeButton)
-	     ? RETRO_DEVICE_MDPAD_3B : RETRO_DEVICE_MDPAD_6B;
+	return pad_use_6button (m_GpioPads.PadTypeAt (port), m_Settings.pad_type)
+	     ? RETRO_DEVICE_MDPAD_6B : RETRO_DEVICE_MDPAD_3B;
 }
 
 TShutdownMode CKernel::Run (void)
