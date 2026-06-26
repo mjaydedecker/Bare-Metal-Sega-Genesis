@@ -44,6 +44,7 @@ OBJS = src/main.o \
        src/input/hotkey.o \
        src/input/sega_board.o \
        src/input/sega_pad.o \
+       src/input/sega_sequence.o \
        src/input/gpio_pads.o \
        src/storage/storage.o \
        src/menu/rom_filter.o \

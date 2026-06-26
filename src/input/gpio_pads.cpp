@@ -2,12 +2,29 @@
 // src/input/gpio_pads.cpp
 //
 #include "gpio_pads.h"
+#include "sega_sequence.h"
 #include <circle/timer.h>
 
 // Settle time after toggling SELECT before sampling. The pad's HC mux switches
 // in tens of ns; a few µs is generous and keeps a full 8-phase poll well under
 // 100 µs — negligible against the ~16.67 ms frame.
 #define SELECT_SETTLE_US 5
+
+// SegaIo glue: bind the pure sequencer's callbacks to one port's GPIO pins. The
+// sequencing/packing logic itself lives in sega_sequence (host-tested); this is
+// the only hardware-touching part.
+namespace
+{
+    struct PortIo
+    {
+        CGPIOPin *select;
+        CGPIOPin *data;   // 6 contiguous data-line pins
+    };
+
+    void io_set_select(void *c, unsigned lvl) { ((PortIo *) c)->select->Write(lvl); }
+    void io_settle(void *) { CTimer::SimpleusDelay(SELECT_SETTLE_US); }
+    unsigned io_read_pin(void *c, unsigned d) { return ((PortIo *) c)->data[d].Read() & 1u; }
+}
 
 GpioPads::GpioPads(void)
 {
@@ -35,18 +52,9 @@ void GpioPads::Init(void)
 
 void GpioPads::PollPort(unsigned port, SegaSample out[SEGA_PHASES])
 {
-    for (unsigned i = 0; i < SEGA_PHASES; ++i)
-    {
-        unsigned sel = (i & 1) ? 0 : 1;          // hi, lo, hi, lo, ...
-        m_Select[port].Write(sel);
-        CTimer::SimpleusDelay(SELECT_SETTLE_US);
-        u8 data = 0;
-        for (unsigned d = 0; d < 6; ++d)
-            data |= (u8)((m_Data[port][d].Read() & 1u) << d);
-        out[i].sel = (u8) sel;
-        out[i].data = data;
-    }
-    m_Select[port].Write(1);   // leave SELECT idle high (lets the 6-btn counter reset)
+    PortIo ctx = { &m_Select[port], &m_Data[port][0] };
+    SegaIo io  = { io_set_select, io_settle, io_read_pin, &ctx };
+    sega_run_sequence(io, out);
 }
 
 void GpioPads::Poll(void)
