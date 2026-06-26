@@ -308,6 +308,24 @@ TShutdownMode CKernel::Run (void)
 		retro_set_controller_port_device (0, PadDeviceFor (0));
 		retro_set_controller_port_device (1, PadDeviceFor (1));
 
+		// Surface any detected GPIO pad so the user knows it's live.
+		for (unsigned p = 0; p < GpioPads::NUM_PORTS; ++p)
+		{
+			if (!m_GpioPads.IsPresent (p))
+				continue;
+			// "GPIO P0: N-button" — the '0' at index 6 is the port placeholder.
+			const char *kind =
+				(m_GpioPads.PadTypeAt (p) == SegaPadType::SixButton)
+				? "GPIO P0: 6-button" : "GPIO P0: 3-button";
+			char msg[20];
+			unsigned i = 0;
+			for (; kind[i] != '\0' && i < sizeof msg - 1; ++i)
+				msg[i] = kind[i];
+			msg[i] = '\0';
+			msg[6] = (char)('1' + p);   // patch port digit: P0 -> P1 / P2
+			m_Overlay.ShowToast (msg, TOAST_SUCCESS);
+		}
+
 		m_SaveState.SetGame (romPath);   // save/load target for this game
 		m_Sram.SetGame (romPath);
 		m_Sram.Load ();                  // restore battery SRAM if present
