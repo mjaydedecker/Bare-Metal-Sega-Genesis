@@ -41,6 +41,7 @@
 #include "menu/calibration_screen.h"
 #include "menu/pause_menu.h"
 #include "input/gamepad.h"
+#include "input/gpio_pads.h"
 #include "input/controller_store.h"
 #include <libretro.h>
 
@@ -79,6 +80,7 @@ private:
 	AudioDriver        m_Audio;      // HDMI audio output (M6)
 	Display            m_Display;    // HDMI video output (M5)
 	Gamepad            m_Gamepad;    // USB controller input (M7)
+	GpioPads           m_GpioPads;   // real Sega DB9 pads on GPIO (coexist w/ USB)
 	Storage            m_Storage;    // SD card filesystem (ChaN FatFS)
 	SaveState          m_SaveState;  // save/load core state to SD slots
 	Sram               m_Sram;       // battery SRAM persistence
@@ -95,6 +97,14 @@ private:
 	CalibrationScreen  m_CalibrationScreen; // press-each-button calibration
 	SettingsScreen     m_SettingsScreen; // in-emulation Settings screen
 	PauseMenu          m_PauseMenu;  // in-emulation overlay menu
+
+	// Menu-navigation button state OR'd across the USB pad and both GPIO ports,
+	// so either input source can drive the pause menu / hotkeys.
+	unsigned MergedMenuButtons (void);
+
+	// MDPAD device (3B/6B) for a port: from live GPIO detection if a Sega pad is
+	// present, else the global pad_type setting (USB pads).
+	unsigned PadDeviceFor (unsigned port);
 
 	// ROM buffer — allocated by SDCard::ReadFile, passed to core in M4.
 	u8    *m_pROMBuffer;

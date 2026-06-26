@@ -26,6 +26,11 @@ extern AudioDriver *g_audio;
 class Gamepad;
 extern Gamepad *g_gamepad;
 
+// Optional second input source: real Sega DB9 pads on GPIO. input_state_cb ORs
+// these into the per-port mask (coexist with USB). 0 if none. Set by the kernel.
+class GpioPads;
+extern GpioPads *g_gpio_pads;
+
 // Per-port button maps (point into the kernel's Settings). input_state_cb reads
 // them so the core sees the user's remapping.
 struct ButtonMap;
