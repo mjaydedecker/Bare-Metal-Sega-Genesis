@@ -9,6 +9,7 @@
 #include "input/hotkey.h"       // decode_hotkey, InGameAction
 #include "input/input_merge.h"  // merge_buttons (USB + GPIO coexist)
 #include "input/pad_device.h"   // pad_use_6button (per-port MD pad type)
+#include "input/pad_toast.h"    // pad_toast_label (GPIO pad detection toast)
 #include "audio/audio_util.h"   // classify_queue, AQ_* for metrics
 #include "video/splash.h"       // splash_show_embedded, splash_apply_override
 #include "ui/theme.h"
@@ -310,16 +311,8 @@ TShutdownMode CKernel::Run (void)
 		{
 			if (!m_GpioPads.IsPresent (p))
 				continue;
-			// "GPIO P0: N-button" — the '0' at index 6 is the port placeholder.
-			const char *kind =
-				(m_GpioPads.PadTypeAt (p) == SegaPadType::SixButton)
-				? "GPIO P0: 6-button" : "GPIO P0: 3-button";
 			char msg[20];
-			unsigned i = 0;
-			for (; kind[i] != '\0' && i < sizeof msg - 1; ++i)
-				msg[i] = kind[i];
-			msg[i] = '\0';
-			msg[6] = (char)('1' + p);   // patch port digit: P0 -> P1 / P2
+			pad_toast_label (msg, sizeof msg, p, m_GpioPads.PadTypeAt (p));
 			m_Overlay.ShowToast (msg, TOAST_SUCCESS);
 		}
 
