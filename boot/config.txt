@@ -1,0 +1,29 @@
+#
+# config.txt — Bare Metal Sega Genesis (Raspberry Pi 2, 32-bit)
+#
+# Copy this file to the root of the FAT32 SD card alongside kernel7.img and
+# the Raspberry Pi firmware (bootcode.bin, start.elf, fixup.dat).
+#
+# Based on Circle's boot/config32.txt. The Pi firmware loads kernel7.img by
+# default on a Pi 2, so no explicit "kernel=" line is required.
+#
+
+# Boot the kernel in 32-bit (AArch32) mode — this build produces kernel7.img.
+arm_64bit=0
+
+# Hand control to the kernel at the normal clock instead of the brief turbo
+# ramp; the emulator sets the CPU to maximum itself once it is running.
+initial_turbo=0
+
+# Force HDMI output even when no display is detected at boot (handy for TVs /
+# capture devices that report late). Comment out if your display is always on.
+hdmi_force_hotplug=1
+
+# Uncomment to force a specific HDMI mode if your display does not auto-detect.
+# CEA 1080p60:
+#hdmi_group=1
+#hdmi_mode=16
+
+# Disable the rainbow/firmware splash so the kernel's own boot splash shows
+# immediately.
+disable_splash=1
