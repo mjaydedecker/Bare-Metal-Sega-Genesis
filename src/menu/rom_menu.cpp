@@ -12,6 +12,7 @@
 #include "../ui/fonts/font_ps2p8.h"
 #include "../ui/fonts/font_vt323_22.h"
 #include "../input/joypad_map.h"   // GP_UP, GP_DOWN, GP_START
+#include "../input/menu_input.h"   // menu_buttons (USB + GPIO)
 #include <circle/timer.h>
 #include <circle/util.h>           // strcpy, strcmp, strlen
 
@@ -225,12 +226,12 @@ bool RomMenu::Run(char *outPath, unsigned outSize)
     // Start used to pick "Return to Browser" in the pause menu) isn't seen as a
     // fresh press and doesn't instantly open the first directory. Matches every
     // other menu screen.
-    unsigned prev = m_pGamepad->MenuButtons();
+    unsigned prev = menu_buttons(m_pGamepad);
     for (;;)
     {
         m_pUSBHCI->UpdatePlugAndPlay();
         m_pGamepad->Poll();
-        unsigned now = m_pGamepad->MenuButtons();
+        unsigned now = menu_buttons(m_pGamepad);
         unsigned pressed = now & ~prev;
         prev = now;
 

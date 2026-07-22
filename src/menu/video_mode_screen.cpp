@@ -7,6 +7,7 @@
 
 #include "video_mode_screen.h"
 #include "../input/joypad_map.h"   // GP_LEFT/RIGHT/A/B/START
+#include "../input/menu_input.h"   // menu_buttons (USB + GPIO)
 #include "../ui/theme.h"
 #include "../ui/screen_chrome.h"
 #include "../ui/fonts/font_ps2p8.h"
@@ -76,7 +77,7 @@ boolean VideoModeScreen::Confirm(void)
     using namespace chrome;
     int W = (int) m_pCanvas->Width();
     int H = (int) m_pCanvas->Height();
-    unsigned prev = m_pGamepad->MenuButtons();
+    unsigned prev = menu_buttons(m_pGamepad);
 
     for (int sec = 15; sec > 0; sec--)
     {
@@ -107,7 +108,7 @@ boolean VideoModeScreen::Confirm(void)
         {
             m_pUSBHCI->UpdatePlugAndPlay();
             m_pGamepad->Poll();
-            unsigned now     = m_pGamepad->MenuButtons();
+            unsigned now     = menu_buttons(m_pGamepad);
             unsigned pressed = now & ~prev;
             prev = now;
             if (pressed & GP_A) return TRUE;
@@ -153,12 +154,12 @@ void VideoModeScreen::Run(void)
     VideoMode sel = m_pSettings->video_mode;
     Render(sel);
 
-    unsigned prev = m_pGamepad->MenuButtons();
+    unsigned prev = menu_buttons(m_pGamepad);
     for (;;)
     {
         m_pUSBHCI->UpdatePlugAndPlay();
         m_pGamepad->Poll();
-        unsigned now     = m_pGamepad->MenuButtons();
+        unsigned now     = menu_buttons(m_pGamepad);
         unsigned pressed = now & ~prev;
         prev = now;
 
@@ -176,7 +177,7 @@ void VideoModeScreen::Run(void)
         {
             Apply(sel);
             sel = m_pSettings->video_mode;            // reflect what stuck
-            prev = m_pGamepad->MenuButtons();         // resync
+            prev = menu_buttons(m_pGamepad);         // resync
             Render(sel);
         }
 

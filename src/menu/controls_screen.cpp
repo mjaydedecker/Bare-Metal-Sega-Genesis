@@ -7,6 +7,7 @@
 
 #include "controls_screen.h"
 #include "../input/joypad_map.h"   // GP_* via header (GP_UP etc. for nav)
+#include "../input/menu_input.h"   // menu_buttons (USB + GPIO)
 #include "../ui/theme.h"
 #include "../ui/screen_chrome.h"
 #include <circle/timer.h>
@@ -74,12 +75,12 @@ void ControlsScreen::Run(void)
     int selected = 0;
     Render(player, selected);
 
-    unsigned prev = m_pGamepad->MenuButtons();
+    unsigned prev = menu_buttons(m_pGamepad);
     for (;;)
     {
         m_pUSBHCI->UpdatePlugAndPlay();
         m_pGamepad->Poll();
-        unsigned now     = m_pGamepad->MenuButtons();
+        unsigned now     = menu_buttons(m_pGamepad);
         unsigned pressed = now & ~prev;
         prev = now;
 

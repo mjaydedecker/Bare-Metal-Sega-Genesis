@@ -48,6 +48,7 @@ OBJS = src/main.o \
        src/input/pad_device.o \
        src/input/pad_toast.o \
        src/input/gpio_pads.o \
+       src/input/menu_input.o \
        src/storage/storage.o \
        src/menu/rom_filter.o \
        src/menu/menu_state.o \

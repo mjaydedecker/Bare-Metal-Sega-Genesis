@@ -8,6 +8,7 @@
 #include "hotkey_screen.h"
 #include "../input/joypad_map.h"          // GP_* for nav
 #include "../input/hotkey.h"              // hotkey_hold_mask, hotkey_conflicts
+#include "../input/menu_input.h"          // menu_buttons (USB + GPIO)
 #include "../libretro/callbacks.h"        // g_hotkey_hold_mask
 #include "../ui/theme.h"
 #include "../ui/screen_chrome.h"
@@ -101,12 +102,12 @@ void HotkeyScreen::Run(void)
     int selected = 0;
     Render(selected);
 
-    unsigned prev = m_pGamepad->MenuButtons();
+    unsigned prev = menu_buttons(m_pGamepad);
     for (;;)
     {
         m_pUSBHCI->UpdatePlugAndPlay();
         m_pGamepad->Poll();
-        unsigned now     = m_pGamepad->MenuButtons();
+        unsigned now     = menu_buttons(m_pGamepad);
         unsigned pressed = now & ~prev;
         prev = now;
 

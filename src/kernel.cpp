@@ -8,6 +8,7 @@
 #include "input/joypad_map.h"   // GP_START, GP_SELECT bits for the menu hotkey
 #include "input/hotkey.h"       // decode_hotkey, InGameAction
 #include "input/input_merge.h"  // merge_buttons (USB + GPIO coexist)
+#include "input/menu_input.h"   // menu_buttons (USB + GPIO, menu navigation)
 #include "input/pad_device.h"   // pad_use_6button (per-port MD pad type)
 #include "input/pad_toast.h"    // pad_toast_label (GPIO pad detection toast)
 #include "audio/audio_util.h"   // classify_queue, AQ_* for metrics
@@ -156,9 +157,7 @@ boolean CKernel::Initialize (void)
 
 unsigned CKernel::MergedMenuButtons (void)
 {
-	return m_Gamepad.MenuButtons ()
-	     | m_GpioPads.Buttons (0)
-	     | m_GpioPads.Buttons (1);
+	return menu_buttons (&m_Gamepad);
 }
 
 unsigned CKernel::PadDeviceFor (unsigned port)

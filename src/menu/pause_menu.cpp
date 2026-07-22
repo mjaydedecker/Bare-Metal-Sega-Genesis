@@ -10,6 +10,7 @@
 #include "settings_screen.h"
 #include "menu_state.h"             // menu_next_enabled
 #include "../input/joypad_map.h"    // GP_UP, GP_DOWN, GP_START, GP_B
+#include "../input/menu_input.h"    // menu_buttons (USB + GPIO)
 #include "../ui/theme.h"
 #include "../ui/screen_chrome.h"
 #include "../ui/fonts/font_ps2p8.h"
@@ -103,7 +104,7 @@ int PauseMenu::PickSlot(bool forLoad)
     }
 
     bool     redraw = true;
-    unsigned prev   = m_pGamepad->MenuButtons();
+    unsigned prev   = menu_buttons(m_pGamepad);
     for (;;)
     {
         if (redraw)
@@ -156,7 +157,7 @@ int PauseMenu::PickSlot(bool forLoad)
 
         m_pUSBHCI->UpdatePlugAndPlay();
         m_pGamepad->Poll();
-        unsigned now     = m_pGamepad->MenuButtons();
+        unsigned now     = menu_buttons(m_pGamepad);
         unsigned pressed = now & ~prev;
         prev = now;
 
@@ -188,12 +189,12 @@ MenuAction PauseMenu::Run(void)
     int selected = 0;
     Render(selected);
 
-    unsigned prev = m_pGamepad->MenuButtons();
+    unsigned prev = menu_buttons(m_pGamepad);
     for (;;)
     {
         m_pUSBHCI->UpdatePlugAndPlay();
         m_pGamepad->Poll();
-        unsigned now     = m_pGamepad->MenuButtons();
+        unsigned now     = menu_buttons(m_pGamepad);
         unsigned pressed = now & ~prev;
         prev = now;
 
@@ -224,7 +225,7 @@ MenuAction PauseMenu::Run(void)
                     Message(ok ? msg : "Save failed.");
                 }
                 Render(selected);
-                prev = m_pGamepad->MenuButtons();
+                prev = menu_buttons(m_pGamepad);
                 break;
             }
 
@@ -236,7 +237,7 @@ MenuAction PauseMenu::Run(void)
                     Message("Load failed.");
                 }
                 Render(selected);
-                prev = m_pGamepad->MenuButtons();
+                prev = menu_buttons(m_pGamepad);
                 break;
             }
 
@@ -246,7 +247,7 @@ MenuAction PauseMenu::Run(void)
             case 4:                       // Settings
                 m_pSettingsScreen->Run();
                 Render(selected);
-                prev = m_pGamepad->MenuButtons();
+                prev = menu_buttons(m_pGamepad);
                 break;
 
             case 5:                       // Return to ROM Browser

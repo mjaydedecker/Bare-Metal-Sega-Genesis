@@ -7,6 +7,7 @@
 
 #include "settings_screen.h"
 #include "../input/joypad_map.h"          // GP_UP, GP_DOWN, GP_LEFT, GP_RIGHT, GP_B
+#include "../input/menu_input.h"          // menu_buttons (USB + GPIO)
 #include "../libretro/environment.h"      // g_widescreen, g_variables_dirty
 #include <circle/timer.h>
 #include <string.h>   // strcmp, strncpy for the auto-launch row
@@ -153,12 +154,12 @@ void SettingsScreen::Run(void)
     int selected = 0;
     Render(selected);
 
-    unsigned prev = m_pGamepad->MenuButtons();
+    unsigned prev = menu_buttons(m_pGamepad);
     for (;;)
     {
         m_pUSBHCI->UpdatePlugAndPlay();
         m_pGamepad->Poll();
-        unsigned now     = m_pGamepad->MenuButtons();
+        unsigned now     = menu_buttons(m_pGamepad);
         unsigned pressed = now & ~prev;
         prev = now;
 
@@ -280,7 +281,7 @@ void SettingsScreen::Run(void)
             }
             if (is_subscreen(selected))
             {
-                prev = m_pGamepad->MenuButtons();      // ignore buttons held on return
+                prev = menu_buttons(m_pGamepad);      // ignore buttons held on return
                 Render(selected);
             }
         }
