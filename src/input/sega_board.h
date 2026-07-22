@@ -23,11 +23,20 @@ struct BoardPinMap
 };
 
 // Reserved (do not use): 18-21 (I2S), 14/15 (UART), 2/3 (I2C), 0/1 (HAT EEPROM).
+// Spare (available, not currently used): 8, 9, 11, 25.
+//
+// Chosen so each port's 7 signals sit on physically adjacent GPIO header
+// columns, grouped toward the side of the header nearest that port's DB9
+// connector on the HAT (Port 1 -> lower-numbered columns, Port 2 ->
+// higher-numbered columns) -- this lets the HAT's PCB route both ports
+// with zero same-layer trace crossings, instead of fighting an interleaved
+// assignment with clever routing. See the HAT repo's
+// docs/reviews/2026-07-22-pinmap-reassignment.md for the full analysis.
 static const BoardPinMap kBoardPinMap =
 {
     {
-        {  4, {  5,  6,  7,  8,  9, 10 } },   // Port 1 (Player 1)
-        { 11, { 12, 13, 16, 17, 22, 23 } },   // Port 2 (Player 2)
+        { 22, { 10, 23, 27, 17, 24,  4 } },   // Port 1 (Player 1)
+        { 12, { 26, 13,  6,  5, 16,  7 } },   // Port 2 (Player 2)
     }
 };
 

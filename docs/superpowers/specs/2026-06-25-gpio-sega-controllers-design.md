@@ -82,15 +82,28 @@ Each port = 1 SELECT output + 6 data inputs. Data lines `D0..D5` map to DB9 pins
 **1, 2, 3, 4, 6, 9** (Up, Down, Left, Right, TL[B/A], TR[C/Start]); DB9 pin 7 =
 SELECT, pin 5 = +3.3V, pin 8 = GND.
 
+**Updated 2026-07-22:** the pin assignment below was reassigned from the
+original table (Port 1 = GPIO4/5/6/7/8/9/10, Port 2 =
+GPIO11/12/13/16/17/22/23) after the separate HAT project's PCB routing hit
+persistent trace-crossing/short violations. Root cause: the original
+assignment interleaved each port's 7 signals across non-adjacent GPIO
+header columns instead of grouping them near the side of the header
+closest to that port's DB9 connector on the HAT. The table below groups
+each port's signals onto physically adjacent header columns, which lets
+the HAT route both ports with zero same-layer crossings. See the HAT
+repo's `docs/reviews/2026-07-22-pinmap-reassignment.md` for the full
+analysis. The reservations list is unchanged; only which *available*
+pins are used, and by which port, changed.
+
 | Signal               | DB9 pin | Port 1 | Port 2 |
 |----------------------|---------|--------|--------|
-| SELECT (output)      | 7       | GPIO4  | GPIO11 |
-| D0 — Up              | 1       | GPIO5  | GPIO12 |
-| D1 — Down            | 2       | GPIO6  | GPIO13 |
-| D2 — Left            | 3       | GPIO7  | GPIO16 |
-| D3 — Right           | 4       | GPIO8  | GPIO17 |
-| D4 — TL (B / A)      | 6       | GPIO9  | GPIO22 |
-| D5 — TR (C / Start)  | 9       | GPIO10 | GPIO23 |
+| SELECT (output)      | 7       | GPIO22 | GPIO12 |
+| D0 — Up              | 1       | GPIO10 | GPIO26 |
+| D1 — Down            | 2       | GPIO23 | GPIO13 |
+| D2 — Left            | 3       | GPIO27 | GPIO6  |
+| D3 — Right           | 4       | GPIO17 | GPIO5  |
+| D4 — TL (B / A)      | 6       | GPIO24 | GPIO16 |
+| D5 — TR (C / Start)  | 9       | GPIO4  | GPIO7  |
 
 **Reserved / deliberately avoided:**
 - **GPIO18–21** — Circle I2S DAC (PCM_CLK/FS/DIN/DOUT); live `audio_output=i2s`
@@ -98,7 +111,7 @@ SELECT, pin 5 = +3.3V, pin 8 = GND.
 - **GPIO14/15** — UART (Circle serial init).
 - **GPIO2/3** — I2C, kept free for the deferred I2C-config DAC work.
 - **GPIO0/1** — HAT ID EEPROM (ID_SD/ID_SC), reserved for the separate HAT.
-- **GPIO24/25/26/27** — left spare (status LED, multitap, future use).
+- **GPIO8/9/11/25** — left spare (status LED, multitap, future use).
 
 This table is the authoritative interface the separate HAT project builds to.
 Individual pin choices within the available set are not load-bearing for the
