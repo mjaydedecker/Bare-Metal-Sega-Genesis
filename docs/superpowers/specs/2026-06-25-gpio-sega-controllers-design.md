@@ -88,22 +88,29 @@ GPIO11/12/13/16/17/22/23) after the separate HAT project's PCB routing hit
 persistent trace-crossing/short violations. Root cause: the original
 assignment interleaved each port's 7 signals across non-adjacent GPIO
 header columns instead of grouping them near the side of the header
-closest to that port's DB9 connector on the HAT. The table below groups
-each port's signals onto physically adjacent header columns, which lets
-the HAT route both ports with zero same-layer crossings. See the HAT
-repo's `docs/reviews/2026-07-22-pinmap-reassignment.md` for the full
-analysis. The reservations list is unchanged; only which *available*
-pins are used, and by which port, changed.
+closest to that port's DB9 connector on the HAT.
+
+**Updated again 2026-07-22 (same day):** the HAT's DB9 connectors were
+corrected from female sockets to male pins (Genesis controllers have
+female cable ends, not male, so the HAT needs male ports to mate with
+them) — this mirrors the connector's physical pin order left-to-right, so
+the table above (matched to the old, incorrect female pin order) had to be
+re-derived to match the male one's actual left-to-right pin order. Each
+port's signals still sit on physically adjacent header columns, now in the
+exact order those 7 signals appear on the connector's own pins. GPIO12/23
+moved to spare; GPIO9/11 moved out of spare. See the HAT repo's
+`docs/reviews/2026-07-22-pinmap-reassignment.md` for the full analysis of
+both reassignments.
 
 | Signal               | DB9 pin | Port 1 | Port 2 |
 |----------------------|---------|--------|--------|
-| SELECT (output)      | 7       | GPIO22 | GPIO12 |
-| D0 — Up              | 1       | GPIO10 | GPIO26 |
-| D1 — Down            | 2       | GPIO23 | GPIO13 |
-| D2 — Left            | 3       | GPIO27 | GPIO6  |
-| D3 — Right           | 4       | GPIO17 | GPIO5  |
-| D4 — TL (B / A)      | 6       | GPIO24 | GPIO16 |
-| D5 — TR (C / Start)  | 9       | GPIO4  | GPIO7  |
+| SELECT (output)      | 7       | GPIO22 | GPIO6  |
+| D0 — Up              | 1       | GPIO4  | GPIO11 |
+| D1 — Down            | 2       | GPIO27 | GPIO5  |
+| D2 — Left            | 3       | GPIO24 | GPIO13 |
+| D3 — Right           | 4       | GPIO10 | GPIO16 |
+| D4 — TL (B / A)      | 6       | GPIO17 | GPIO7  |
+| D5 — TR (C / Start)  | 9       | GPIO9  | GPIO26 |
 
 **Reserved / deliberately avoided:**
 - **GPIO18–21** — Circle I2S DAC (PCM_CLK/FS/DIN/DOUT); live `audio_output=i2s`
@@ -111,7 +118,7 @@ pins are used, and by which port, changed.
 - **GPIO14/15** — UART (Circle serial init).
 - **GPIO2/3** — I2C, kept free for the deferred I2C-config DAC work.
 - **GPIO0/1** — HAT ID EEPROM (ID_SD/ID_SC), reserved for the separate HAT.
-- **GPIO8/9/11/25** — left spare (status LED, multitap, future use).
+- **GPIO8/12/23/25** — left spare (status LED, multitap, future use).
 
 This table is the authoritative interface the separate HAT project builds to.
 Individual pin choices within the available set are not load-bearing for the

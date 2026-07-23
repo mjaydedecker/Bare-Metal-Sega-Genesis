@@ -7,11 +7,11 @@ int main(void)
     // The shipped pin map has no pin assigned twice.
     assert(pinmap_unique(kBoardPinMap));
 
-    // Sanity: the documented assignment (P1 select=22, P2 select=12).
+    // Sanity: the documented assignment (P1 select=22, P2 select=6).
     assert(kBoardPinMap.port[0].select == 22);
-    assert(kBoardPinMap.port[1].select == 12);
-    assert(kBoardPinMap.port[0].data[0] == 10);
-    assert(kBoardPinMap.port[1].data[5] == 7);
+    assert(kBoardPinMap.port[1].select == 6);
+    assert(kBoardPinMap.port[0].data[0] == 4);
+    assert(kBoardPinMap.port[1].data[5] == 26);
 
     // A map with a duplicated pin is rejected.
     BoardPinMap bad = kBoardPinMap;
