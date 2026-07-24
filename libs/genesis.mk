@@ -16,6 +16,9 @@ PREFIX   ?= arm-linux-gnueabihf-
 CC        = $(PREFIX)gcc
 AR        = $(PREFIX)ar
 
+AARCH    ?= 32
+RASPPI   ?= 2
+
 GENESIS  = libs/genesis-plus-gx-wide
 COMM     = $(GENESIS)/libretro/libretro-common
 BDIR     = build/genesis
@@ -47,10 +50,31 @@ INCFLAGS += -I$(GENESIS)/libretro
 INCFLAGS += -I$(COMM)/include
 
 # ---------------------------------------------------------------------------
-# Compile flags — Cortex-A7 hard-float, same ABI as Circle
+# Per-board CPU flags — mirrors Circle's Rules.mk ARCHCPU cases for AArch32
+# (see libs/circle/Rules.mk) so this core always matches the -mcpu/-mfpu
+# Circle itself uses for that board. RASPPI=5 (Pi 5) has no AArch32 target
+# in Circle at all — it's AArch64-only — and AArch64 needs its own CFLAGS
+# rework here (drops -marm/-mfpu/-mfloat-abi). Both unsupported for now.
+# ---------------------------------------------------------------------------
+ifneq ($(strip $(AARCH)),32)
+$(error libs/genesis.mk only supports AARCH=32 currently (got AARCH=$(AARCH)))
+endif
+
+ifeq ($(strip $(RASPPI)),2)
+ARCHCPU = -mcpu=cortex-a7 -marm -mfpu=neon-vfpv4 -mfloat-abi=hard
+else ifeq ($(strip $(RASPPI)),3)
+ARCHCPU = -mcpu=cortex-a53 -marm -mfpu=neon-fp-armv8 -mfloat-abi=hard
+else ifeq ($(strip $(RASPPI)),4)
+ARCHCPU = -mcpu=cortex-a72 -marm -mfpu=neon-fp-armv8 -mfloat-abi=hard
+else
+$(error libs/genesis.mk only supports RASPPI=2, 3 or 4 currently (got RASPPI=$(RASPPI)))
+endif
+
+# ---------------------------------------------------------------------------
+# Compile flags — same ABI as Circle for the selected board
 # ---------------------------------------------------------------------------
 CFLAGS = \
-    -mcpu=cortex-a7 -marm -mfpu=neon-vfpv4 -mfloat-abi=hard \
+    $(ARCHCPU) \
     -O2 -std=gnu99 -fsigned-char \
     -U_FORTIFY_SOURCE \
     "-DINLINE=static __inline__" \
