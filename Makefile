@@ -6,10 +6,15 @@
 
 CIRCLEHOME = libs/circle
 
-# Target: Raspberry Pi 2, AArch32
-# Produces: kernel7.img
-AARCH   = 32
-RASPPI  = 2
+# Target board — override on the command line, e.g. `make RASPPI=3`.
+# Default: Raspberry Pi 2, AArch32, producing kernel7.img.
+# Supported: RASPPI=2 (kernel7.img), RASPPI=3 (kernel8-32.img),
+# RASPPI=4 (kernel7l.img). AARCH=64 / RASPPI=5 (Pi 5) not yet supported.
+# Switching RASPPI requires `make clean-all` first (see below) — a plain
+# `make clean` does not remove Circle's own per-library build artifacts,
+# which aren't rebuilt automatically when the target board changes.
+AARCH   ?= 32
+RASPPI  ?= 2
 
 # Override Circle's default (arm-none-eabi-) to use the
 # arm-linux-gnueabihf toolchain available via apt on Ubuntu/Debian.
@@ -136,7 +141,7 @@ $(CIRCLEHOME)/Config.mk:
 CIRCLE_MAKE = $(MAKE) -C $(@D) AARCH=$(AARCH) RASPPI=$(RASPPI) PREFIX=$(PREFIX)
 
 libs/libgenesis.a:
-	$(MAKE) -f libs/genesis.mk PREFIX=$(PREFIX)
+	$(MAKE) -f libs/genesis.mk PREFIX=$(PREFIX) AARCH=$(AARCH) RASPPI=$(RASPPI)
 
 $(CIRCLEHOME)/lib/libcircle.a: $(CIRCLEHOME)/Config.mk
 	$(CIRCLE_MAKE)
@@ -160,5 +165,20 @@ $(CIRCLEHOME)/addon/fatfs/libfatfs.a: $(CIRCLEHOME)/Config.mk
 # storage) — required even though we no longer use the built-in CFATFileSystem.
 $(CIRCLEHOME)/lib/fs/libfs.a: $(CIRCLEHOME)/Config.mk
 	$(CIRCLE_MAKE)
+
+# `make clean` (from Circle's Rules.mk) only removes objects in this
+# directory plus EXTRACLEAN — it does not touch Circle's own per-library
+# build artifacts under $(CIRCLEHOME)/lib/*, $(CIRCLEHOME)/addon/*. Those
+# aren't rebuilt when RASPPI/AARCH change (Make has no flag-based
+# dependency tracking), so switching boards with a plain `make clean`
+# silently relinks stale-arch objects into the new image. `clean-all`
+# clears everything, including Circle's generated build artifacts
+# (git-clean is safe here: Circle is a submodule and its build output is
+# entirely untracked).
+.PHONY: clean-all
+clean-all:
+	rm -rf build/genesis
+	$(MAKE) clean
+	git -C $(CIRCLEHOME) clean -fdx
 
 -include $(DEPS)
