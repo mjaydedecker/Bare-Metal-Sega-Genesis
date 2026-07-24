@@ -32,7 +32,11 @@ libretro core to deliver instant-on, low-latency emulation.
 
 ## Hardware requirements
 
-- **Raspberry Pi 2** (Model B, ARMv7 / `kernel7.img`).
+- **Raspberry Pi 2** (Model B, ARMv7 / `kernel7.img`) by default. Pi 3
+  (`kernel8-32.img`) and Pi 4 (`kernel7l.img`) are also supported in
+  32-bit mode — see [Building](#building) — but have not yet been
+  verified on physical hardware. Pi 5 is not yet supported (it has no
+  32-bit target; it needs a separate 64-bit build).
 - A **microSD card** (FAT32) for the kernel, ROMs, and saves.
 - HDMI display; USB gamepad(s).
 - Optional: 3.5 mm analog audio or a PCM5102 I2S DAC.
@@ -68,8 +72,25 @@ make
 ```
 
 This builds the Circle sub-libraries, the Genesis core (`libgenesis.a`), and
-links everything into **`kernel7.img`**. The Makefile is already configured for
+links everything into **`kernel7.img`**. The Makefile defaults to
 `RASPPI=2`, `AARCH=32`, and the `arm-linux-gnueabihf-` prefix.
+
+To target a Raspberry Pi 3 or 4 instead (both still 32-bit; Pi 5 is not yet
+supported), override `RASPPI` on the command line:
+
+```sh
+make RASPPI=3   # Pi 3 -> kernel8-32.img
+make RASPPI=4   # Pi 4 -> kernel7l.img
+```
+
+Switching boards requires a full clean first, since Circle's own
+per-library build artifacts aren't rebuilt automatically when the target
+changes:
+
+```sh
+make clean-all
+make RASPPI=3
+```
 
 ## SD card setup
 
