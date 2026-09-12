@@ -31,6 +31,33 @@ BOARDS=(3 4 2)
 die()  { echo "mkdist: ERROR: $*" >&2; exit 1; }
 note() { echo "mkdist: $*"; }
 
+# Project version from src/version.h (must be plain MAJOR.MINOR.PATCH).
+read_header_version() {   # $1 header path
+    [[ -r $1 ]] || die "version header not found: $1"
+    local v
+    v=$(sed -n 's/^#define BMSG_VERSION  *"\([^"]*\)".*/\1/p' "$1" | head -n 1)
+    [[ $v =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] ||
+        die "BMSG_VERSION in $1 is not MAJOR.MINOR.PATCH: '$v'"
+    echo "$v"
+}
+
+# Package version: "v<ver>" only for a clean tree whose HEAD is tagged
+# v<ver>; any other build is "v<ver>-dev.<hash>[-dirty]" so a test build
+# can't pass for the release. A different v* tag on HEAD is an error.
+dist_version() {   # $1 header version, $2 exact v* tag on HEAD ('' if none), $3 dirty 0|1, $4 short hash
+    local ver=$1 tag=$2 dirty=$3 hash=$4
+    if [[ -n $tag && $tag != "v$ver" ]]; then
+        die "HEAD is tagged $tag but src/version.h says v$ver"
+    fi
+    if [[ $tag == "v$ver" && $dirty == 0 ]]; then
+        echo "v$ver"
+        return
+    fi
+    local name="v$ver-dev.$hash"
+    if [[ $dirty == 1 ]]; then name="$name-dirty"; fi
+    echo "$name"
+}
+
 target_for() {   # kernel image basename per board
     case $1 in
         2) echo kernel7 ;;
@@ -257,9 +284,16 @@ main() {
         command -v "$t" >/dev/null || die "required tool not found: $t"
     done
 
-    local version
-    version=$(git -C "$REPO" describe --always --dirty)
-    [[ $version == *-dirty ]] && note "WARNING: working tree has uncommitted changes ($version)"
+    local header_ver tag dirty hash version
+    header_ver=$(read_header_version "$REPO/src/version.h")
+    tag=$(git -C "$REPO" describe --tags --exact-match --match 'v*' 2>/dev/null || true)
+    dirty=0
+    if [[ -n $(git -C "$REPO" status --porcelain --untracked-files=no) ]]; then dirty=1; fi
+    hash=$(git -C "$REPO" rev-parse --short HEAD)
+    version=$(dist_version "$header_ver" "$tag" "$dirty" "$hash")
+    if [[ $version != "v$header_ver" ]]; then
+        note "NOTE: not a release build ($version) — release packages need a clean tree tagged v$header_ver"
+    fi
 
     rm -rf "$STAGE"
     mkdir -p "$STAGE/images"

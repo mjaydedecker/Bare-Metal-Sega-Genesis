@@ -18,6 +18,7 @@
 #include "../ui/screen_chrome.h"
 #include "menu_state.h"
 #include "controller_test_screen.h"
+#include "../version.h"                   // BMSG_VERSION_LABEL
 
 #define NUM_ROWS 17
 
@@ -123,7 +124,7 @@ void SettingsScreen::Render(int selected)
         "" };
 
     m_pCanvas->Clear(theme::BG);
-    header(m_pCanvas, "SETTINGS", "SD:/settings.txt", theme::VALUE);
+    header(m_pCanvas, "SETTINGS", BMSG_VERSION_LABEL, theme::VALUE);
 
     // Window the list so it fits the framebuffer height (at 480p all 16 rows +
     // footer would overflow ~480 px). Show the rows that fit and scroll the

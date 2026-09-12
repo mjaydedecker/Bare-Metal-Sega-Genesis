@@ -16,6 +16,7 @@
 #include "../ui/fonts/font_ps2p8.h"
 #include "../ui/fonts/font_vt323_22.h"
 #include "../storage/storage.h"
+#include "../version.h"              // BMSG_VERSION_LABEL
 
 // Clear to black and blit a w*h RGB565 image centered, integer-scaled.
 static void draw_image(TextCanvas *canvas, Display *display,
@@ -68,7 +69,7 @@ void splash_show_text(GlyphCanvas *canvas, Display *display)
     canvas->Text(&g_font_ps2p8, 2, W / 2 - ww / 2, H - 180, wait,
                  theme::WHITE, theme::BG, true);
 
-    const char *foot = "RASPBERRY PI . CIRCLE . LIBRETRO / GENESIS PLUS GX";
+    const char *foot = BMSG_VERSION_LABEL "  .  RASPBERRY PI . CIRCLE . LIBRETRO / GENESIS PLUS GX";
     int fw = canvas->TextWidth(&g_font_vt323_22, 1, foot);
     canvas->Text(&g_font_vt323_22, 1, W / 2 - fw / 2, H - 120, foot,
                  theme::TEXT_DIM, theme::BG, true);
