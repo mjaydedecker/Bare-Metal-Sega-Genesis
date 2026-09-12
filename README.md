@@ -11,6 +11,9 @@ libretro core to deliver instant-on, low-latency emulation.
 > (`kernel7.img`, `kernel8-32.img`, `kernel7l.img`), all verified on real
 > hardware. The Pi 2 (default build) achieves a clean 60 fps with full audio.
 
+Release notes are in [CHANGELOG.md](CHANGELOG.md); the version number lives in
+[`src/version.h`](src/version.h).
+
 ## Why bare metal?
 
 - **Instant on** — no OS to boot; you're at the ROM browser in a second or two.
@@ -96,7 +99,11 @@ make RASPPI=3
 ### Packaging
 
 `make dist` produces one ready-to-copy SD-card zip per board in `dist/`
-(`bare-metal-genesis-pi{2,3,4}-<git describe>.zip`). Each contains the
+(`bare-metal-genesis-pi{2,3,4}-<version>.zip`). `<version>` comes from
+`src/version.h`: a clean tree whose commit is tagged `v<version>` gives a
+release name such as `v0.1.0`; any other build is named
+`v<version>-dev.<commit>` (plus `-dirty` with uncommitted changes), and a
+mismatched `v*` tag stops the build. Each zip contains the
 kernel image, the Raspberry Pi firmware that board boots with, a
 `config.txt` (with the right `kernel=` line for Pi 3/4), an empty `roms/`
 folder, a `README.txt`, and `licenses/`.

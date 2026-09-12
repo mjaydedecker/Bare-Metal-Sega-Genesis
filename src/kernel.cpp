@@ -13,6 +13,7 @@
 #include "input/pad_toast.h"    // pad_toast_label (GPIO pad detection toast)
 #include "audio/audio_util.h"   // classify_queue, AQ_* for metrics
 #include "video/splash.h"       // splash_show_embedded, splash_apply_override
+#include "version.h"            // BMSG_VERSION_LABEL
 #include "ui/theme.h"
 #include "ui/fonts/font_ps2p8.h"
 #include "ui/fonts/font_vt323_22.h"
@@ -170,7 +171,7 @@ unsigned CKernel::PadDeviceFor (unsigned port)
 TShutdownMode CKernel::Run (void)
 {
 	m_Logger.Write (FromKernel, LogNotice,
-		"Bare Metal Sega Genesis — build " __DATE__ " " __TIME__);
+		"Bare Metal Sega Genesis " BMSG_VERSION_LABEL " — build " __DATE__ " " __TIME__);
 
 	if (!m_Storage.Mount ())
 	{
