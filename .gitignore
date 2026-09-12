@@ -16,6 +16,11 @@
 # Packaged handoff archives
 docs/*-handoff.zip
 
+# Release packaging (make dist)
+/dist/
+/build/dist-stage/
+/build/firmware/
+
 # Editor
 *.swp
 *~

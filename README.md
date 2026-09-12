@@ -92,6 +92,20 @@ make clean-all
 make RASPPI=3
 ```
 
+### Packaging
+
+`make dist` produces one ready-to-copy SD-card zip per board in `dist/`
+(`bare-metal-genesis-pi{2,3,4}-<git describe>.zip`). Each contains the
+kernel image, the Raspberry Pi firmware that board boots with, a
+`config.txt` (with the right `kernel=` line for Pi 3/4), an empty `roms/`
+folder, a `README.txt`, and `licenses/`.
+
+It rebuilds every board from `make clean-all`, checks each image's CPU
+architecture and size before packaging, and leaves the tree as a Pi 2 build.
+The firmware revision pinned by Circle (`libs/circle/boot/Makefile`) is
+downloaded with `wget` on first use and cached in `build/firmware/`.
+Requires `python3` (for zipping).
+
 ## SD card setup
 
 1. Format a microSD card as **FAT32**.
