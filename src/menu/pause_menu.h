@@ -25,7 +25,7 @@ public:
     MenuAction Run(void);     // draws over the last frame; returns on confirm
 
 private:
-    void Render(int selected);
+    void Render(int selected, bool backdrop);   // backdrop: dim what's behind
     int  PickSlot(bool forLoad);   // returns slot 1..4, or 0 to cancel
     void Message(const char *text);
 

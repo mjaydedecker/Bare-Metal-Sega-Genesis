@@ -34,14 +34,21 @@ PauseMenu::PauseMenu(GlyphCanvas *pCanvas, Gamepad *pGamepad, CUSBHCIDevice *pUS
 {
 }
 
-void PauseMenu::Render(int selected)
+void PauseMenu::Render(int selected, bool backdrop)
 {
     using namespace chrome;
     int W = (int) m_pCanvas->Width();
     int H = (int) m_pCanvas->Height();
 
-    // Dim the live game frame behind the panel (don't wipe to black).
-    m_pCanvas->BlendRect(0, 0, W, H, theme::BG, 200);
+    // Dim the live game frame behind the panel (don't wipe to black). Dim and
+    // scanlines read-modify-write the framebuffer, so apply them only when the
+    // backdrop is new: redoing them on every selector move compounds, fading
+    // the game frame toward flat BG. Plain redraws repaint just the panel.
+    if (backdrop)
+    {
+        m_pCanvas->BlendRect(0, 0, W, H, theme::BG, 200);
+        m_pCanvas->Scanlines(0, 0, W, H, 60);
+    }
 
     int panelW = 460;
     int panelH = NUM_ENTRIES * ROW_H + 120;
@@ -70,7 +77,7 @@ void PauseMenu::Render(int selected)
     int fy = py + panelH - 28;
     int hx = hint_dpad(m_pCanvas, px + 20, fy - 4, "MOVE");
     hint_start(m_pCanvas, hx, fy - 4, "SELECT");
-    m_pCanvas->Scanlines(0, 0, W, H, 60);
+    m_pCanvas->Scanlines(px, py, panelW, panelH, 60);
 }
 
 void PauseMenu::Message(const char *text)
@@ -103,15 +110,21 @@ int PauseMenu::PickSlot(bool forLoad)
         for (int i = 0; i < NUM_SLOTS; i++) if (occupied[i]) { sel = i; break; }
     }
 
-    bool     redraw = true;
-    unsigned prev   = menu_buttons(m_pGamepad);
+    bool     redraw   = true;
+    bool     backdrop = true;             // dim once; see Render
+    unsigned prev     = menu_buttons(m_pGamepad);
     for (;;)
     {
         if (redraw)
         {
             int W = (int) m_pCanvas->Width();
             int H = (int) m_pCanvas->Height();
-            m_pCanvas->BlendRect(0, 0, W, H, theme::BG, 200);
+            if (backdrop)
+            {
+                m_pCanvas->BlendRect(0, 0, W, H, theme::BG, 200);
+                m_pCanvas->Scanlines(0, 0, W, H, 60);
+                backdrop = false;
+            }
 
             int panelW = 460, panelH = NUM_SLOTS * 44 + 120;
             int px = W / 2 - panelW / 2, py = H / 2 - panelH / 2;
@@ -151,7 +164,7 @@ int PauseMenu::PickSlot(bool forLoad)
             int hx = chrome::hint_start(m_pCanvas, px + 20, fy - 4,
                                         forLoad ? "LOAD" : "SAVE");
             chrome::hint_button(m_pCanvas, hx, fy - 4, 'B', theme::TEXT_DIM, "CANCEL");
-            m_pCanvas->Scanlines(0, 0, W, H, 60);
+            m_pCanvas->Scanlines(px, py, panelW, panelH, 60);
             redraw = false;
         }
 
@@ -187,7 +200,7 @@ int PauseMenu::PickSlot(bool forLoad)
 MenuAction PauseMenu::Run(void)
 {
     int selected = 0;
-    Render(selected);
+    Render(selected, true);
 
     unsigned prev = menu_buttons(m_pGamepad);
     for (;;)
@@ -201,12 +214,12 @@ MenuAction PauseMenu::Run(void)
         if (pressed & GP_UP)
         {
             selected = menu_next_enabled(ENABLED, NUM_ENTRIES, selected, -1);
-            Render(selected);
+            Render(selected, false);
         }
         if (pressed & GP_DOWN)
         {
             selected = menu_next_enabled(ENABLED, NUM_ENTRIES, selected, +1);
-            Render(selected);
+            Render(selected, false);
         }
         if (pressed & GP_START)
         {
@@ -224,7 +237,8 @@ MenuAction PauseMenu::Run(void)
                     msg[14] = (char) ('0' + slot);
                     Message(ok ? msg : "Save failed.");
                 }
-                Render(selected);
+                // Pause panel covers the slot picker + message box, so no re-dim.
+                Render(selected, false);
                 prev = menu_buttons(m_pGamepad);
                 break;
             }
@@ -236,7 +250,7 @@ MenuAction PauseMenu::Run(void)
                     if (m_pSaveState->Load(slot)) return MenuAction::Resume;
                     Message("Load failed.");
                 }
-                Render(selected);
+                Render(selected, false);
                 prev = menu_buttons(m_pGamepad);
                 break;
             }
@@ -246,7 +260,7 @@ MenuAction PauseMenu::Run(void)
 
             case 4:                       // Settings
                 m_pSettingsScreen->Run();
-                Render(selected);
+                Render(selected, true);   // settings cleared the screen
                 prev = menu_buttons(m_pGamepad);
                 break;
 
