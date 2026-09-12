@@ -17,8 +17,9 @@
 #include "../ui/theme.h"
 #include "../ui/screen_chrome.h"
 #include "menu_state.h"
+#include "controller_test_screen.h"
 
-#define NUM_ROWS 16
+#define NUM_ROWS 17
 
 // Row identities in DISPLAY order (grouped Video / Audio / System / Input).
 // The labels/values arrays and the input handlers key off these names, so the
@@ -28,14 +29,16 @@ enum SRow {
     SR_VIDEO_SCALE = 0, SR_WIDESCREEN, SR_VSYNC, SR_VIDEO_MODE,   // Video
     SR_VOLUME, SR_MUTE, SR_AUDIO_OUT, SR_AUDIO_LATENCY,           // Audio
     SR_REGION, SR_MENU_HOTKEY, SR_AUTO_LAUNCH, SR_DEBUG_OVERLAY,  // System
-    SR_PAD_TYPE, SR_CONTROLS, SR_HOTKEYS, SR_CALIBRATE            // Input
+    SR_PAD_TYPE, SR_CONTROLS, SR_HOTKEYS, SR_CALIBRATE,           // Input
+    SR_TEST_PADS
 };
 
 // Rows that open another screen (drawn with a ▸ chevron, opened with START).
 static bool is_subscreen(int row)
 {
     return row == SR_VIDEO_MODE || row == SR_CONTROLS ||
-           row == SR_HOTKEYS    || row == SR_CALIBRATE;
+           row == SR_HOTKEYS    || row == SR_CALIBRATE ||
+           row == SR_TEST_PADS;
 }
 
 SettingsScreen::SettingsScreen(GlyphCanvas *pCanvas, Gamepad *pGamepad,
@@ -43,12 +46,13 @@ SettingsScreen::SettingsScreen(GlyphCanvas *pCanvas, Gamepad *pGamepad,
                                SettingsStore *pStore, Display *pDisplay,
                                AudioDriver *pAudio, ControlsScreen *pControls,
                                VideoModeScreen *pVideoMode, Overlay *pOverlay,
-                               HotkeyScreen *pHotkey, CalibrationScreen *pCalibration)
+                               HotkeyScreen *pHotkey, CalibrationScreen *pCalibration,
+                               ControllerTestScreen *pControllerTest)
 :   m_pCanvas(pCanvas), m_pGamepad(pGamepad), m_pUSBHCI(pUSBHCI),
     m_pSettings(pSettings), m_pStore(pStore), m_pDisplay(pDisplay),
     m_pAudio(pAudio), m_pRomPath(0), m_pControls(pControls),
     m_pVideoMode(pVideoMode), m_pOverlay(pOverlay), m_pHotkey(pHotkey),
-    m_pCalibration(pCalibration)
+    m_pCalibration(pCalibration), m_pControllerTest(pControllerTest)
 {
 }
 
@@ -109,12 +113,14 @@ void SettingsScreen::Render(int selected)
         "Video Scale", "Widescreen", "Vsync", "Video Mode",            // Video
         "Volume", "Mute", "Audio Out", "Audio Latency",                // Audio
         "Region", "Menu Hotkey", "Auto-Launch ROM", "Debug Overlay",   // System
-        "Pad Type", "Controls", "Hotkeys", "Calibrate Controller" };   // Input
+        "Pad Type", "Controls", "Hotkeys", "Calibrate Controller",     // Input
+        "Test Controllers" };
     const char *values[NUM_ROWS] = {
         scaleVal, wideVal, vsyncVal, "",
         volVal, muteVal, audioVal, latVal,
         regionVal, hotkeyVal, autoVal, dbgVal,
-        padVal, "", "", "" };
+        padVal, "", "", "",
+        "" };
 
     m_pCanvas->Clear(theme::BG);
     header(m_pCanvas, "SETTINGS", "SD:/settings.txt", theme::VALUE);
@@ -277,6 +283,7 @@ void SettingsScreen::Run(void)
             case SR_CONTROLS:   m_pControls->Run();    break;
             case SR_HOTKEYS:    m_pHotkey->Run();       break;
             case SR_CALIBRATE:  m_pCalibration->Run();  break;
+            case SR_TEST_PADS:  m_pControllerTest->Run(); break;
             default: break;                            // value rows: START is a no-op
             }
             if (is_subscreen(selected))

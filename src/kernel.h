@@ -39,6 +39,7 @@
 #include "menu/hotkey_screen.h"
 #include "menu/video_mode_screen.h"
 #include "menu/calibration_screen.h"
+#include "menu/controller_test_screen.h"
 #include "menu/pause_menu.h"
 #include "input/gamepad.h"
 #include "input/gpio_pads.h"
@@ -95,6 +96,7 @@ private:
 	HotkeyScreen       m_HotkeyScreen;   // in-game hotkey remap sub-screen
 	ControllerStore    m_ControllerStore; // per-VID/PID calibrations (SD)
 	CalibrationScreen  m_CalibrationScreen; // press-each-button calibration
+	ControllerTestScreen m_ControllerTestScreen; // live HAT + USB pad tester
 	SettingsScreen     m_SettingsScreen; // in-emulation Settings screen
 	PauseMenu          m_PauseMenu;  // in-emulation overlay menu
 

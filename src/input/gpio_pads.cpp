@@ -10,6 +10,10 @@
 // 100 µs — negligible against the ~16.67 ms frame.
 #define SELECT_SETTLE_US 5
 
+// Minimum gap between real polls: the 6-button pad resets its phase counter
+// after SELECT idles high ~1.5 ms; 2 ms leaves margin.
+#define MIN_POLL_US 2000
+
 // SegaIo glue: bind the pure sequencer's callbacks to one port's GPIO pins. The
 // sequencing/packing logic itself lives in sega_sequence (host-tested); this is
 // the only hardware-touching part.
@@ -33,6 +37,8 @@ GpioPads::GpioPads(void)
         m_Buttons[p] = 0;
         m_Type[p] = SegaPadType::None;
     }
+    m_Gate.primed  = false;
+    m_Gate.last_us = 0;
 }
 
 void GpioPads::Init(void)
@@ -59,6 +65,9 @@ void GpioPads::PollPort(unsigned port, SegaSample out[SEGA_PHASES])
 
 void GpioPads::Poll(void)
 {
+    if (!poll_gate_due(m_Gate, CTimer::GetClockTicks(), MIN_POLL_US))
+        return;   // polled moments ago; the cached result is still fresh
+
     for (unsigned p = 0; p < NUM_PORTS; ++p)
     {
         SegaSample phases[SEGA_PHASES];
