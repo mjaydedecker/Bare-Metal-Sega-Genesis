@@ -184,4 +184,11 @@ clean-all:
 	$(MAKE) clean
 	git -C $(CIRCLEHOME) clean -fdx
 
+# SD-card zips for Pi 2, 3 and 4 in dist/ (see README "Packaging"). Rebuilds
+# every board from clean (leaving a Pi 2 build) and downloads the pinned
+# Raspberry Pi firmware on first use.
+.PHONY: dist
+dist:
+	bash tools/mkdist.sh
+
 -include $(DEPS)
