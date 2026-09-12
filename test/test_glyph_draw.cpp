@@ -56,6 +56,50 @@ int main(void) {
     assert(fb[0 * W + 8] == 0x0000);          // outside width, untouched
     gd_stipple_rect(fb, W, W, H, -3, -3, 6, 6, 0x2222);   // negative origin clips, no crash
 
+    // scanlines at scale 2: 2-px dark bands on rows where (y / 2) % 3 == 2,
+    // aligned to ABSOLUTE framebuffer rows (so region passes line up).
+    reset();
+    gd_fill_rect(fb, W, W, H, 0, 0, 8, 12, 0xFFFF);
+    gd_scanlines(fb, W, W, H, 0, 0, 8, 12, 128, 2);
+    assert(fb[3 * W + 0]  == 0xFFFF);         // row 3: (3/2)%3 = 1
+    assert(fb[4 * W + 0]  != 0xFFFF);         // rows 4-5: band
+    assert(fb[5 * W + 0]  != 0xFFFF);
+    assert(fb[6 * W + 0]  == 0xFFFF);         // rows 6-9 untouched
+    assert(fb[9 * W + 0]  == 0xFFFF);
+    assert(fb[10 * W + 0] != 0xFFFF);         // rows 10-11: next band
+    assert(fb[11 * W + 0] != 0xFFFF);
+
+    // scale-2 region starting mid-band stays on the absolute row grid.
+    reset();
+    gd_fill_rect(fb, W, W, H, 0, 0, 8, 16, 0xFFFF);
+    gd_scanlines(fb, W, W, H, 0, 5, 8, 6, 128, 2);
+    assert(fb[4 * W + 0]  == 0xFFFF);         // outside region (would be band)
+    assert(fb[5 * W + 0]  != 0xFFFF);         // (5/2)%3 == 2
+    assert(fb[6 * W + 0]  == 0xFFFF);         // (6/2)%3 == 0
+    assert(fb[10 * W + 0] != 0xFFFF);         // (10/2)%3 == 2
+
+    // stipple at scale 2: 2x2 checker cells ((x/2 + y/2) & 1), gap rows where
+    // ((y - y0) / 2) % 3 == 2. Still write-only.
+    reset();
+    gd_stipple_rect(fb, W, W, H, 0, 0, 8, 12, 0xABCD, 2);
+    assert(fb[0 * W + 0] == 0xABCD);          // cell (0,0)
+    assert(fb[0 * W + 1] == 0xABCD);          // same cell
+    assert(fb[1 * W + 1] == 0xABCD);          // same cell
+    assert(fb[0 * W + 2] == 0x0000);          // cell (1,0): odd
+    assert(fb[2 * W + 2] == 0xABCD);          // cell (1,1): even
+    assert(fb[4 * W + 0] == 0x0000);          // local rows 4-5: gap
+    assert(fb[5 * W + 1] == 0x0000);
+    assert(fb[6 * W + 2] == 0xABCD);          // row 6 resumes: cell (1,3) even
+    assert(fb[6 * W + 0] == 0x0000);          // cell (0,3): odd
+
+    // stipple scale-2 gap rows are LOCAL to the rect's y origin.
+    reset();
+    gd_stipple_rect(fb, W, W, H, 0, 3, 4, 8, 0x5555, 2);
+    assert(fb[6 * W + 2] == 0x5555);          // local (6-3)/2 = 1; cell (1,3) even
+    assert(fb[7 * W + 2] == 0x0000);          // local (7-3)/2 = 2 -> gap
+    assert(fb[8 * W + 0] == 0x0000);          // local (8-3)/2 = 2 -> gap
+    assert(fb[9 * W + 0] == 0x5555);          // local 3; cell (0,4) even
+
     // text width = chars * width * scale
     assert(gd_text_width(&kFont, 1, "!!") == 6);
     assert(gd_text_width(&kFont, 2, "!")  == 6);
