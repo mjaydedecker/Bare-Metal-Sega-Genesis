@@ -16,8 +16,9 @@ void icon_tri  (uint16_t *buf, unsigned pitchPx, int fbw, int fbh,
                 int x, int y, int size, int dir, uint16_t color);
 void icon_cross(uint16_t *buf, unsigned pitchPx, int fbw, int fbh,
                 int x, int y, int size, uint16_t color);
+// Filled d x d square with `letter` centred in it, drawn at font `scale`.
 void icon_button(uint16_t *buf, unsigned pitchPx, int fbw, int fbh,
                  int x, int y, int d, char letter,
-                 uint16_t fill, uint16_t fg, const Font *f);
+                 uint16_t fill, uint16_t fg, const Font *f, int scale = 1);
 
 #endif

@@ -35,6 +35,24 @@ int main(void) {
     bool sawLetter = false;
     for (unsigned i = 0; i < W * H; i++) if (fb[i] == 0xFFFF) sawLetter = true;
     assert(sawLetter);
+    // exact scale-1 placement: 3x5 glyph centred in 11 -> origin (4,3); the
+    // '!' stroke is the glyph's middle column -> x = 5, rows 3..7.
+    assert(fb[3 * W + 5] == 0xFFFF);
+    assert(fb[7 * W + 5] == 0xFFFF);
+    assert(fb[3 * W + 6] == 0xE000);
+    assert(fb[8 * W + 5] == 0xE000);
+
+    // button at scale 2: letter drawn 2x (6x10) and centred in d=12 ->
+    // origin (3,1); stroke columns x = 5..6, rows 1..10.
+    reset();
+    icon_button(fb, W, W, H, 0, 0, 12, '!', 0xE000, 0xFFFF, &kFont, 2);
+    assert(fb[1 * W + 5]  == 0xFFFF);
+    assert(fb[1 * W + 6]  == 0xFFFF);
+    assert(fb[10 * W + 6] == 0xFFFF);
+    assert(fb[1 * W + 4]  == 0xE000);         // left of stroke
+    assert(fb[1 * W + 7]  == 0xE000);         // right of stroke
+    assert(fb[0 * W + 5]  == 0xE000);         // above letter
+    assert(fb[11 * W + 5] == 0xE000);         // below letter
 
     // left triangle: base at right edge, tip at left-middle
     reset();

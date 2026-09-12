@@ -43,13 +43,14 @@ void icon_cross(uint16_t *buf, unsigned pitchPx, int fbw, int fbh,
 
 void icon_button(uint16_t *buf, unsigned pitchPx, int fbw, int fbh,
                  int x, int y, int d, char letter,
-                 uint16_t fill, uint16_t fg, const Font *f) {
+                 uint16_t fill, uint16_t fg, const Font *f, int scale) {
+    if (scale < 1) scale = 1;
     gd_fill_rect(buf, pitchPx, fbw, fbh, x, y, d, d, fill);
     if (f) {
         char s[2] = { letter, '\0' };
-        int tw = gd_text_width(f, 1, s);
+        int tw = gd_text_width(f, scale, s);
         int tx = x + (d - tw) / 2;
-        int ty = y + (d - (int) f->height) / 2;
-        gd_draw_text(buf, pitchPx, fbw, fbh, f, 1, tx, ty, s, fg, fill, true);
+        int ty = y + (d - (int) f->height * scale) / 2;
+        gd_draw_text(buf, pitchPx, fbw, fbh, f, scale, tx, ty, s, fg, fill, true);
     }
 }
