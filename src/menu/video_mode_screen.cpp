@@ -60,7 +60,7 @@ void VideoModeScreen::Render(VideoMode sel)
     }
 
     m_pCanvas->Text(&g_font_vt323_22, 1, PAD, y + 50,
-                    "Only a confirmed mode is saved; an unsupported signal auto-reverts.",
+                    "Only a confirmed mode is saved; unsupported signals auto-revert.",
                     theme::TEXT_DIM, theme::BG, true);
 
     footer_divider(m_pCanvas);

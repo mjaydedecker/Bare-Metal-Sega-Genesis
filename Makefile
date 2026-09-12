@@ -74,6 +74,7 @@ OBJS = src/main.o \
        src/settings/settings_store.o \
        src/ui/text_canvas.o \
        src/ui/hud.o \
+       src/ui/ui_scale.o \
        src/ui/overlay.o \
        src/ui/pixel_ops.o \
        src/ui/glyph_draw.o \

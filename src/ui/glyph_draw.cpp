@@ -34,10 +34,11 @@ void gd_blend_rect(uint16_t *buf, unsigned pitchPx, int fbw, int fbh,
 }
 
 void gd_scanlines(uint16_t *buf, unsigned pitchPx, int fbw, int fbh,
-                  int x, int y, int w, int h, uint8_t strength) {
+                  int x, int y, int w, int h, uint8_t strength, int scale) {
+    if (scale < 1) scale = 1;
     for (int yy = y; yy < y + h; yy++) {
         if (yy < 0 || yy >= fbh) continue;
-        if ((yy % 3) != 2) continue;            // darken every 3rd row
+        if (((yy / scale) % 3) != 2) continue;  // darken every 3rd (scaled) row
         for (int xx = x; xx < x + w; xx++) {
             if (xx < 0 || xx >= fbw) continue;
             uint16_t *p = &buf[(unsigned) yy * pitchPx + (unsigned) xx];
@@ -47,11 +48,12 @@ void gd_scanlines(uint16_t *buf, unsigned pitchPx, int fbw, int fbh,
 }
 
 void gd_stipple_rect(uint16_t *buf, unsigned pitchPx, int fbw, int fbh,
-                     int x, int y, int w, int h, uint16_t color) {
+                     int x, int y, int w, int h, uint16_t color, int scale) {
+    if (scale < 1) scale = 1;
     for (int yy = y; yy < y + h; yy++) {
-        if ((yy - y) % 3 == 2) continue;        // scanline gap row (write nothing)
+        if (((yy - y) / scale) % 3 == 2) continue;          // scanline gap row
         for (int xx = x; xx < x + w; xx++) {
-            if (((xx + yy) & 1) != 0) continue;  // 50% checkerboard (write-only)
+            if (((xx / scale + yy / scale) & 1) != 0) continue;  // 50% checker
             put(buf, pitchPx, fbw, fbh, xx, yy, color);
         }
     }

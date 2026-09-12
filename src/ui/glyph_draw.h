@@ -14,15 +14,18 @@ void gd_fill_rect (uint16_t *buf, unsigned pitchPx, int fbw, int fbh,
                    int x, int y, int w, int h, uint16_t color);
 void gd_blend_rect(uint16_t *buf, unsigned pitchPx, int fbw, int fbh,
                    int x, int y, int w, int h, uint16_t color, uint8_t alpha);
+// Darken rows where (y / scale) % 3 == 2 (absolute framebuffer rows, so
+// separate region passes stay aligned). scale 1 = every 3rd row.
 void gd_scanlines (uint16_t *buf, unsigned pitchPx, int fbw, int fbh,
-                   int x, int y, int w, int h, uint8_t strength);
+                   int x, int y, int w, int h, uint8_t strength, int scale = 1);
 
-// Write-only pseudo-transparent fill: writes `color` on a 50% checkerboard and
-// leaves every 3rd row (local row % 3 == 2) untouched as a scanline gap. Never
-// READS the framebuffer (unlike blend_rect/scanlines), so it is cheap over the
-// Pi's write-combining framebuffer where reads stall. Used for HUD/toast panels.
+// Write-only pseudo-transparent fill: writes `color` on a 50% checkerboard of
+// scale x scale cells and leaves rows where ((y - y0) / scale) % 3 == 2
+// untouched as a scanline gap. Never READS the framebuffer (unlike
+// blend_rect/scanlines), so it is cheap over the Pi's write-combining
+// framebuffer where reads stall. Used for HUD/toast panels.
 void gd_stipple_rect(uint16_t *buf, unsigned pitchPx, int fbw, int fbh,
-                     int x, int y, int w, int h, uint16_t color);
+                     int x, int y, int w, int h, uint16_t color, int scale = 1);
 
 int  gd_text_width(const Font *f, int scale, const char *s);
 
