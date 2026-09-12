@@ -7,8 +7,9 @@ bare-metal Commodore 64), it combines the [Circle](https://github.com/rsta2/circ
 bare-metal C++ environment with the [Genesis-Plus-GX-Wide](https://github.com/libretro/Genesis-Plus-GX-Wide)
 libretro core to deliver instant-on, low-latency emulation.
 
-> **Status:** Targets the **Raspberry Pi 2 (32-bit / ARMv7)**, producing
-> `kernel7.img`. Achieves a clean 60 fps with full audio on real hardware.
+> **Status:** Runs on the **Raspberry Pi 2, 3 and 4** in 32-bit mode
+> (`kernel7.img`, `kernel8-32.img`, `kernel7l.img`), all verified on real
+> hardware. The Pi 2 (default build) achieves a clean 60 fps with full audio.
 
 ## Why bare metal?
 
@@ -32,11 +33,11 @@ libretro core to deliver instant-on, low-latency emulation.
 
 ## Hardware requirements
 
-- **Raspberry Pi 2** (Model B, ARMv7 / `kernel7.img`) by default. Pi 3
-  (`kernel8-32.img`) and Pi 4 (`kernel7l.img`) are also supported in
-  32-bit mode — see [Building](#building) — but have not yet been
-  verified on physical hardware. Pi 5 is not yet supported (it has no
-  32-bit target; it needs a separate 64-bit build).
+- **Raspberry Pi 2** (Model B, ARMv7 / `kernel7.img`) by default, or a
+  **Pi 3** (`kernel8-32.img`) or **Pi 4** (`kernel7l.img`) in 32-bit mode —
+  see [Building](#building). All three have been verified on physical
+  hardware. Pi 5 is not yet supported (it has no 32-bit target; it needs a
+  separate 64-bit build).
 - A **microSD card** (FAT32) for the kernel, ROMs, and saves.
 - HDMI display; USB gamepad(s).
 - Optional: 3.5 mm analog audio or a PCM5102 I2S DAC.

@@ -172,13 +172,8 @@ write_config() {   # $1 board, $2 kernel image, $3 output path
 }
 
 write_readme() {   # $1 board, $2 kernel image, $3 version, $4 output path
-    local origin tested
+    local origin
     origin=$(git -C "$REPO" remote get-url origin 2>/dev/null || echo "(no origin remote)")
-    if [[ $1 == 2 ]]; then
-        tested="Tested on Raspberry Pi 2 hardware."
-    else
-        tested="NOTE: Raspberry Pi $1 builds have not yet been tested on hardware."
-    fi
     cat >"$4" <<EOF
 Bare Metal Sega Genesis - Raspberry Pi $1 SD card
 =================================================
@@ -187,7 +182,7 @@ Version:  $3
 Built:    $(date -u +%Y-%m-%d) (UTC)
 Kernel:   $2
 Source:   $origin
-$tested
+Tested on Raspberry Pi $1 hardware.
 
 SETUP
 1. Format a microSD card as FAT32.
