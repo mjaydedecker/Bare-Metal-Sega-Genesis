@@ -184,7 +184,7 @@ Bare Metal Sega Genesis - Raspberry Pi $1 SD card
 =================================================
 
 Version:  $3
-Built:    $(date -u +%Y-%m-%d)
+Built:    $(date -u +%Y-%m-%d) (UTC)
 Kernel:   $2
 Source:   $origin
 $tested
