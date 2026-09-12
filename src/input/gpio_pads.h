@@ -16,6 +16,7 @@
 #include <circle/types.h>
 #include "sega_pad.h"
 #include "sega_board.h"
+#include "poll_gate.h"
 
 class GpioPads
 {
@@ -27,7 +28,9 @@ public:
     // Configure the GPIO pin modes from kBoardPinMap. Call once after boot.
     void Init(void);
 
-    // Run the SELECT sequence for both ports, decode, and cache. Call per frame.
+    // Run the SELECT sequence for both ports, decode, and cache. Call per frame
+    // (game loop) or per menu loop. A call within MIN_POLL_US of the last real
+    // poll is skipped so the 6-button counter's ~1.5 ms reset is respected.
     void Poll(void);
 
     unsigned    Buttons(unsigned port) const;     // GP_* mask (0 if invalid)
@@ -41,6 +44,7 @@ private:
     CGPIOPin    m_Data[NUM_PORTS][6];
     unsigned    m_Buttons[NUM_PORTS];
     SegaPadType m_Type[NUM_PORTS];
+    PollGate    m_Gate;
 };
 
 #endif
