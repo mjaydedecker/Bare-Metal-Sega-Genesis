@@ -13,9 +13,9 @@
 // resolution-based UI scale (ui_scale), so the HUD grows with the menus and
 // reads clearly at 1080p and above.
 static const Font *kHudFont = &g_font_vt323_22;
-#define HUD_MARGIN  8     // panel offset from top-left corner (x scale)
-#define HUD_PAD     8     // inner padding (x scale)
-#define HUD_GAP     4     // extra px between text rows (x scale)
+#define HUD_MARGIN  8     // panel offset from top-left corner (logical px)
+#define HUD_PAD     8     // inner padding (logical px)
+#define HUD_GAP     4     // extra px between text rows (logical px)
 #define HUD_COLCH   13    // column width in characters (two columns)
 
 // Two-column layout for the 9 cells from hud_build (in fixed order).

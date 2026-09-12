@@ -96,9 +96,10 @@ per row at their size, so a scaled size is smooth, not blocky).
 ## 4. HUD / toasts
 
 `Overlay` keeps drawing through the same canvas. Its own `hud_scale()` becomes
-redundant (logical height is always < 960, so it would always return 1) and is
-removed together with `HUD_SCALE_BASE` and its asserts in `test_hud.cpp`; the
-`* sc` factors in `overlay.cpp` are dropped.
+redundant now that `GlyphCanvas` owns resolution scaling — a second
+HUD-specific scale on top of it would double-scale the HUD — so `hud_scale()`
+is removed together with `HUD_SCALE_BASE` and its asserts in `test_hud.cpp`;
+the `* sc` factors in `overlay.cpp` are dropped.
 
 Net effect: ≤720p unchanged; 1080p stays 2× (same physical pixels and per-frame
 cost as today); 1440p becomes 3× (was 2×), matching the menus.
