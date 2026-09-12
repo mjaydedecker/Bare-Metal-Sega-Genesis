@@ -68,6 +68,8 @@ OBJS = src/main.o \
        src/menu/hotkey_screen.o \
        src/menu/video_mode_screen.o \
        src/menu/calibration_screen.o \
+       src/menu/pad_test.o \
+       src/menu/controller_test_screen.o \
        src/settings/settings.o \
        src/settings/settings_store.o \
        src/ui/text_canvas.o \

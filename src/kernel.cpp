@@ -69,7 +69,8 @@ CKernel::CKernel (void)
 	m_HotkeyScreen (&m_GlyphCanvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore),
 	m_ControllerStore (),
 	m_CalibrationScreen (&m_GlyphCanvas, &m_Gamepad, &m_USBHCI, &m_ControllerStore, &m_Storage),
-	m_SettingsScreen (&m_GlyphCanvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore, &m_Display, &m_Audio, &m_ControlsScreen, &m_VideoModeScreen, &m_Overlay, &m_HotkeyScreen, &m_CalibrationScreen),
+	m_ControllerTestScreen (&m_GlyphCanvas, &m_Gamepad, &m_USBHCI, &m_GpioPads),
+	m_SettingsScreen (&m_GlyphCanvas, &m_Gamepad, &m_USBHCI, &m_Settings, &m_SettingsStore, &m_Display, &m_Audio, &m_ControlsScreen, &m_VideoModeScreen, &m_Overlay, &m_HotkeyScreen, &m_CalibrationScreen, &m_ControllerTestScreen),
 	m_PauseMenu (&m_GlyphCanvas, &m_Gamepad, &m_USBHCI, &m_SaveState, &m_SettingsScreen),
 	m_pROMBuffer (0),
 	m_nROMSize (0)

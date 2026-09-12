@@ -23,6 +23,7 @@
 class ControlsScreen;
 class VideoModeScreen;
 class CalibrationScreen;
+class ControllerTestScreen;
 
 class SettingsScreen
 {
@@ -31,7 +32,8 @@ public:
                    Settings *pSettings, SettingsStore *pStore, Display *pDisplay,
                    AudioDriver *pAudio, ControlsScreen *pControls,
                    VideoModeScreen *pVideoMode, Overlay *pOverlay,
-                   HotkeyScreen *pHotkey, CalibrationScreen *pCalibration);
+                   HotkeyScreen *pHotkey, CalibrationScreen *pCalibration,
+                   ControllerTestScreen *pControllerTest);
     void Run(void);   // returns when the user backs out (B)
 
     // Tell the screen which ROM is currently running (for the auto-launch row).
@@ -54,6 +56,7 @@ private:
     Overlay         *m_pOverlay;
     HotkeyScreen    *m_pHotkey;
     CalibrationScreen *m_pCalibration;
+    ControllerTestScreen *m_pControllerTest;
 };
 
 #endif
